@@ -38,7 +38,7 @@ class FamilyExpenseTrackerApp extends ConsumerWidget {
           centerTitle: true,
           elevation: 0,
         ),
-        cardTheme: const CardTheme(
+        cardTheme: const CardThemeData(
           elevation: 2,
           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),
@@ -75,7 +75,7 @@ class FamilyExpenseTrackerApp extends ConsumerWidget {
           centerTitle: true,
           elevation: 0,
         ),
-        cardTheme: const CardTheme(
+        cardTheme: const CardThemeData(
           elevation: 2,
           margin: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),

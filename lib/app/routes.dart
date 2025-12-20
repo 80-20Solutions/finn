@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../main.dart' show kDemoMode;
+import '../features/demo/demo_navigation_screen.dart';
 import '../features/auth/presentation/screens/login_screen.dart';
 import '../features/auth/presentation/screens/register_screen.dart';
 import '../features/auth/presentation/screens/forgot_password_screen.dart';
@@ -56,11 +58,16 @@ class AppRoutes {
 /// Provider for the router
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: AppRoutes.home,
+    initialLocation: kDemoMode ? AppRoutes.main : AppRoutes.home,
     debugLogDiagnostics: true,
 
-    // Redirect based on auth state
+    // Redirect based on auth state (skip in demo mode)
     redirect: (context, state) {
+      // In demo mode, skip all auth checks
+      if (kDemoMode) {
+        return null;
+      }
+
       final session = Supabase.instance.client.auth.currentSession;
       final isAuthenticated = session != null;
       final isAuthRoute = state.matchedLocation == AppRoutes.login ||
@@ -178,7 +185,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.main,
         name: 'main',
-        builder: (context, state) => const MainNavigationScreen(),
+        builder: (context, state) => kDemoMode
+            ? const DemoNavigationScreen()
+            : const MainNavigationScreen(),
       ),
     ],
 

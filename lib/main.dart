@@ -5,19 +5,24 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'app/app.dart';
 import 'core/config/env.dart';
 
+/// Demo mode flag - set via --dart-define=DEMO_MODE=true
+const bool kDemoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Validate environment in development
-  if (!Env.isDevelopment) {
-    Env.validate();
-  }
+  if (!kDemoMode) {
+    // Validate environment in development
+    if (!Env.isDevelopment) {
+      Env.validate();
+    }
 
-  // Initialize Supabase
-  await Supabase.initialize(
-    url: Env.supabaseUrl,
-    anonKey: Env.supabaseAnonKey,
-  );
+    // Initialize Supabase
+    await Supabase.initialize(
+      url: Env.supabaseUrl,
+      anonKey: Env.supabaseAnonKey,
+    );
+  }
 
   runApp(
     const ProviderScope(
