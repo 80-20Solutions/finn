@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// Demo navigation screen showing UI without Supabase connection.
+import '../../app/app_theme.dart';
+
+/// Demo navigation screen with distinctive "Italian Brutalism" UI.
 class DemoNavigationScreen extends StatefulWidget {
   const DemoNavigationScreen({super.key});
 
@@ -19,34 +22,6 @@ class _DemoNavigationScreenState extends State<DemoNavigationScreen> {
     _DemoProfile(),
   ];
 
-  final List<NavigationDestination> _destinations = const [
-    NavigationDestination(
-      icon: Icon(Icons.dashboard_outlined),
-      selectedIcon: Icon(Icons.dashboard),
-      label: 'Dashboard',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.receipt_long_outlined),
-      selectedIcon: Icon(Icons.receipt_long),
-      label: 'Spese',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.camera_alt_outlined),
-      selectedIcon: Icon(Icons.camera_alt),
-      label: 'Scansiona',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.group_outlined),
-      selectedIcon: Icon(Icons.group),
-      label: 'Gruppo',
-    ),
-    NavigationDestination(
-      icon: Icon(Icons.person_outline),
-      selectedIcon: Icon(Icons.person),
-      label: 'Profilo',
-    ),
-  ];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -54,23 +29,100 @@ class _DemoNavigationScreenState extends State<DemoNavigationScreen> {
         index: _currentIndex,
         children: _screens,
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _currentIndex,
-        onDestinationSelected: (index) {
-          setState(() => _currentIndex = index);
-        },
-        destinations: _destinations,
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: AppColors.cream,
+          border: Border(
+            top: BorderSide(
+              color: AppColors.inkFaded.withValues(alpha: 0.2),
+              width: 1,
+            ),
+          ),
+        ),
+        child: NavigationBar(
+          selectedIndex: _currentIndex,
+          onDestinationSelected: (index) {
+            setState(() => _currentIndex = index);
+          },
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.grid_view_outlined),
+              selectedIcon: Icon(Icons.grid_view_rounded),
+              label: 'Panorama',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.receipt_long_outlined),
+              selectedIcon: Icon(Icons.receipt_long),
+              label: 'Spese',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.document_scanner_outlined),
+              selectedIcon: Icon(Icons.document_scanner),
+              label: 'Scansiona',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.people_outline),
+              selectedIcon: Icon(Icons.people),
+              label: 'Famiglia',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.account_circle_outlined),
+              selectedIcon: Icon(Icons.account_circle),
+              label: 'Profilo',
+            ),
+          ],
+        ),
       ),
       floatingActionButton: _currentIndex == 1
-          ? FloatingActionButton(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Demo: Aggiungi spesa')),
-                );
-              },
-              child: const Icon(Icons.add),
+          ? FloatingActionButton.extended(
+              onPressed: () => _showAddExpenseSheet(context),
+              icon: const Icon(Icons.add),
+              label: Text('Aggiungi', style: GoogleFonts.dmSans(fontWeight: FontWeight.w600)),
             )
           : null,
+    );
+  }
+
+  void _showAddExpenseSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppColors.cream,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(4)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Nuova Spesa',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 24,
+                fontWeight: FontWeight.w600,
+                color: AppColors.ink,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'DEMO MODE',
+              style: GoogleFonts.jetBrainsMono(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.terracotta,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Funzionalità non disponibile in modalità demo',
+              style: GoogleFonts.dmSans(color: AppColors.inkLight),
+            ),
+            const SizedBox(height: 24),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -80,131 +132,310 @@ class _DemoDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dashboard'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {},
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Period selector mock
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _PeriodChip(label: 'Settimana', selected: false),
-                    _PeriodChip(label: 'Mese', selected: true),
-                    _PeriodChip(label: 'Anno', selected: false),
-                  ],
+      backgroundColor: AppColors.parchment,
+      body: CustomScrollView(
+        slivers: [
+          // Dramatic header
+          SliverAppBar(
+            expandedHeight: 200,
+            pinned: true,
+            backgroundColor: AppColors.parchment,
+            flexibleSpace: FlexibleSpaceBar(
+              background: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppColors.terracotta.withValues(alpha: 0.15),
+                      AppColors.parchment,
+                    ],
+                  ),
+                ),
+                child: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Dicembre',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.inkLight,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AppColors.copper.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '2024',
+                                style: GoogleFonts.jetBrainsMono(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.copper,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          'Spese Totali',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 14,
+                            color: AppColors.inkLight,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '€',
+                              style: GoogleFonts.playfairDisplay(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w400,
+                                color: AppColors.terracotta,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              '2.847',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 48,
+                                fontWeight: FontWeight.w700,
+                                color: AppColors.ink,
+                                height: 1,
+                              ),
+                            ),
+                            Text(
+                              ',56',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 28,
+                                fontWeight: FontWeight.w500,
+                                color: AppColors.inkLight,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 16),
+          ),
 
-            // Total summary
-            Card(
-              color: theme.colorScheme.primaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Text(
-                      'Totale Spese',
-                      style: theme.textTheme.titleMedium,
+          // Period selector
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+              child: Row(
+                children: [
+                  _PeriodTab(label: 'Settimana', selected: false, onTap: () {}),
+                  const SizedBox(width: 8),
+                  _PeriodTab(label: 'Mese', selected: true, onTap: () {}),
+                  const SizedBox(width: 8),
+                  _PeriodTab(label: 'Anno', selected: false, onTap: () {}),
+                ],
+              ),
+            ),
+          ),
+
+          // Category breakdown
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Per Categoria',
+                        style: GoogleFonts.playfairDisplay(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: Text(
+                          'Vedi tutto',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _CategoryCard(
+                    icon: Icons.shopping_basket,
+                    color: AppColors.categoryGrocery,
+                    name: 'Alimentari',
+                    amount: 876.45,
+                    percent: 31,
+                  ),
+                  _CategoryCard(
+                    icon: Icons.home_outlined,
+                    color: AppColors.categoryHome,
+                    name: 'Casa & Utenze',
+                    amount: 654.00,
+                    percent: 23,
+                  ),
+                  _CategoryCard(
+                    icon: Icons.directions_car_outlined,
+                    color: AppColors.categoryTransport,
+                    name: 'Trasporti',
+                    amount: 432.50,
+                    percent: 15,
+                  ),
+                  _CategoryCard(
+                    icon: Icons.restaurant_outlined,
+                    color: AppColors.categoryRestaurant,
+                    name: 'Ristoranti',
+                    amount: 398.00,
+                    percent: 14,
+                  ),
+                  _CategoryCard(
+                    icon: Icons.local_hospital_outlined,
+                    color: AppColors.categoryHealth,
+                    name: 'Salute',
+                    amount: 289.61,
+                    percent: 10,
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
+          // Members breakdown
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Per Membro',
+                    style: GoogleFonts.playfairDisplay(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink,
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '€ 1.234,56',
-                      style: theme.textTheme.headlineLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onPrimaryContainer,
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: AppColors.cream,
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(
+                        color: AppColors.inkFaded.withValues(alpha: 0.15),
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '23 transazioni',
-                      style: theme.textTheme.bodySmall,
+                    child: Column(
+                      children: [
+                        _MemberTile(
+                          name: 'Marco',
+                          initial: 'M',
+                          color: AppColors.terracotta,
+                          amount: 1234.56,
+                          isFirst: true,
+                        ),
+                        Divider(height: 1, color: AppColors.inkFaded.withValues(alpha: 0.1)),
+                        _MemberTile(
+                          name: 'Laura',
+                          initial: 'L',
+                          color: AppColors.copper,
+                          amount: 987.00,
+                        ),
+                        Divider(height: 1, color: AppColors.inkFaded.withValues(alpha: 0.1)),
+                        _MemberTile(
+                          name: 'Giovanni',
+                          initial: 'G',
+                          color: AppColors.gold,
+                          amount: 626.00,
+                          isLast: true,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 16),
+          ),
 
-            // Category breakdown
-            Text('Spese per Categoria', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _CategoryRow(emoji: '🛒', name: 'Spesa', amount: '€ 456,78', percent: 37),
-                    _CategoryRow(emoji: '🏠', name: 'Casa', amount: '€ 320,00', percent: 26),
-                    _CategoryRow(emoji: '🚗', name: 'Trasporti', amount: '€ 180,50', percent: 15),
-                    _CategoryRow(emoji: '⚡', name: 'Bollette', amount: '€ 145,00', percent: 12),
-                    _CategoryRow(emoji: '🍽️', name: 'Ristoranti', amount: '€ 132,28', percent: 10),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 16),
+          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        ],
+      ),
+    );
+  }
+}
 
-            // Members breakdown
-            Text('Spese per Membro', style: theme.textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _MemberRow(name: 'Marco', amount: '€ 567,23', color: Colors.blue),
-                    _MemberRow(name: 'Laura', amount: '€ 445,11', color: Colors.pink),
-                    _MemberRow(name: 'Giovanni', amount: '€ 222,22', color: Colors.green),
-                  ],
-                ),
-              ),
-            ),
-          ],
+class _PeriodTab extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _PeriodTab({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.terracotta : AppColors.cream,
+          borderRadius: BorderRadius.circular(4),
+          border: selected
+              ? null
+              : Border.all(color: AppColors.inkFaded.withValues(alpha: 0.2)),
+        ),
+        child: Text(
+          label,
+          style: GoogleFonts.dmSans(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: selected ? AppColors.cream : AppColors.inkLight,
+          ),
         ),
       ),
     );
   }
 }
 
-class _PeriodChip extends StatelessWidget {
-  final String label;
-  final bool selected;
-  const _PeriodChip({required this.label, required this.selected});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChoiceChip(
-      label: Text(label),
-      selected: selected,
-      onSelected: (_) {},
-    );
-  }
-}
-
-class _CategoryRow extends StatelessWidget {
-  final String emoji;
+class _CategoryCard extends StatelessWidget {
+  final IconData icon;
+  final Color color;
   final String name;
-  final String amount;
+  final double amount;
   final int percent;
-  const _CategoryRow({
-    required this.emoji,
+
+  const _CategoryCard({
+    required this.icon,
+    required this.color,
     required this.name,
     required this.amount,
     required this.percent,
@@ -212,48 +443,147 @@ class _CategoryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.cream,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppColors.inkFaded.withValues(alpha: 0.15)),
+      ),
       child: Row(
         children: [
-          Text(emoji, style: const TextStyle(fontSize: 24)),
-          const SizedBox(width: 12),
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Icon(icon, color: color, size: 24),
+          ),
+          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name),
-                const SizedBox(height: 4),
-                LinearProgressIndicator(
-                  value: percent / 100,
-                  backgroundColor: Colors.grey.shade200,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      name,
+                      style: GoogleFonts.dmSans(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                    Text(
+                      '€ ${amount.toStringAsFixed(2)}',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.ink,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(2),
+                        child: LinearProgressIndicator(
+                          value: percent / 100,
+                          backgroundColor: AppColors.parchmentDark,
+                          valueColor: AlwaysStoppedAnimation<Color>(color),
+                          minHeight: 6,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      '$percent%',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.inkLight,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 12),
-          Text(amount, style: const TextStyle(fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 }
 
-class _MemberRow extends StatelessWidget {
+class _MemberTile extends StatelessWidget {
   final String name;
-  final String amount;
+  final String initial;
   final Color color;
-  const _MemberRow({required this.name, required this.amount, required this.color});
+  final double amount;
+  final bool isFirst;
+  final bool isLast;
+
+  const _MemberTile({
+    required this.name,
+    required this.initial,
+    required this.color,
+    required this.amount,
+    this.isFirst = false,
+    this.isLast = false,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ListTile(
-      leading: CircleAvatar(
-        backgroundColor: color,
-        child: Text(name[0], style: const TextStyle(color: Colors.white)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Center(
+              child: Text(
+                initial,
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 20,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Text(
+              name,
+              style: GoogleFonts.dmSans(
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                color: AppColors.ink,
+              ),
+            ),
+          ),
+          Text(
+            '€ ${amount.toStringAsFixed(2)}',
+            style: GoogleFonts.jetBrainsMono(
+              fontSize: 16,
+              fontWeight: FontWeight.w700,
+              color: AppColors.ink,
+            ),
+          ),
+        ],
       ),
-      title: Text(name),
-      trailing: Text(amount, style: const TextStyle(fontWeight: FontWeight.bold)),
     );
   }
 }
@@ -264,21 +594,28 @@ class _DemoExpenseList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final expenses = [
-      _ExpenseData('Supermercato Esselunga', '🛒', 78.45, DateTime.now()),
-      _ExpenseData('Benzina', '🚗', 65.00, DateTime.now().subtract(const Duration(days: 1))),
-      _ExpenseData('Bolletta Gas', '⚡', 89.50, DateTime.now().subtract(const Duration(days: 2))),
-      _ExpenseData('Ristorante Da Mario', '🍽️', 45.00, DateTime.now().subtract(const Duration(days: 3))),
-      _ExpenseData('Farmacia', '💊', 23.80, DateTime.now().subtract(const Duration(days: 4))),
-      _ExpenseData('Cinema', '🎬', 32.00, DateTime.now().subtract(const Duration(days: 5))),
-      _ExpenseData('Abbigliamento', '👕', 89.99, DateTime.now().subtract(const Duration(days: 6))),
+      _ExpenseData('Esselunga', Icons.shopping_basket, AppColors.categoryGrocery, 78.45, DateTime.now(), 'Alimentari'),
+      _ExpenseData('ENI Stazione', Icons.local_gas_station, AppColors.categoryTransport, 65.00, DateTime.now().subtract(const Duration(days: 1)), 'Trasporti'),
+      _ExpenseData('Bolletta Enel', Icons.bolt, AppColors.categoryBills, 89.50, DateTime.now().subtract(const Duration(days: 2)), 'Utenze'),
+      _ExpenseData('Trattoria Romana', Icons.restaurant, AppColors.categoryRestaurant, 45.00, DateTime.now().subtract(const Duration(days: 3)), 'Ristoranti'),
+      _ExpenseData('Farmacia Centrale', Icons.medical_services, AppColors.categoryHealth, 23.80, DateTime.now().subtract(const Duration(days: 4)), 'Salute'),
+      _ExpenseData('UCI Cinema', Icons.movie, AppColors.categoryEntertainment, 32.00, DateTime.now().subtract(const Duration(days: 5)), 'Svago'),
+      _ExpenseData('Zara', Icons.checkroom, AppColors.categoryClothing, 89.99, DateTime.now().subtract(const Duration(days: 6)), 'Abbigliamento'),
     ];
 
     return Scaffold(
+      backgroundColor: AppColors.parchment,
       appBar: AppBar(
-        title: const Text('Spese'),
+        title: Text(
+          'Spese',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list),
+            icon: const Icon(Icons.tune),
             onPressed: () {},
           ),
           IconButton(
@@ -288,30 +625,124 @@ class _DemoExpenseList extends StatelessWidget {
         ],
       ),
       body: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
         itemCount: expenses.length,
         itemBuilder: (context, index) {
           final expense = expenses[index];
-          return Card(
-            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-            child: ListTile(
-              leading: CircleAvatar(
-                backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                child: Text(expense.emoji, style: const TextStyle(fontSize: 20)),
-              ),
-              title: Text(expense.description),
-              subtitle: Text(_formatDate(expense.date)),
-              trailing: Text(
-                '€ ${expense.amount.toStringAsFixed(2)}',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('Demo: Dettaglio ${expense.description}')),
-                );
-              },
-            ),
-          );
+          return _ExpenseCard(expense: expense);
         },
+      ),
+    );
+  }
+}
+
+class _ExpenseData {
+  final String description;
+  final IconData icon;
+  final Color color;
+  final double amount;
+  final DateTime date;
+  final String category;
+
+  _ExpenseData(this.description, this.icon, this.color, this.amount, this.date, this.category);
+}
+
+class _ExpenseCard extends StatelessWidget {
+  final _ExpenseData expense;
+
+  const _ExpenseCard({required this.expense});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.cream,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppColors.inkFaded.withValues(alpha: 0.12)),
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Dettaglio: ${expense.description}'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(4),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: expense.color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Icon(expense.icon, color: expense.color, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        expense.description,
+                        style: GoogleFonts.dmSans(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.ink,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            expense.category,
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              color: expense.color,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            width: 4,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: AppColors.inkFaded,
+                              borderRadius: BorderRadius.circular(2),
+                            ),
+                          ),
+                          Text(
+                            _formatDate(expense.date),
+                            style: GoogleFonts.dmSans(
+                              fontSize: 12,
+                              color: AppColors.inkFaded,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '€ ${expense.amount.toStringAsFixed(2)}',
+                  style: GoogleFonts.jetBrainsMono(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -321,16 +752,8 @@ class _DemoExpenseList extends StatelessWidget {
     final diff = now.difference(date).inDays;
     if (diff == 0) return 'Oggi';
     if (diff == 1) return 'Ieri';
-    return '${date.day}/${date.month}/${date.year}';
+    return '${date.day}/${date.month}';
   }
-}
-
-class _ExpenseData {
-  final String description;
-  final String emoji;
-  final double amount;
-  final DateTime date;
-  _ExpenseData(this.description, this.emoji, this.amount, this.date);
 }
 
 class _DemoScanner extends StatelessWidget {
@@ -339,25 +762,82 @@ class _DemoScanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Scansiona Scontrino')),
+      backgroundColor: AppColors.parchment,
+      appBar: AppBar(
+        title: Text(
+          'Scansiona',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.camera_alt, size: 100, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(height: 24),
-            const Text('Inquadra uno scontrino'),
-            const SizedBox(height: 16),
-            ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Demo: Scansione scontrino')),
-                );
-              },
-              icon: const Icon(Icons.camera),
-              label: const Text('Scatta Foto'),
-            ),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  color: AppColors.terracotta.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: AppColors.terracotta.withValues(alpha: 0.3),
+                    width: 2,
+                  ),
+                ),
+                child: Icon(
+                  Icons.document_scanner_outlined,
+                  size: 80,
+                  color: AppColors.terracotta,
+                ),
+              ),
+              const SizedBox(height: 32),
+              Text(
+                'Scansione Scontrino',
+                style: GoogleFonts.playfairDisplay(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'Inquadra lo scontrino per estrarre\nautomaticamente i dati della spesa',
+                textAlign: TextAlign.center,
+                style: GoogleFonts.dmSans(
+                  fontSize: 15,
+                  color: AppColors.inkLight,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 40),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Demo: Scansione non disponibile'),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.camera_alt),
+                  label: const Text('SCATTA FOTO'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.photo_library_outlined),
+                label: const Text('Scegli dalla galleria'),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -369,82 +849,229 @@ class _DemoGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final members = [
-      ('Marco', 'marco@example.com', Colors.blue, true),
-      ('Laura', 'laura@example.com', Colors.pink, false),
-      ('Giovanni', 'giovanni@example.com', Colors.green, false),
-    ];
-
     return Scaffold(
+      backgroundColor: AppColors.parchment,
       appBar: AppBar(
-        title: const Text('Famiglia Rossi'),
+        title: Text(
+          'Famiglia Rossi',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         actions: [
-          IconButton(icon: const Icon(Icons.settings), onPressed: () {}),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined),
+            onPressed: () {},
+          ),
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Invite code card
-            Card(
-              color: Theme.of(context).colorScheme.primaryContainer,
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    const Text('Codice Invito'),
-                    const SizedBox(height: 8),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          'FAM-ABC123',
-                          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.copy),
-                          onPressed: () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Codice copiato!')),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                    const Text(
-                      'Condividi questo codice per invitare membri',
-                      style: TextStyle(fontSize: 12),
-                    ),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.terracotta,
+                    AppColors.terracottaDark,
                   ],
+                ),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Column(
+                children: [
+                  Text(
+                    'CODICE INVITO',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.cream.withValues(alpha: 0.8),
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'FAM-XK9P2',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 28,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.cream,
+                          letterSpacing: 3,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: Icon(Icons.copy, color: AppColors.cream.withValues(alpha: 0.8)),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Codice copiato negli appunti'),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Condividi questo codice per invitare nuovi membri',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 12,
+                      color: AppColors.cream.withValues(alpha: 0.7),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+
+            // Members section
+            Text(
+              'Membri',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: AppColors.ink,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _GroupMemberCard(
+              name: 'Marco Rossi',
+              email: 'marco@esempio.it',
+              initial: 'M',
+              color: AppColors.terracotta,
+              isAdmin: true,
+            ),
+            _GroupMemberCard(
+              name: 'Laura Rossi',
+              email: 'laura@esempio.it',
+              initial: 'L',
+              color: AppColors.copper,
+              isAdmin: false,
+            ),
+            _GroupMemberCard(
+              name: 'Giovanni Rossi',
+              email: 'giovanni@esempio.it',
+              initial: 'G',
+              color: AppColors.gold,
+              isAdmin: false,
+            ),
+
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () {},
+                icon: const Icon(Icons.person_add_outlined),
+                label: const Text('INVITA MEMBRO'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupMemberCard extends StatelessWidget {
+  final String name;
+  final String email;
+  final String initial;
+  final Color color;
+  final bool isAdmin;
+
+  const _GroupMemberCard({
+    required this.name,
+    required this.email,
+    required this.initial,
+    required this.color,
+    required this.isAdmin,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: AppColors.cream,
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: AppColors.inkFaded.withValues(alpha: 0.12)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Center(
+                child: Text(
+                  initial,
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
-            const SizedBox(height: 24),
-
-            // Members list
-            Text('Membri (${members.length})', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            ...members.map((m) => Card(
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: m.$3,
-                  child: Text(m.$1[0], style: const TextStyle(color: Colors.white)),
-                ),
-                title: Text(m.$1),
-                subtitle: Text(m.$2),
-                trailing: m.$4
-                    ? Chip(
-                        label: const Text('Admin'),
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-                      )
-                    : null,
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    name,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.ink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    email,
+                    style: GoogleFonts.dmSans(
+                      fontSize: 13,
+                      color: AppColors.inkFaded,
+                    ),
+                  ),
+                ],
               ),
-            )),
+            ),
+            if (isAdmin)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.terracotta.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  'ADMIN',
+                  style: GoogleFonts.dmSans(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.terracotta,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
@@ -458,66 +1085,215 @@ class _DemoProfile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Profilo')),
+      backgroundColor: AppColors.parchment,
+      appBar: AppBar(
+        title: Text(
+          'Profilo',
+          style: GoogleFonts.playfairDisplay(
+            fontSize: 24,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const CircleAvatar(
-              radius: 50,
-              child: Icon(Icons.person, size: 50),
+            const SizedBox(height: 20),
+            // Profile avatar
+            Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: AppColors.terracotta,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Center(
+                child: Text(
+                  'M',
+                  style: GoogleFonts.playfairDisplay(
+                    fontSize: 44,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
             ),
-            const SizedBox(height: 16),
-            Text('Marco Rossi', style: Theme.of(context).textTheme.headlineSmall),
-            const Text('marco.rossi@example.com'),
+            const SizedBox(height: 20),
+            Text(
+              'Marco Rossi',
+              style: GoogleFonts.playfairDisplay(
+                fontSize: 26,
+                fontWeight: FontWeight.w600,
+                color: AppColors.ink,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'marco.rossi@esempio.it',
+              style: GoogleFonts.dmSans(
+                fontSize: 14,
+                color: AppColors.inkLight,
+              ),
+            ),
             const SizedBox(height: 32),
 
-            Card(
+            // Settings sections
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.cream,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: AppColors.inkFaded.withValues(alpha: 0.12)),
+              ),
               child: Column(
                 children: [
-                  ListTile(
-                    leading: const Icon(Icons.edit),
-                    title: const Text('Modifica Profilo'),
-                    trailing: const Icon(Icons.chevron_right),
+                  _SettingsTile(
+                    icon: Icons.edit_outlined,
+                    title: 'Modifica Profilo',
                     onTap: () {},
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.notifications),
-                    title: const Text('Notifiche'),
-                    trailing: const Icon(Icons.chevron_right),
+                  Divider(height: 1, color: AppColors.inkFaded.withValues(alpha: 0.1)),
+                  _SettingsTile(
+                    icon: Icons.notifications_outlined,
+                    title: 'Notifiche',
                     onTap: () {},
                   ),
-                  ListTile(
-                    leading: const Icon(Icons.dark_mode),
-                    title: const Text('Tema'),
-                    trailing: const Icon(Icons.chevron_right),
+                  Divider(height: 1, color: AppColors.inkFaded.withValues(alpha: 0.1)),
+                  _SettingsTile(
+                    icon: Icons.palette_outlined,
+                    title: 'Tema',
+                    trailing: Text(
+                      'Sistema',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 14,
+                        color: AppColors.inkFaded,
+                      ),
+                    ),
+                    onTap: () {},
+                  ),
+                  Divider(height: 1, color: AppColors.inkFaded.withValues(alpha: 0.1)),
+                  _SettingsTile(
+                    icon: Icons.language_outlined,
+                    title: 'Lingua',
+                    trailing: Text(
+                      'Italiano',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 14,
+                        color: AppColors.inkFaded,
+                      ),
+                    ),
                     onTap: () {},
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            Card(
-              child: ListTile(
-                leading: const Icon(Icons.logout, color: Colors.red),
-                title: const Text('Esci', style: TextStyle(color: Colors.red)),
+            Container(
+              decoration: BoxDecoration(
+                color: AppColors.cream,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.2)),
+              ),
+              child: _SettingsTile(
+                icon: Icons.logout,
+                iconColor: AppColors.error,
+                title: 'Esci',
+                titleColor: AppColors.error,
                 onTap: () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Demo: Logout')),
+                    const SnackBar(
+                      content: Text('Demo: Logout non disponibile'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
                   );
                 },
               ),
             ),
-            const SizedBox(height: 32),
-            const Text(
-              'DEMO MODE',
-              style: TextStyle(color: Colors.orange, fontWeight: FontWeight.bold),
+
+            const SizedBox(height: 40),
+            // Demo mode badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.gold.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: AppColors.gold.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.science_outlined, size: 18, color: AppColors.gold),
+                  const SizedBox(width: 8),
+                  Text(
+                    'MODALITÀ DEMO',
+                    style: GoogleFonts.jetBrainsMono(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.gold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const Text(
-              'UI Preview - Nessun database connesso',
-              style: TextStyle(color: Colors.grey, fontSize: 12),
+            const SizedBox(height: 8),
+            Text(
+              'UI Preview • Nessun database connesso',
+              style: GoogleFonts.dmSans(
+                fontSize: 12,
+                color: AppColors.inkFaded,
+              ),
             ),
+            const SizedBox(height: 40),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsTile extends StatelessWidget {
+  final IconData icon;
+  final Color? iconColor;
+  final String title;
+  final Color? titleColor;
+  final Widget? trailing;
+  final VoidCallback onTap;
+
+  const _SettingsTile({
+    required this.icon,
+    this.iconColor,
+    required this.title,
+    this.titleColor,
+    this.trailing,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(icon, color: iconColor ?? AppColors.inkLight, size: 22),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Text(
+                  title,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                    color: titleColor ?? AppColors.ink,
+                  ),
+                ),
+              ),
+              trailing ?? Icon(Icons.chevron_right, color: AppColors.inkFaded, size: 22),
+            ],
+          ),
         ),
       ),
     );
