@@ -76,6 +76,7 @@ coverage/
 *.keystore
 google-services.json
 GoogleService-Info.plist
+run_with_supabase.ps1
 
 # Drift database
 *.sqlite

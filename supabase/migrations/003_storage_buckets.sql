@@ -35,7 +35,7 @@ USING (
     AND p.group_id IS NOT NULL
     AND EXISTS (
       SELECT 1 FROM public.expenses e
-      WHERE e.receipt_url LIKE '%' || storage.objects.name
+      WHERE e.receipt_image_url LIKE '%' || storage.objects.name
       AND e.group_id = p.group_id
     )
   )
@@ -80,7 +80,7 @@ BEGIN
     SELECT 1 FROM public.profiles p
     JOIN public.expenses e ON e.group_id = p.group_id
     WHERE p.id = auth.uid()
-    AND e.receipt_url LIKE '%' || receipt_path
+    AND e.receipt_image_url LIKE '%' || receipt_path
   ) THEN
     RAISE EXCEPTION 'Access denied to receipt';
   END IF;
