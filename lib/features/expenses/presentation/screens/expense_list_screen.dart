@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+
+import '../../domain/entities/expense_entity.dart';
 
 import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
@@ -18,6 +22,10 @@ class ExpenseListScreen extends ConsumerStatefulWidget {
 class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
   final ScrollController _scrollController = ScrollController();
 
+  /// Pending delete state for undo functionality
+  ExpenseEntity? _pendingDelete;
+  Timer? _deleteTimer;
+
   @override
   void initState() {
     super.initState();
@@ -31,6 +39,11 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    // Ensure pending delete is executed before disposing
+    if (_deleteTimer != null && _pendingDelete != null) {
+      _deleteTimer?.cancel();
+      _executeFinalDelete(_pendingDelete!.id);
+    }
     super.dispose();
   }
 
@@ -119,6 +132,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
             key: Key(expense.id),
             direction: DismissDirection.endToStart,
             confirmDismiss: (direction) => _showDeleteConfirmDialog(context),
+            onDismissed: (direction) => _handleSwipeDelete(expense),
             background: Container(
               alignment: Alignment.centerRight,
               padding: const EdgeInsets.only(right: 24),
@@ -162,6 +176,67 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
         ],
       ),
     );
+  }
+
+  /// Handles the swipe delete with delayed delete pattern for undo capability
+  void _handleSwipeDelete(ExpenseEntity expense) {
+    // Cancel any existing pending delete
+    _deleteTimer?.cancel();
+
+    // Store the expense for potential undo
+    _pendingDelete = expense;
+
+    // Item is already removed from UI by Dismissible widget
+    // We need to update the provider state
+    ref.read(expenseListProvider.notifier).removeExpenseFromList(expense.id);
+
+    // Start timer for actual backend deletion
+    _deleteTimer = Timer(const Duration(seconds: 5), () {
+      _executeFinalDelete(expense.id);
+    });
+
+    // Show SnackBar with undo option
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Spesa eliminata'),
+        duration: const Duration(seconds: 5),
+        action: SnackBarAction(
+          label: 'Annulla',
+          onPressed: _undoDelete,
+        ),
+      ),
+    );
+  }
+
+  /// Restores the pending delete expense when undo is pressed
+  void _undoDelete() {
+    _deleteTimer?.cancel();
+    if (_pendingDelete != null) {
+      ref.read(expenseListProvider.notifier).addExpense(_pendingDelete!);
+      _pendingDelete = null;
+    }
+  }
+
+  /// Executes the actual backend deletion
+  Future<void> _executeFinalDelete(String expenseId) async {
+    final success = await ref.read(expenseFormProvider.notifier).deleteExpense(
+          expenseId: expenseId,
+        );
+
+    if (!success && mounted) {
+      // If delete failed, show error and refresh list to restore item
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Errore durante l\'eliminazione'),
+          backgroundColor: Theme.of(context).colorScheme.error,
+        ),
+      );
+      // Refresh list to restore the item from backend
+      ref.read(expenseListProvider.notifier).refresh();
+    }
+
+    _pendingDelete = null;
   }
 
   void _showFilterDialog(BuildContext context) {
