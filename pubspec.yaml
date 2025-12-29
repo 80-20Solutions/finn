@@ -46,6 +46,9 @@ dependencies:
   dartz: ^0.10.1
   uuid: ^4.0.0
 
+  # Share Intent
+  receive_sharing_intent: ^1.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
