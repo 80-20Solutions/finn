@@ -297,9 +297,9 @@ class _CameraScreenState extends ConsumerState<CameraScreen>
 class _ReceiptFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    // Calculate frame dimensions
-    final frameWidth = size.width * 0.85;
-    final frameHeight = size.height * 0.6;
+    // Calculate frame dimensions - near full-screen for better receipt capture
+    final frameWidth = size.width * 0.95;
+    final frameHeight = size.height * 0.85;
     final left = (size.width - frameWidth) / 2;
     final top = (size.height - frameHeight) / 2;
 
