@@ -227,20 +227,25 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
 
   /// Executes the actual backend deletion
   Future<void> _executeFinalDelete(String expenseId) async {
+    final expenseToDelete = _pendingDelete;
+
     final success = await ref.read(expenseFormProvider.notifier).deleteExpense(
           expenseId: expenseId,
         );
 
     if (!success && mounted) {
-      // If delete failed, show error and refresh list to restore item
+      // If delete failed, restore the item directly to the list
+      // This works even when network is unavailable (no refresh needed)
+      if (expenseToDelete != null) {
+        ref.read(expenseListProvider.notifier).addExpense(expenseToDelete);
+      }
+      // Show error SnackBar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Errore durante l\'eliminazione'),
           backgroundColor: Theme.of(context).colorScheme.error,
         ),
       );
-      // Refresh list to restore the item from backend
-      ref.read(expenseListProvider.notifier).refresh();
     }
 
     _pendingDelete = null;
