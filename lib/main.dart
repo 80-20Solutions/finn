@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'app/app.dart';
 import 'core/config/env.dart';
+import 'shared/services/share_intent_service.dart';
 
 /// Demo mode flag - set via --dart-define=DEMO_MODE=true
 const bool kDemoMode = bool.fromEnvironment('DEMO_MODE', defaultValue: false);
@@ -19,6 +20,9 @@ Future<void> main() async {
   // Initialize Hive for local caching
   await Hive.initFlutter();
   await Hive.openBox<String>('dashboard_cache');
+
+  // Initialize share intent service for receiving images from other apps
+  await ShareIntentService.initialize();
 
   if (!kDemoMode) {
     // Validate environment in development

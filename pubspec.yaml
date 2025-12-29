@@ -48,6 +48,9 @@ dependencies:
   uuid: ^4.0.0
   flutter_dotenv: ^5.1.0
 
+  # Share Intent
+  receive_sharing_intent: ^1.8.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
