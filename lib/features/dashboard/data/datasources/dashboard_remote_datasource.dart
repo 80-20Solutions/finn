@@ -62,7 +62,11 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
       final expenses = await query;
 
       // Fetch member names separately
-      final memberIds = expenses.map((e) => e['paid_by'] as String).toSet().toList();
+      final memberIds = expenses
+          .where((e) => e['paid_by'] != null)
+          .map((e) => e['paid_by'] as String)
+          .toSet()
+          .toList();
       final memberNames = <String, String>{};
 
       if (memberIds.isNotEmpty) {
@@ -91,8 +95,8 @@ class DashboardRemoteDataSourceImpl implements DashboardRemoteDataSource {
         final amount = (expense['amount'] as num).toDouble();
         final category = expense['category'] as String? ?? 'altro';
         final date = expense['date'] as String;
-        final paidBy = expense['paid_by'] as String;
-        final displayName = memberNames[paidBy] ?? 'Utente';
+        final paidBy = expense['paid_by'] as String? ?? 'unknown';
+        final displayName = memberNames[paidBy] ?? 'Utente sconosciuto';
 
         totalAmount += amount;
 

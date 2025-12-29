@@ -176,6 +176,8 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
             'group_id': groupId,
             'created_by': userId,
             'created_by_name': displayName ?? 'Utente',
+            'paid_by': userId,
+            'paid_by_name': displayName ?? 'Utente',
             'amount': amount,
             'date': date.toIso8601String().split('T')[0],
             'category': category,

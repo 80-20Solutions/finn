@@ -58,7 +58,7 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen> {
 
     if (expense != null && mounted) {
       listNotifier.addExpense(expense);
-      context.go('/expenses');
+      context.pop(); // Return to previous screen (MainNavigationScreen with Spese tab)
     }
   }
 

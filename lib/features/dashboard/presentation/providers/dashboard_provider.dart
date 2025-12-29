@@ -110,6 +110,9 @@ class DashboardNotifier extends StateNotifier<DashboardState> {
     if (_groupId == null) return;
     if (!mounted) return;
 
+    // Prevent duplicate loads
+    if (state.isLoading) return;
+
     state = state.copyWith(status: DashboardStatus.loading, errorMessage: null);
 
     // Try to load from cache first for faster display
@@ -217,10 +220,22 @@ final dashboardProvider =
   final currentUser = Supabase.instance.client.auth.currentUser;
   final notifier = DashboardNotifier(repository, currentUser?.id);
 
-  // Watch group state to get group ID
-  final groupState = ref.watch(groupProvider);
+  // Listen to group changes and auto-load stats (use listen to avoid provider recreation)
+  ref.listen<GroupState>(groupProvider, (previous, next) {
+    if (next.group != null) {
+      notifier.setGroupId(next.group!.id);
+      // Only load if group actually changed
+      if (previous?.group?.id != next.group!.id) {
+        Future.microtask(() => notifier.loadStats());
+      }
+    }
+  });
+
+  // Initial setup if group is already available
+  final groupState = ref.read(groupProvider);
   if (groupState.group != null) {
     notifier.setGroupId(groupState.group!.id);
+    Future.microtask(() => notifier.loadStats());
   }
 
   return notifier;

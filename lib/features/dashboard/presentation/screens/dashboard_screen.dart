@@ -24,26 +24,12 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  String? _lastGroupId;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
     _tabController.addListener(_onTabChanged);
-
-    // Load dashboard stats on init if group is already available
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _tryLoadStats();
-    });
-  }
-
-  void _tryLoadStats() {
-    final groupState = ref.read(groupProvider);
-    if (groupState.group != null) {
-      _lastGroupId = groupState.group!.id;
-      ref.read(dashboardProvider.notifier).loadStats();
-    }
   }
 
   @override
@@ -66,15 +52,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   Widget build(BuildContext context) {
     final dashboardState = ref.watch(dashboardProvider);
     final groupState = ref.watch(groupProvider);
-
-    // Load stats when group becomes available or changes
-    final currentGroupId = groupState.group?.id;
-    if (currentGroupId != null && currentGroupId != _lastGroupId) {
-      _lastGroupId = currentGroupId;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        ref.read(dashboardProvider.notifier).loadStats();
-      });
-    }
 
     return Scaffold(
       appBar: AppBar(
