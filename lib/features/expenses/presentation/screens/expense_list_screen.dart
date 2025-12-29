@@ -115,9 +115,23 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
           }
 
           final expense = listState.expenses[index];
-          return ExpenseListItem(
-            expense: expense,
-            onTap: () => context.go('/expense/${expense.id}'),
+          return Dismissible(
+            key: Key(expense.id),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              alignment: Alignment.centerRight,
+              padding: const EdgeInsets.only(right: 24),
+              color: Theme.of(context).colorScheme.error,
+              child: Icon(
+                Icons.delete,
+                color: Theme.of(context).colorScheme.onError,
+                size: 28,
+              ),
+            ),
+            child: ExpenseListItem(
+              expense: expense,
+              onTap: () => context.go('/expense/${expense.id}'),
+            ),
           );
         },
       ),
