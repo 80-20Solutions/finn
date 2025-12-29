@@ -61,7 +61,7 @@ class ScannerRemoteDataSourceImpl implements ScannerRemoteDataSource {
     if (lowerMessage.contains('no text detected')) {
       return 'Nessun testo rilevato. Assicurati che lo scontrino sia ben illuminato e a fuoco.';
     }
-    if (lowerMessage.contains('api key')) {
+    if (lowerMessage.contains('api key') || lowerMessage.contains('service account')) {
       return 'Servizio di scansione non configurato correttamente.';
     }
     if (lowerMessage.contains('image')) {

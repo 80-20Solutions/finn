@@ -2,8 +2,10 @@
 // Extracts amount, date, and merchant information from receipt images
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { create, getNumericDate } from "https://deno.land/x/djwt@v3.0.2/mod.ts";
 
 const GOOGLE_VISION_API_URL = "https://vision.googleapis.com/v1/images:annotate";
+const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
 interface ScanResult {
   amount: number | null;
@@ -158,7 +160,150 @@ function calculateConfidence(result: ScanResult): number {
   return Math.min(score, 100);
 }
 
-async function callGoogleVisionAPI(imageBase64: string, apiKey: string): Promise<string> {
+function base64ToArrayBuffer(base64: string): ArrayBuffer {
+  // Use Deno's native base64 decoder
+  const decoder = new TextDecoder('utf-8');
+
+  // Decode using standard base64
+  try {
+    // Method 1: Try atob first
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  } catch (e) {
+    // Method 2: Fallback - manual base64 decode
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=';
+    let output = '';
+    let i = 0;
+
+    base64 = base64.replace(/[^A-Za-z0-9\+\/\=]/g, '');
+
+    while (i < base64.length) {
+      const enc1 = chars.indexOf(base64.charAt(i++));
+      const enc2 = chars.indexOf(base64.charAt(i++));
+      const enc3 = chars.indexOf(base64.charAt(i++));
+      const enc4 = chars.indexOf(base64.charAt(i++));
+
+      const chr1 = (enc1 << 2) | (enc2 >> 4);
+      const chr2 = ((enc2 & 15) << 4) | (enc3 >> 2);
+      const chr3 = ((enc3 & 3) << 6) | enc4;
+
+      output = output + String.fromCharCode(chr1);
+
+      if (enc3 !== 64) {
+        output = output + String.fromCharCode(chr2);
+      }
+      if (enc4 !== 64) {
+        output = output + String.fromCharCode(chr3);
+      }
+    }
+
+    const bytes = new Uint8Array(output.length);
+    for (let i = 0; i < output.length; i++) {
+      bytes[i] = output.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+}
+
+async function getAccessToken(serviceAccountJson: string): Promise<string> {
+  try {
+    console.log('Raw secret first 200 chars:', serviceAccountJson.substring(0, 200));
+    console.log('Raw secret last 100 chars:', serviceAccountJson.substring(serviceAccountJson.length - 100));
+
+    const serviceAccount = JSON.parse(serviceAccountJson);
+
+    // Normalize private key - ensure proper newlines
+    let privateKeyPem = serviceAccount.private_key;
+
+    console.log('Private key type:', typeof privateKeyPem);
+    console.log('Private key length:', privateKeyPem?.length);
+    console.log('Private key starts with:', privateKeyPem?.substring(0, 80));
+    console.log('Private key ends with:', privateKeyPem?.substring(privateKeyPem.length - 80));
+
+    // Check for common issues
+    console.log('Contains \\n:', privateKeyPem.includes('\\n'));
+    console.log('Contains actual newline:', privateKeyPem.includes('\n'));
+    console.log('Contains double backslash:', privateKeyPem.includes('\\\\'));
+
+    // Use regex to find header and footer (handles any spacing variations)
+    const headerRegex = /-----BEGIN\s+PRIVATE\s+KEY-----/;
+    const footerRegex = /-----END\s+PRIVATE\s+KEY-----/;
+
+    const headerMatch = privateKeyPem.match(headerRegex);
+    const footerMatch = privateKeyPem.match(footerRegex);
+
+    if (!headerMatch) {
+      throw new Error('Invalid PEM format: missing header');
+    }
+
+    if (!footerMatch) {
+      throw new Error('Invalid PEM format: missing footer');
+    }
+
+    const headerIndex = headerMatch.index!;
+    const footerIndex = footerMatch.index!;
+
+    // Extract everything between header and footer, then remove ALL whitespace
+    const startIndex = headerIndex + headerMatch[0].length;
+    const pemContents = privateKeyPem
+      .substring(startIndex, footerIndex)
+      .replace(/\s/g, '')  // Remove ALL whitespace
+      .trim();
+
+    console.log('PEM contents length:', pemContents.length);
+    console.log('PEM contents first 50 chars:', pemContents.substring(0, 50));
+
+    // Convert to ArrayBuffer
+    const binaryDer = base64ToArrayBuffer(pemContents);
+
+    // Import the key
+    const cryptoKey = await crypto.subtle.importKey(
+      'pkcs8',
+      binaryDer,
+      { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+
+    // Create JWT claims
+    const payload = {
+      iss: serviceAccount.client_email,
+      scope: "https://www.googleapis.com/auth/cloud-vision",
+      aud: GOOGLE_TOKEN_URL,
+      exp: getNumericDate(3600), // 1 hour
+      iat: getNumericDate(0),
+    };
+
+    // Create signed JWT with CryptoKey
+    const jwt = await create({ alg: "RS256", typ: "JWT" }, payload, cryptoKey);
+
+    // Exchange JWT for access token
+    const response = await fetch(GOOGLE_TOKEN_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+        assertion: jwt,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`Failed to get access token: ${error}`);
+    }
+
+    const data = await response.json();
+    return data.access_token;
+  } catch (error) {
+    throw new Error(`Service account authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+}
+
+async function callGoogleVisionAPI(imageBase64: string, accessToken: string): Promise<string> {
   const requestBody = {
     requests: [
       {
@@ -178,9 +323,10 @@ async function callGoogleVisionAPI(imageBase64: string, apiKey: string): Promise
     ],
   };
 
-  const response = await fetch(`${GOOGLE_VISION_API_URL}?key=${apiKey}`, {
+  const response = await fetch(GOOGLE_VISION_API_URL, {
     method: "POST",
     headers: {
+      "Authorization": `Bearer ${accessToken}`,
       "Content-Type": "application/json",
     },
     body: JSON.stringify(requestBody),
@@ -215,11 +361,11 @@ serve(async (req: Request) => {
   }
 
   try {
-    // Get Google Vision API key from environment
-    const apiKey = Deno.env.get("GOOGLE_VISION_API_KEY");
-    if (!apiKey) {
+    // Get Google Service Account JSON from environment
+    const serviceAccountJson = Deno.env.get("GOOGLE_SERVICE_ACCOUNT_JSON");
+    if (!serviceAccountJson) {
       return new Response(
-        JSON.stringify({ error: "Google Vision API key not configured", code: "config_error" } as ErrorResponse),
+        JSON.stringify({ error: "Google Service Account not configured", code: "config_error" } as ErrorResponse),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -237,8 +383,11 @@ serve(async (req: Request) => {
     // Remove data URL prefix if present
     const base64Image = image.replace(/^data:image\/\w+;base64,/, "");
 
+    // Get access token from service account
+    const accessToken = await getAccessToken(serviceAccountJson);
+
     // Call Google Vision API
-    const extractedText = await callGoogleVisionAPI(base64Image, apiKey);
+    const extractedText = await callGoogleVisionAPI(base64Image, accessToken);
 
     // Parse the extracted text
     const result: ScanResult = {
