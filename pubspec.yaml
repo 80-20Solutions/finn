@@ -45,6 +45,7 @@ dependencies:
   equatable: ^2.0.5
   dartz: ^0.10.1
   uuid: ^4.0.0
+  flutter_dotenv: ^5.1.0
 
 dev_dependencies:
   flutter_test:
@@ -69,3 +70,6 @@ flutter_launcher_icons:
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - .env
