@@ -48,8 +48,11 @@ const monthMap: Record<string, string> = {
 
 // Amount patterns for Italian receipts - ordered by priority (most specific first)
 const amountPatterns = [
-  // PRIORITY 1: Explicit total keywords
-  /(?:TOTALE|TOT\.?|TOTAL|DA PAGARE|IMPORTO)\s*[:=]?\s*(?:EUR|€)?\s*(\d+[,\.]\d{2})/gi,
+  // PRIORITY 0: Most explicit total with currency (highest priority)
+  /(?:TOTALE|TOT\.?|TOTAL|DA PAGARE|IMPORTO)\s+(?:COMPLESSIVO|GENERALE|FINALE?)?\s*(?:EUR|€|EURO)\s*(\d+[,\.]\d{2})/gi,
+
+  // PRIORITY 1: Total keywords without explicit currency
+  /(?:TOTALE|TOT\.?|TOTAL|DA PAGARE|IMPORTO)\s*[:=]?\s*(\d+[,\.]\d{2})/gi,
 
   // PRIORITY 2: Payment keywords
   /(?:PAGATO|CONTANTI|CONTANTE|CARTA|BANCOMAT|POS)\s*[:=]?\s*(?:EUR|€)?\s*(\d+[,\.]\d{2})/gi,
@@ -91,15 +94,21 @@ function extractAmount(text: string): number | null {
     return null;
   }
 
-  // Sort by priority (lower is better), then by position (later in text is better for totals)
+  // Sort by priority (lower is better), then by position (later in text), then by amount (higher)
   candidates.sort((a, b) => {
+    // First sort by priority
     if (a.priority !== b.priority) {
       return a.priority - b.priority;
     }
-    return b.position - a.position;
+    // Then by position (later in text is better for totals)
+    if (a.position !== b.position) {
+      return b.position - a.position;
+    }
+    // Finally by amount (higher is better when same priority and position)
+    return b.amount - a.amount;
   });
 
-  // Return the best candidate (highest priority, latest in text)
+  // Return the best candidate (highest priority, latest in text, highest amount)
   return candidates[0].amount;
 }
 
