@@ -46,33 +46,61 @@ const monthMap: Record<string, string> = {
   'DIC': '12', 'DICEMBRE': '12',
 };
 
-// Amount patterns for Italian receipts
+// Amount patterns for Italian receipts - ordered by priority (most specific first)
 const amountPatterns = [
-  // EUR or € followed by amount
-  /(?:EUR|€)\s*(\d+[,\.]\d{2})/i,
-  // TOTALE or TOT followed by amount
-  /(?:TOTALE|TOT\.?|TOTAL)\s*[:=]?\s*(?:EUR|€)?\s*(\d+[,\.]\d{2})/i,
-  // Amount followed by EUR or €
-  /(\d+[,\.]\d{2})\s*(?:EUR|€)/i,
-  // DA PAGARE or IMPORTO
-  /(?:DA PAGARE|IMPORTO|PAGATO)\s*[:=]?\s*(?:EUR|€)?\s*(\d+[,\.]\d{2})/i,
-  // Standalone amount at end of line (common for totals)
-  /^\s*(\d+[,\.]\d{2})\s*$/m,
+  // PRIORITY 1: Explicit total keywords
+  /(?:TOTALE|TOT\.?|TOTAL|DA PAGARE|IMPORTO)\s*[:=]?\s*(?:EUR|€)?\s*(\d+[,\.]\d{2})/gi,
+
+  // PRIORITY 2: Payment keywords
+  /(?:PAGATO|CONTANTI|CONTANTE|CARTA|BANCOMAT|POS)\s*[:=]?\s*(?:EUR|€)?\s*(\d+[,\.]\d{2})/gi,
+
+  // PRIORITY 3: Currency symbols with amount
+  /(?:EUR|€)\s*(\d+[,\.]\d{2})/gi,
+
+  // PRIORITY 4: Amount followed by currency
+  /(\d+[,\.]\d{2})\s*(?:EUR|€)/gi,
+
+  // PRIORITY 5: Standalone amount at end of line (least specific)
+  /^\s*(\d+[,\.]\d{2})\s*$/gm,
 ];
 
 function extractAmount(text: string): number | null {
-  for (const pattern of amountPatterns) {
-    const match = text.match(pattern);
-    if (match) {
-      // Convert Italian format (comma as decimal) to number
+  const candidates: Array<{ amount: number; priority: number; position: number }> = [];
+
+  // Search with all patterns and collect candidates
+  amountPatterns.forEach((pattern, priority) => {
+    // Reset regex state
+    pattern.lastIndex = 0;
+
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
       const amountStr = match[1].replace(',', '.');
       const amount = parseFloat(amountStr);
+
       if (!isNaN(amount) && amount > 0 && amount < 100000) {
-        return amount;
+        candidates.push({
+          amount,
+          priority,
+          position: match.index
+        });
       }
     }
+  });
+
+  if (candidates.length === 0) {
+    return null;
   }
-  return null;
+
+  // Sort by priority (lower is better), then by position (later in text is better for totals)
+  candidates.sort((a, b) => {
+    if (a.priority !== b.priority) {
+      return a.priority - b.priority;
+    }
+    return b.position - a.position;
+  });
+
+  // Return the best candidate (highest priority, latest in text)
+  return candidates[0].amount;
 }
 
 function extractDate(text: string): string | null {
