@@ -46,28 +46,49 @@ const monthMap: Record<string, string> = {
   'DIC': '12', 'DICEMBRE': '12',
 };
 
+// Patterns to EXCLUDE (subtotals, not final totals)
+const excludePatterns = [
+  /(?:SUB[\s\-]?TOTALE|SUBTOT|IMPONIBILE|IVA\s+ESCLUSA|IVA\s+ESCL|TOTALE\s+PARZIALE)\s*[:=]?\s*(?:EUR|€)?\s*\d+[,\.]\d{2}/gi,
+];
+
 // Amount patterns for Italian receipts - ordered by priority (most specific first)
 const amountPatterns = [
-  // PRIORITY 0: Most explicit total with currency (highest priority)
+  // PRIORITY 0: Total with "IVA INCLUSA" or "IVA COMPRESA" (absolute highest priority)
+  /(?:TOTALE|TOT\.?|TOTAL|DA PAGARE|IMPORTO)\s+(?:IVA\s+INCLUSA|IVA\s+COMPRESA|IVA\s+INCL|COMPRENSIVO|CON\s+IVA)\s*[:=]?\s*(?:EUR|€|EURO)?\s*(\d+[,\.]\d{2})/gi,
+
+  // PRIORITY 1: Explicit total with currency
   /(?:TOTALE|TOT\.?|TOTAL|DA PAGARE|IMPORTO)\s+(?:COMPLESSIVO|GENERALE|FINALE?)?\s*(?:EUR|€|EURO)\s*(\d+[,\.]\d{2})/gi,
 
-  // PRIORITY 1: Total keywords without explicit currency
+  // PRIORITY 2: Total keywords without explicit currency
   /(?:TOTALE|TOT\.?|TOTAL|DA PAGARE|IMPORTO)\s*[:=]?\s*(\d+[,\.]\d{2})/gi,
 
-  // PRIORITY 2: Payment keywords
+  // PRIORITY 3: Payment keywords
   /(?:PAGATO|CONTANTI|CONTANTE|CARTA|BANCOMAT|POS)\s*[:=]?\s*(?:EUR|€)?\s*(\d+[,\.]\d{2})/gi,
 
-  // PRIORITY 3: Currency symbols with amount
+  // PRIORITY 4: Currency symbols with amount
   /(?:EUR|€)\s*(\d+[,\.]\d{2})/gi,
 
-  // PRIORITY 4: Amount followed by currency
+  // PRIORITY 5: Amount followed by currency
   /(\d+[,\.]\d{2})\s*(?:EUR|€)/gi,
 
-  // PRIORITY 5: Standalone amount at end of line (least specific)
+  // PRIORITY 6: Standalone amount at end of line (least specific)
   /^\s*(\d+[,\.]\d{2})\s*$/gm,
 ];
 
 function extractAmount(text: string): number | null {
+  // First, identify positions of subtotals to exclude
+  const excludePositions = new Set<number>();
+  excludePatterns.forEach(pattern => {
+    pattern.lastIndex = 0;
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      // Mark this position range as excluded
+      for (let i = match.index; i < match.index + match[0].length; i++) {
+        excludePositions.add(i);
+      }
+    }
+  });
+
   const candidates: Array<{ amount: number; priority: number; position: number }> = [];
 
   // Search with all patterns and collect candidates
@@ -77,6 +98,12 @@ function extractAmount(text: string): number | null {
 
     let match;
     while ((match = pattern.exec(text)) !== null) {
+      // Skip if this match overlaps with an excluded region
+      const isExcluded = excludePositions.has(match.index);
+      if (isExcluded) {
+        continue;
+      }
+
       const amountStr = match[1].replace(',', '.');
       const amount = parseFloat(amountStr);
 
