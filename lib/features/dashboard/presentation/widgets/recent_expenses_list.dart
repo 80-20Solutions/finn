@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../app/routes.dart';
-import '../../../../core/config/constants.dart';
 import '../../../expenses/domain/entities/expense_entity.dart';
 
 /// Widget to display a list of recent expenses
