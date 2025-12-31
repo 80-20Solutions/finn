@@ -7,6 +7,7 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/error_display.dart';
+import '../../../../shared/widgets/navigation_guard.dart';
 import '../../../../shared/widgets/primary_button.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../providers/expense_provider.dart';
@@ -20,7 +21,8 @@ class ManualExpenseScreen extends ConsumerStatefulWidget {
   ConsumerState<ManualExpenseScreen> createState() => _ManualExpenseScreenState();
 }
 
-class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen> {
+class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
+    with UnsavedChangesGuard {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _merchantController = TextEditingController();
@@ -28,12 +30,39 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen> {
   DateTime _selectedDate = DateTime.now();
   ExpenseCategory _selectedCategory = ExpenseCategory.altro;
 
+  // Track initial values for unsaved changes detection
+  late final String _initialAmount;
+  late final String _initialMerchant;
+  late final String _initialNotes;
+  late final DateTime _initialDate;
+  late final ExpenseCategory _initialCategory;
+
+  @override
+  void initState() {
+    super.initState();
+    // Store initial values
+    _initialAmount = _amountController.text;
+    _initialMerchant = _merchantController.text;
+    _initialNotes = _notesController.text;
+    _initialDate = _selectedDate;
+    _initialCategory = _selectedCategory;
+  }
+
   @override
   void dispose() {
     _amountController.dispose();
     _merchantController.dispose();
     _notesController.dispose();
     super.dispose();
+  }
+
+  @override
+  bool get hasUnsavedChanges {
+    return _amountController.text != _initialAmount ||
+        _merchantController.text != _initialMerchant ||
+        _notesController.text != _initialNotes ||
+        _selectedDate != _initialDate ||
+        _selectedCategory != _initialCategory;
   }
 
   Future<void> _handleSave() async {
@@ -84,7 +113,9 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen> {
   Widget build(BuildContext context) {
     final formState = ref.watch(expenseFormProvider);
 
-    return Scaffold(
+    return buildWithNavigationGuard(
+      context,
+      Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -184,6 +215,7 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen> {
             ],
           ),
         ),
+      ),
       ),
     );
   }

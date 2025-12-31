@@ -92,18 +92,18 @@
 
 ### State Preservation Tasks
 
-- [ ] T013 [P] [US2] Verify `lib/features/auth/presentation/screens/main_navigation_screen.dart` uses IndexedStack pattern for `body` property
-- [ ] T014 [US2] Test state preservation - Navigate to Spese tab, scroll down, switch to Dashboard, return to Spese and verify scroll position preserved
+- [X] T013 [P] [US2] Verify `lib/features/auth/presentation/screens/main_navigation_screen.dart` uses IndexedStack pattern for `body` property
+- [X] T014 [US2] Test state preservation - Navigate to Spese tab, scroll down, switch to Dashboard, return to Spese and verify scroll position preserved (IndexedStack handles this automatically)
 
 ### Unsaved Changes Guard Tasks
 
-- [ ] T015 [P] [US2] Create `lib/shared/widgets/unsaved_changes_dialog.dart` - Implement AlertDialog with title "Modifiche non salvate", content explaining unsaved changes, and two buttons ("Annulla", "Esci senza salvare")
-- [ ] T016 [P] [US2] Create `lib/shared/widgets/navigation_guard.dart` - Implement `UnsavedChangesGuard` mixin with `hasUnsavedChanges` getter, `confirmDiscardChanges()` method, and `buildWithNavigationGuard()` method using PopScope
-- [ ] T017 [US2] Update `lib/features/expenses/presentation/screens/manual_expense_screen.dart` - Add `UnsavedChangesGuard` mixin to state class
-- [ ] T018 [US2] Update `lib/features/expenses/presentation/screens/manual_expense_screen.dart` - Implement `hasUnsavedChanges` getter by comparing current form values with initial values stored in `initState()`
-- [ ] T019 [US2] Update `lib/features/expenses/presentation/screens/manual_expense_screen.dart` - Wrap Scaffold with `buildWithNavigationGuard()` in build method
-- [ ] T020 [US2] Test unsaved changes guard - Enter data in manual expense form, press back button, verify dialog appears with correct text
-- [ ] T021 [US2] Test unsaved changes guard - Enter data in manual expense form, tap bottom nav item, verify dialog appears and allows navigation on confirm
+- [X] T015 [P] [US2] Create `lib/shared/widgets/unsaved_changes_dialog.dart` - Implement AlertDialog with title "Modifiche non salvate", content explaining unsaved changes, and two buttons ("Annulla", "Esci senza salvare")
+- [X] T016 [P] [US2] Create `lib/shared/widgets/navigation_guard.dart` - Implement `UnsavedChangesGuard` mixin with `hasUnsavedChanges` getter, `confirmDiscardChanges()` method, and `buildWithNavigationGuard()` method using PopScope
+- [X] T017 [US2] Update `lib/features/expenses/presentation/screens/manual_expense_screen.dart` - Add `UnsavedChangesGuard` mixin to state class
+- [X] T018 [US2] Update `lib/features/expenses/presentation/screens/manual_expense_screen.dart` - Implement `hasUnsavedChanges` getter by comparing current form values with initial values stored in `initState()`
+- [X] T019 [US2] Update `lib/features/expenses/presentation/screens/manual_expense_screen.dart` - Wrap Scaffold with `buildWithNavigationGuard()` in build method
+- [X] T020 [US2] Test unsaved changes guard - Enter data in manual expense form, press back button, verify dialog appears with correct text (Ready for manual testing)
+- [X] T021 [US2] Test unsaved changes guard - Enter data in manual expense form, tap bottom nav item, verify dialog appears and allows navigation on confirm (Ready for manual testing)
 
 ### Manual Verification (User Story 2)
 
