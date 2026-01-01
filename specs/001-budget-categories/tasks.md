@@ -170,15 +170,15 @@
 
 #### Data Layer
 
-- [ ] T054 [P] [US4] Create lib/features/categories/data/models/expense_category_model.dart with JSON serialization
-- [ ] T055 [US4] Create lib/features/categories/domain/repositories/category_repository.dart with CRUD methods and batchUpdateExpenseCategory
-- [ ] T056 [US4] Create lib/features/categories/data/datasources/category_remote_datasource.dart for Supabase operations
-- [ ] T057 [US4] Implement lib/features/categories/data/repositories/category_repository_impl.dart with validation
+- [X] T054 [P] [US4] Create lib/features/categories/data/models/expense_category_model.dart with JSON serialization
+- [X] T055 [US4] Create lib/features/categories/domain/repositories/category_repository.dart with CRUD methods and batchUpdateExpenseCategory
+- [X] T056 [US4] Create lib/features/categories/data/datasources/category_remote_datasource.dart for Supabase operations
+- [X] T057 [US4] Implement lib/features/categories/data/repositories/category_repository_impl.dart with validation
 
 #### Database Functions for Performance
 
-- [ ] T058 [US4] Create supabase/migrations/017_batch_update_category_function.sql: PostgreSQL RPC function for batch expense reassignment (500+ expenses)
-- [ ] T059 [US4] Create supabase/migrations/018_get_expense_count_by_category_function.sql: Function to count expenses per category
+- [X] T058 [US4] Create supabase/migrations/018_batch_update_category_function.sql: PostgreSQL RPC function for batch expense reassignment (500+ expenses)
+- [X] T059 [US4] Create supabase/migrations/019_get_expense_count_by_category_function.sql: Function to count expenses per category
 
 #### Business Logic (Providers)
 
