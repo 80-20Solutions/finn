@@ -182,9 +182,9 @@
 
 #### Business Logic (Providers)
 
-- [ ] T060 [US4] Create lib/features/categories/presentation/providers/category_provider.dart: StateNotifier for category list management
-- [ ] T061 [US4] Create lib/features/categories/presentation/providers/category_actions_provider.dart for create/update/delete actions
-- [ ] T062 [US4] Add Supabase Realtime subscription for expense_categories table in category provider
+- [X] T060 [US4] Create lib/features/categories/presentation/providers/category_provider.dart: StateNotifier for category list management
+- [X] T061 [US4] Create lib/features/categories/presentation/providers/category_actions_provider.dart for create/update/delete actions
+- [X] T062 [US4] Add Supabase Realtime subscription for expense_categories table in category provider
 
 #### UI Components - Category Management
 
