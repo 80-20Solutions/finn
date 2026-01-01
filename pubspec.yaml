@@ -48,6 +48,13 @@ dependencies:
   uuid: ^4.0.0
   flutter_dotenv: ^5.1.0
 
+  # Timezone Support
+  flutter_timezone: ^2.1.0
+  timezone: ^0.9.2
+
+  # UI Components
+  wolt_modal_sheet: ^0.6.0
+
   # Share Intent
   receive_sharing_intent: ^1.8.0
 
