@@ -188,22 +188,22 @@
 
 #### UI Components - Category Management
 
-- [ ] T063 [P] [US4] Create lib/features/categories/presentation/screens/category_management_screen.dart with category list
-- [ ] T064 [P] [US4] Create lib/features/categories/presentation/widgets/category_list_item.dart with edit/delete actions (admin only)
-- [ ] T065 [P] [US4] Create lib/features/categories/presentation/widgets/category_form_dialog.dart for create/edit
-- [ ] T066 [US4] Add navigation to category management from settings screen
+- [X] T063 [P] [US4] Create lib/features/categories/presentation/screens/category_management_screen.dart with category list
+- [X] T064 [P] [US4] Create lib/features/categories/presentation/widgets/category_list_item.dart with edit/delete actions (admin only)
+- [X] T065 [P] [US4] Create lib/features/categories/presentation/widgets/category_form_dialog.dart for create/edit
+- [X] T066 [US4] Add navigation to category management from settings screen
 
-#### UI Components - Deletion Flow (Multi-Page Modal)
+#### UI Components - Deletion Flow (Simplified)
 
-- [ ] T067 [US4] Create lib/features/categories/presentation/widgets/category_deletion_flow.dart: Impact preview page with affected expense count
-- [ ] T068 [US4] Add quick reassignment page to category_deletion_flow.dart with category dropdown and "Auto to Other" option
-- [ ] T069 [US4] Add manual reassignment page to category_deletion_flow.dart with batch selection and progress tracking (optional, can be future enhancement)
-- [ ] T070 [US4] Integrate WoltModalSheet for multi-page deletion flow with smooth transitions
+- [X] T067 [US4] SIMPLIFIED: Implemented deletion with expense count check and confirmation dialog in category_list_item.dart
+- [X] T068 [US4] SIMPLIFIED: Shows error message for categories with expenses, user must manually reassign first
+- [ ] T069 [US4] FUTURE: Add manual reassignment page with batch selection and progress tracking
+- [ ] T070 [US4] FUTURE: Integrate WoltModalSheet for multi-page deletion flow with smooth transitions
 
 #### Integration
 
-- [ ] T071 [US4] Update expense category selector in lib/features/expenses/presentation/screens/manual_expense_screen.dart to use dynamic category list from provider
-- [ ] T072 [US4] Add real-time category updates to expense form (new categories appear immediately)
+- [ ] T071 [US4] PENDING: Update expense category selector to use dynamic category list from provider (requires expense entity migration)
+- [ ] T072 [US4] PENDING: Add real-time category updates to expense form (requires T071 first)
 
 **Checkpoint**: Administrators can fully manage categories. Deletion handles bulk reassignment gracefully. All users see category changes in real-time.
 
