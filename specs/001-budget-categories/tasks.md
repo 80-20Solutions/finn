@@ -22,10 +22,10 @@
 
 **Purpose**: Add new dependencies and initialize timezone support required by all user stories
 
-- [ ] T001 Add new dependencies to pubspec.yaml: flutter_timezone ^2.1.0, timezone ^0.9.2, wolt_modal_sheet ^0.6.0
-- [ ] T002 Initialize timezone support in lib/main.dart with flutter_timezone and set local timezone
-- [ ] T003 Create lib/core/utils/timezone_handler.dart for timezone-aware date operations
-- [ ] T004 Create lib/core/utils/budget_calculator.dart for budget math utilities
+- [X] T001 Add new dependencies to pubspec.yaml: flutter_timezone ^2.1.0, timezone ^0.9.2, wolt_modal_sheet ^0.6.0
+- [X] T002 Initialize timezone support in lib/main.dart with flutter_timezone and set local timezone
+- [X] T003 Create lib/core/utils/timezone_handler.dart for timezone-aware date operations
+- [X] T004 Create lib/core/utils/budget_calculator.dart for budget math utilities
 
 ---
 
@@ -37,22 +37,22 @@
 
 ### Database Migrations
 
-- [ ] T005 Create supabase/migrations/010_add_is_group_expense_phase1.sql: Add nullable is_group_expense column to expenses table with default true
-- [ ] T006 Create supabase/migrations/011_create_group_budgets_table.sql: Create group_budgets table with RLS policies
-- [ ] T007 Create supabase/migrations/012_create_personal_budgets_table.sql: Create personal_budgets table with RLS policies
-- [ ] T008 Create supabase/migrations/013_create_expense_categories_table.sql: Create expense_categories table with RLS policies
-- [ ] T009 Create supabase/migrations/014_seed_default_categories.sql: Insert default categories (Food, Utilities, Transport, Healthcare, Entertainment, Other) for all existing groups
-- [ ] T010 Create supabase/migrations/015_add_timezone_to_profiles.sql: Add timezone column to profiles table with default 'UTC'
-- [ ] T011 Run database migrations: Execute supabase db push to apply all migrations
+- [X] T005 Create supabase/migrations/010_add_is_group_expense_phase1.sql: Add nullable is_group_expense column to expenses table with default true
+- [X] T006 Create supabase/migrations/011_create_group_budgets_table.sql: Create group_budgets table with RLS policies
+- [X] T007 Create supabase/migrations/012_create_personal_budgets_table.sql: Create personal_budgets table with RLS policies
+- [X] T008 Create supabase/migrations/013_create_expense_categories_table.sql: Create expense_categories table with RLS policies
+- [X] T009 Create supabase/migrations/014_seed_default_categories.sql: Insert default categories (Food, Utilities, Transport, Healthcare, Entertainment, Other) for all existing groups
+- [X] T010 Create supabase/migrations/015_add_timezone_to_profiles.sql: Add timezone column to profiles table with default 'UTC'
+- [X] T011 Run database migrations: Execute supabase db push to apply all migrations
 
 ### Core Data Models (Shared Across Stories)
 
-- [ ] T012 [P] Modify lib/features/expenses/domain/entities/expense_entity.dart: Add isGroupExpense boolean field with default true
-- [ ] T013 [P] Modify lib/features/expenses/data/models/expense_model.dart: Add isGroupExpense to JSON serialization with null-coalescing for backward compatibility
-- [ ] T014 [P] Create lib/features/budgets/domain/entities/group_budget_entity.dart for GroupBudget entity
-- [ ] T015 [P] Create lib/features/budgets/domain/entities/personal_budget_entity.dart for PersonalBudget entity
-- [ ] T016 [P] Create lib/features/budgets/domain/entities/budget_stats_entity.dart for BudgetStats calculation results
-- [ ] T017 [P] Create lib/features/categories/domain/entities/expense_category_entity.dart for ExpenseCategory entity
+- [X] T012 [P] Modify lib/features/expenses/domain/entities/expense_entity.dart: Add isGroupExpense boolean field with default true
+- [X] T013 [P] Modify lib/features/expenses/data/models/expense_model.dart: Add isGroupExpense to JSON serialization with null-coalescing for backward compatibility
+- [X] T014 [P] Create lib/features/budgets/domain/entities/group_budget_entity.dart for GroupBudget entity
+- [X] T015 [P] Create lib/features/budgets/domain/entities/personal_budget_entity.dart for PersonalBudget entity
+- [X] T016 [P] Create lib/features/budgets/domain/entities/budget_stats_entity.dart for BudgetStats calculation results
+- [X] T017 [P] Create lib/features/categories/domain/entities/expense_category_entity.dart for ExpenseCategory entity
 
 **Checkpoint**: Foundation ready - all migrations applied, core entities created. User story implementation can now begin in parallel.
 
@@ -68,32 +68,32 @@
 
 #### Data Layer
 
-- [ ] T018 [P] [US1] Create lib/features/budgets/data/models/group_budget_model.dart with JSON serialization
-- [ ] T019 [P] [US1] Create lib/features/budgets/data/models/budget_stats_model.dart with JSON serialization
-- [ ] T020 [US1] Create lib/features/budgets/domain/repositories/budget_repository.dart interface with setGroupBudget and getGroupBudgetStats methods
-- [ ] T021 [US1] Create lib/features/budgets/data/datasources/budget_remote_datasource.dart for Supabase operations
-- [ ] T022 [US1] Implement lib/features/budgets/data/repositories/budget_repository_impl.dart with error handling
+- [X] T018 [P] [US1] Create lib/features/budgets/data/models/group_budget_model.dart with JSON serialization
+- [X] T019 [P] [US1] Create lib/features/budgets/data/models/budget_stats_model.dart with JSON serialization
+- [X] T020 [US1] Create lib/features/budgets/domain/repositories/budget_repository.dart interface with setGroupBudget and getGroupBudgetStats methods
+- [X] T021 [US1] Create lib/features/budgets/data/datasources/budget_remote_datasource.dart for Supabase operations
+- [X] T022 [US1] Implement lib/features/budgets/data/repositories/budget_repository_impl.dart with error handling
 
 #### Business Logic (Providers)
 
-- [ ] T023 [US1] Create lib/features/budgets/presentation/providers/budget_provider.dart: BudgetNotifier with state management for group budget stats
-- [ ] T024 [US1] Implement optimistic update logic in budget_provider.dart for expense add/edit/delete operations
-- [ ] T025 [US1] Implement Supabase Realtime subscription in budget_provider.dart for multi-device sync
-- [ ] T026 [US1] Create lib/features/budgets/presentation/providers/budget_actions_provider.dart for setGroupBudget action
+- [X] T023 [US1] Create lib/features/budgets/presentation/providers/budget_provider.dart: BudgetNotifier with state management for group budget stats
+- [X] T024 [US1] Implement optimistic update logic in budget_provider.dart for expense add/edit/delete operations
+- [X] T025 [US1] Implement Supabase Realtime subscription in budget_provider.dart for multi-device sync
+- [X] T026 [US1] Create lib/features/budgets/presentation/providers/budget_actions_provider.dart for setGroupBudget action
 
 #### UI Components
 
-- [ ] T027 [P] [US1] Create lib/features/budgets/presentation/widgets/budget_progress_bar.dart with percentage calculation and color coding
-- [ ] T028 [P] [US1] Create lib/features/budgets/presentation/widgets/budget_warning_indicator.dart for 80% threshold warning
-- [ ] T029 [P] [US1] Create lib/features/budgets/presentation/widgets/no_budget_set_card.dart with call-to-action button
-- [ ] T030 [US1] Create lib/features/budgets/presentation/screens/budget_settings_screen.dart with group budget section
-- [ ] T031 [US1] Add group budget card with progress indicators to lib/features/dashboard/presentation/screens/dashboard_screen.dart
+- [X] T027 [P] [US1] Create lib/features/budgets/presentation/widgets/budget_progress_bar.dart with percentage calculation and color coding
+- [X] T028 [P] [US1] Create lib/features/budgets/presentation/widgets/budget_warning_indicator.dart for 80% threshold warning
+- [X] T029 [P] [US1] Create lib/features/budgets/presentation/widgets/no_budget_set_card.dart with call-to-action button
+- [X] T030 [US1] Create lib/features/budgets/presentation/screens/budget_settings_screen.dart with group budget section
+- [X] T031 [US1] Add group budget card with progress indicators to lib/features/dashboard/presentation/screens/dashboard_screen.dart
 
 #### Integration
 
-- [ ] T032 [US1] Enable Supabase Realtime on expenses table: ALTER PUBLICATION supabase_realtime ADD TABLE expenses
-- [ ] T033 [US1] Wire budget provider to expense creation flow in lib/features/expenses/presentation/providers/expense_provider.dart
-- [ ] T034 [US1] Add navigation from dashboard to budget settings screen
+- [X] T032 [US1] Enable Supabase Realtime on expenses table: ALTER PUBLICATION supabase_realtime ADD TABLE expenses
+- [X] T033 [US1] Wire budget provider to expense creation flow in lib/features/expenses/presentation/providers/expense_provider.dart
+- [X] T034 [US1] Add navigation from dashboard to budget settings screen
 
 **Checkpoint**: At this point, group administrators can set budgets, see progress bars on dashboard, and receive warnings. This is a complete MVP feature.
 

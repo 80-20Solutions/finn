@@ -25,7 +25,8 @@ Future<void> main() async {
 
   // Get device timezone and set as local
   try {
-    final String deviceTimezone = await FlutterTimezone.getLocalTimezone();
+    final timezoneInfo = await FlutterTimezone.getLocalTimezone();
+    final String deviceTimezone = timezoneInfo.identifier;
     tz.setLocalLocation(tz.getLocation(deviceTimezone));
   } catch (e) {
     // Fallback to UTC if device timezone cannot be determined
