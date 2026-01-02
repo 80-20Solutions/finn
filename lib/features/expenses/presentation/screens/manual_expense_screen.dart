@@ -177,18 +177,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
               ),
               const SizedBox(height: 16),
 
-              // Category selector
-              CategorySelector(
-                selectedCategory: _selectedCategory,
-                onCategorySelected: (category) {
-                  setState(() {
-                    _selectedCategory = category;
-                  });
-                },
-                enabled: !formState.isSubmitting,
-              ),
-              const SizedBox(height: 16),
-
               // Expense type toggle
               Text(
                 'Tipo di spesa',
@@ -212,6 +200,18 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                     ),
+              ),
+              const SizedBox(height: 16),
+
+              // Category selector
+              CategorySelector(
+                selectedCategory: _selectedCategory,
+                onCategorySelected: (category) {
+                  setState(() {
+                    _selectedCategory = category;
+                  });
+                },
+                enabled: !formState.isSubmitting,
               ),
               const SizedBox(height: 16),
 
