@@ -18,6 +18,7 @@ import '../features/scanner/presentation/screens/review_scan_screen.dart';
 import '../features/expenses/presentation/screens/manual_expense_screen.dart';
 import '../features/expenses/presentation/screens/expense_list_screen.dart';
 import '../features/expenses/presentation/screens/expense_detail_screen.dart';
+import '../features/expenses/presentation/screens/edit_expense_screen.dart';
 import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/auth/presentation/screens/main_navigation_screen.dart';
 import '../features/auth/presentation/screens/profile_screen.dart';
@@ -48,6 +49,7 @@ class AppRoutes {
   static const reviewScan = '/review-scan';
   static const uploadFile = '/upload-file';
   static const expenseDetail = '/expense/:id';
+  static const editExpense = '/expense/:id/edit';
 
   // Budget routes
   static const budgetSettings = '/budget-settings';
@@ -162,6 +164,14 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final expenseId = state.pathParameters['id']!;
           return ExpenseDetailScreen(expenseId: expenseId);
+        },
+      ),
+      GoRoute(
+        path: '/expense/:id/edit',
+        name: 'editExpense',
+        builder: (context, state) {
+          final expenseId = state.pathParameters['id']!;
+          return EditExpenseScreen(expenseId: expenseId);
         },
       ),
 

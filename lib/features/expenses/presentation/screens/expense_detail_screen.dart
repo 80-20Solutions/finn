@@ -44,11 +44,23 @@ class ExpenseDetailScreen extends ConsumerWidget {
 
               return PopupMenuButton<String>(
                 onSelected: (value) async {
-                  if (value == 'delete') {
+                  if (value == 'edit') {
+                    context.go('/expense/${expense.id}/edit');
+                  } else if (value == 'delete') {
                     await _handleDelete(context, ref);
                   }
                 },
                 itemBuilder: (context) => [
+                  const PopupMenuItem(
+                    value: 'edit',
+                    child: Row(
+                      children: [
+                        Icon(Icons.edit),
+                        SizedBox(width: 8),
+                        Text('Modifica'),
+                      ],
+                    ),
+                  ),
                   const PopupMenuItem(
                     value: 'delete',
                     child: Row(
