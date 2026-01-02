@@ -6,6 +6,7 @@ import '../../../../core/utils/date_formatter.dart';
 import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
 import '../providers/expense_provider.dart';
 
@@ -226,6 +227,8 @@ class ExpenseDetailScreen extends ConsumerWidget {
 
       if (success && context.mounted) {
         ref.read(expenseListProvider.notifier).removeExpenseFromList(expenseId);
+        // Refresh dashboard to reflect the deleted expense
+        ref.read(dashboardProvider.notifier).refresh();
         context.go('/expenses');
       }
     }
