@@ -255,6 +255,44 @@ class CategoryRepositoryImpl implements CategoryRepository {
     }
   }
 
+  // ========== Virgin Category Tracking (Feature 004) ==========
+
+  @override
+  Future<Either<Failure, bool>> hasUserUsedCategory({
+    required String userId,
+    required String categoryId,
+  }) async {
+    try {
+      final hasUsed = await remoteDataSource.hasUserUsedCategory(
+        userId: userId,
+        categoryId: categoryId,
+      );
+      return Right(hasUsed);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> markCategoryAsUsed({
+    required String userId,
+    required String categoryId,
+  }) async {
+    try {
+      await remoteDataSource.markCategoryAsUsed(
+        userId: userId,
+        categoryId: categoryId,
+      );
+      return const Right(unit);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
   /// Validate category name.
   ///
   /// Returns error message if invalid, null if valid.

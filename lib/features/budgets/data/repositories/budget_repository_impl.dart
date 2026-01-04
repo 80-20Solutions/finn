@@ -195,4 +195,152 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return Left(ServerFailure(e.toString()));
     }
   }
+
+  // ========== Category Budget Operations (Feature 004 - T030) ==========
+
+  @override
+  Future<Either<Failure, List>> getCategoryBudgets({
+    required String groupId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final budgets = await remoteDataSource.getCategoryBudgets(
+        groupId: groupId,
+        year: year,
+        month: month,
+      );
+      return Right(budgets);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, dynamic>> getCategoryBudget({
+    required String categoryId,
+    required String groupId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final budget = await remoteDataSource.getCategoryBudget(
+        categoryId: categoryId,
+        groupId: groupId,
+        year: year,
+        month: month,
+      );
+      return Right(budget);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, dynamic>> createCategoryBudget({
+    required String categoryId,
+    required String groupId,
+    required int amount,
+    required int month,
+    required int year,
+  }) async {
+    try {
+      final budget = await remoteDataSource.createCategoryBudget(
+        categoryId: categoryId,
+        groupId: groupId,
+        amount: amount,
+        month: month,
+        year: year,
+      );
+      return Right(budget);
+    } on AppAuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on PermissionException catch (e) {
+      return Left(PermissionFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, dynamic>> updateCategoryBudget({
+    required String budgetId,
+    required int amount,
+  }) async {
+    try {
+      final budget = await remoteDataSource.updateCategoryBudget(
+        budgetId: budgetId,
+        amount: amount,
+      );
+      return Right(budget);
+    } on PermissionException catch (e) {
+      return Left(PermissionFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> deleteCategoryBudget(String budgetId) async {
+    try {
+      await remoteDataSource.deleteCategoryBudget(budgetId);
+      return const Right(unit);
+    } on PermissionException catch (e) {
+      return Left(PermissionFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, dynamic>> getCategoryBudgetStats({
+    required String groupId,
+    required String categoryId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final stats = await remoteDataSource.getCategoryBudgetStats(
+        groupId: groupId,
+        categoryId: categoryId,
+        year: year,
+        month: month,
+      );
+      return Right(stats);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, dynamic>> getOverallGroupBudgetStats({
+    required String groupId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final stats = await remoteDataSource.getOverallGroupBudgetStats(
+        groupId: groupId,
+        year: year,
+        month: month,
+      );
+      return Right(stats);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
 }

@@ -79,4 +79,22 @@ abstract class CategoryRepository {
     required String name,
     String? excludeCategoryId,
   });
+
+  // ========== Virgin Category Tracking (Feature 004) ==========
+
+  /// Check if a user has used a specific category (virgin detection).
+  ///
+  /// Used to determine if budget prompt should be shown on first expense.
+  Future<Either<Failure, bool>> hasUserUsedCategory({
+    required String userId,
+    required String categoryId,
+  });
+
+  /// Mark a category as used by a user (after first expense).
+  ///
+  /// Creates user_category_usage record to prevent future prompts.
+  Future<Either<Failure, Unit>> markCategoryAsUsed({
+    required String userId,
+    required String categoryId,
+  });
 }

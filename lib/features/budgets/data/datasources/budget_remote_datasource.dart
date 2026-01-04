@@ -67,6 +67,56 @@ abstract class BudgetRemoteDataSource {
     required String userId,
     int? limit,
   });
+
+  // ========== Category Budget Operations (Feature 004) ==========
+
+  /// Get all category budgets for a specific month.
+  Future<List> getCategoryBudgets({
+    required String groupId,
+    required int year,
+    required int month,
+  });
+
+  /// Get a single category budget.
+  Future<dynamic> getCategoryBudget({
+    required String categoryId,
+    required String groupId,
+    required int year,
+    required int month,
+  });
+
+  /// Create a new category budget.
+  Future<dynamic> createCategoryBudget({
+    required String categoryId,
+    required String groupId,
+    required int amount,
+    required int month,
+    required int year,
+  });
+
+  /// Update a category budget.
+  Future<dynamic> updateCategoryBudget({
+    required String budgetId,
+    required int amount,
+  });
+
+  /// Delete a category budget.
+  Future<void> deleteCategoryBudget(String budgetId);
+
+  /// Get category budget stats (via RPC).
+  Future<dynamic> getCategoryBudgetStats({
+    required String groupId,
+    required String categoryId,
+    required int year,
+    required int month,
+  });
+
+  /// Get overall group budget stats (via RPC).
+  Future<dynamic> getOverallGroupBudgetStats({
+    required String groupId,
+    required int year,
+    required int month,
+  });
 }
 
 /// Implementation of [BudgetRemoteDataSource] using Supabase.
@@ -349,6 +399,166 @@ class BudgetRemoteDataSourceImpl implements BudgetRemoteDataSource {
       throw ServerException(e.message, e.code);
     } catch (e) {
       throw ServerException('Failed to get personal budget history: $e');
+    }
+  }
+
+  // ========== Category Budget Operations (Feature 004) ==========
+
+  @override
+  Future<List> getCategoryBudgets({
+    required String groupId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final response = await supabaseClient
+          .from('category_budgets')
+          .select('*, expense_categories(name)')
+          .eq('group_id', groupId)
+          .eq('year', year)
+          .eq('month', month)
+          .order('expense_categories(name)', ascending: true);
+
+      return response as List;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to get category budgets: $e');
+    }
+  }
+
+  @override
+  Future<dynamic> getCategoryBudget({
+    required String categoryId,
+    required String groupId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final response = await supabaseClient
+          .from('category_budgets')
+          .select()
+          .eq('category_id', categoryId)
+          .eq('group_id', groupId)
+          .eq('year', year)
+          .eq('month', month)
+          .maybeSingle();
+
+      return response;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to get category budget: $e');
+    }
+  }
+
+  @override
+  Future<dynamic> createCategoryBudget({
+    required String categoryId,
+    required String groupId,
+    required int amount,
+    required int month,
+    required int year,
+  }) async {
+    try {
+      final userId = _currentUserId;
+
+      final response = await supabaseClient.from('category_budgets').insert({
+        'category_id': categoryId,
+        'group_id': groupId,
+        'amount': amount,
+        'month': month,
+        'year': year,
+        'created_by': userId,
+      }).select().single();
+
+      return response;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to create category budget: $e');
+    }
+  }
+
+  @override
+  Future<dynamic> updateCategoryBudget({
+    required String budgetId,
+    required int amount,
+  }) async {
+    try {
+      final response = await supabaseClient
+          .from('category_budgets')
+          .update({'amount': amount, 'updated_at': DateTime.now().toIso8601String()})
+          .eq('id', budgetId)
+          .select()
+          .single();
+
+      return response;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to update category budget: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteCategoryBudget(String budgetId) async {
+    try {
+      await supabaseClient.from('category_budgets').delete().eq('id', budgetId);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to delete category budget: $e');
+    }
+  }
+
+  @override
+  Future<dynamic> getCategoryBudgetStats({
+    required String groupId,
+    required String categoryId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final response = await supabaseClient.rpc(
+        'get_category_budget_stats',
+        params: {
+          'p_group_id': groupId,
+          'p_category_id': categoryId,
+          'p_year': year,
+          'p_month': month,
+        },
+      ).single();
+
+      return response;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to get category budget stats: $e');
+    }
+  }
+
+  @override
+  Future<dynamic> getOverallGroupBudgetStats({
+    required String groupId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final response = await supabaseClient.rpc(
+        'get_overall_group_budget_stats',
+        params: {
+          'p_group_id': groupId,
+          'p_year': year,
+          'p_month': month,
+        },
+      ).single();
+
+      return response;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to get overall budget stats: $e');
     }
   }
 }

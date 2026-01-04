@@ -90,4 +90,54 @@ abstract class BudgetRepository {
     required String userId,
     int? limit,
   });
+
+  // ========== Category Budget Operations (Feature 004) ==========
+
+  /// Get all category budgets for a specific group and month.
+  Future<Either<Failure, List>> getCategoryBudgets({
+    required String groupId,
+    required int year,
+    required int month,
+  });
+
+  /// Get a single category budget.
+  Future<Either<Failure, dynamic>> getCategoryBudget({
+    required String categoryId,
+    required String groupId,
+    required int year,
+    required int month,
+  });
+
+  /// Create a new category budget.
+  Future<Either<Failure, dynamic>> createCategoryBudget({
+    required String categoryId,
+    required String groupId,
+    required int amount,
+    required int month,
+    required int year,
+  });
+
+  /// Update an existing category budget amount.
+  Future<Either<Failure, dynamic>> updateCategoryBudget({
+    required String budgetId,
+    required int amount,
+  });
+
+  /// Delete a category budget.
+  Future<Either<Failure, Unit>> deleteCategoryBudget(String budgetId);
+
+  /// Get budget statistics for a specific category and month (via RPC).
+  Future<Either<Failure, dynamic>> getCategoryBudgetStats({
+    required String groupId,
+    required String categoryId,
+    required int year,
+    required int month,
+  });
+
+  /// Get overall group budget statistics for dashboard (via RPC).
+  Future<Either<Failure, dynamic>> getOverallGroupBudgetStats({
+    required String groupId,
+    required int year,
+    required int month,
+  });
 }

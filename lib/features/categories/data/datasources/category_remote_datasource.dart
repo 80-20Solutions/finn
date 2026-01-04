@@ -45,6 +45,20 @@ abstract class CategoryRemoteDataSource {
     required String name,
     String? excludeCategoryId,
   });
+
+  // ========== Virgin Category Tracking (Feature 004) ==========
+
+  /// Check if a user has used a specific category (virgin detection).
+  Future<bool> hasUserUsedCategory({
+    required String userId,
+    required String categoryId,
+  });
+
+  /// Mark a category as used by a user (after first expense).
+  Future<void> markCategoryAsUsed({
+    required String userId,
+    required String categoryId,
+  });
 }
 
 /// Implementation of [CategoryRemoteDataSource] using Supabase.
@@ -268,6 +282,49 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
       throw ServerException(e.message, e.code);
     } catch (e) {
       throw ServerException('Failed to check category name: $e');
+    }
+  }
+
+  // ========== Virgin Category Tracking (Feature 004) ==========
+
+  @override
+  Future<bool> hasUserUsedCategory({
+    required String userId,
+    required String categoryId,
+  }) async {
+    try {
+      final response = await supabaseClient
+          .from('user_category_usage')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('category_id', categoryId)
+          .maybeSingle();
+
+      return response != null;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to check user category usage: $e');
+    }
+  }
+
+  @override
+  Future<void> markCategoryAsUsed({
+    required String userId,
+    required String categoryId,
+  }) async {
+    try {
+      await supabaseClient.from('user_category_usage').insert({
+        'user_id': userId,
+        'category_id': categoryId,
+      });
+    } on PostgrestException catch (e) {
+      // Ignore duplicate key error (23505) - user already has record
+      if (e.code != '23505') {
+        throw ServerException(e.message, e.code);
+      }
+    } catch (e) {
+      throw ServerException('Failed to mark category as used: $e');
     }
   }
 }
