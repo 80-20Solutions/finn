@@ -15,9 +15,13 @@ pubspec.lock
 
 # Claude Code
 .claude/settings.local.json
+.claude/settings.json
 
 # Temp files
 nul
+.worktrees/
+*flutter_logs.txt
+*logcat.txt
 
 # Android
 android/.gradle/
