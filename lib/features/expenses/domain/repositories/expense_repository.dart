@@ -13,12 +13,13 @@ import '../entities/expense_entity.dart';
 abstract class ExpenseRepository {
   /// Get all expenses for the current user's group.
   ///
-  /// Optionally filter by date range and category.
+  /// Optionally filter by date range, category, and expense type.
   Future<Either<Failure, List<ExpenseEntity>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
-    String? category,
+    String? categoryId,
     String? createdBy,
+    bool? isGroupExpense,
     int? limit,
     int? offset,
   });
@@ -34,7 +35,7 @@ abstract class ExpenseRepository {
   Future<Either<Failure, ExpenseEntity>> createExpense({
     required double amount,
     required DateTime date,
-    required String category,
+    required String categoryId,
     String? merchant,
     String? notes,
     Uint8List? receiptImage,
@@ -46,7 +47,7 @@ abstract class ExpenseRepository {
     required String expenseId,
     double? amount,
     DateTime? date,
-    String? category,
+    String? categoryId,
     String? merchant,
     String? notes,
   });

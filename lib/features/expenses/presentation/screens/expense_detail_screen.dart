@@ -107,19 +107,9 @@ class ExpenseDetailScreen extends ConsumerWidget {
                           ),
                         ),
                         const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
-                              expense.category.emoji,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              expense.category.label,
-                              style: theme.textTheme.titleMedium,
-                            ),
-                          ],
+                        Text(
+                          expense.categoryName ?? 'Categoria non specificata',
+                          style: theme.textTheme.titleMedium,
                         ),
                       ],
                     ),
@@ -151,6 +141,12 @@ class ExpenseDetailScreen extends ConsumerWidget {
                           icon: Icons.person,
                           label: 'Inserito da',
                           value: expense.createdByName ?? 'Utente',
+                        ),
+                        const Divider(),
+                        _DetailRow(
+                          icon: expense.isGroupExpense ? Icons.group : Icons.person_outline,
+                          label: 'Tipo',
+                          value: expense.isGroupExpense ? 'Spesa di gruppo' : 'Spesa personale',
                         ),
                         if (expense.createdAt != null) ...[
                           const Divider(),
@@ -241,8 +237,6 @@ class ExpenseDetailScreen extends ConsumerWidget {
 
       if (success && context.mounted) {
         ref.read(expenseListProvider.notifier).removeExpenseFromList(expenseId);
-        // Refresh dashboard to reflect the deleted expense
-        ref.read(dashboardProvider.notifier).refresh();
         context.go('/expenses');
       }
     }

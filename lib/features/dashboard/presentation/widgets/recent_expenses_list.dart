@@ -105,15 +105,15 @@ class RecentExpenseItem extends StatelessWidget {
 
     return ListTile(
       leading: CircleAvatar(
-        backgroundColor: expense.category.color.withOpacity(0.2),
+        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
         child: Icon(
-          expense.category.icon,
-          color: expense.category.color,
+          Icons.category,
+          color: Theme.of(context).colorScheme.onPrimaryContainer,
           size: 20,
         ),
       ),
       title: Text(
-        expense.merchant ?? expense.notes ?? expense.category.label,
+        expense.merchant ?? expense.notes ?? expense.categoryName ?? 'N/A',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ),
@@ -128,7 +128,7 @@ class RecentExpenseItem extends StatelessWidget {
             ),
       ),
       onTap: () {
-        context.push('${AppRoutes.expenses}/${expense.id}');
+        context.go('/expense/${expense.id}');
       },
     );
   }

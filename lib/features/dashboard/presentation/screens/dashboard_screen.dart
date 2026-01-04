@@ -49,8 +49,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
   void _onTabChanged() {
     if (!_tabController.indexIsChanging) {
       final mode = _tabController.index == 0
-          ? DashboardViewMode.group
-          : DashboardViewMode.personal;
+          ? DashboardViewMode.personal
+          : DashboardViewMode.group;
       ref.read(dashboardProvider.notifier).setViewMode(mode);
     }
   }
@@ -67,12 +67,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           controller: _tabController,
           tabs: const [
             Tab(
-              icon: Icon(Icons.group),
-              text: 'Gruppo',
-            ),
-            Tab(
               icon: Icon(Icons.person),
               text: 'Personale',
+            ),
+            Tab(
+              icon: Icon(Icons.group),
+              text: 'Gruppo',
             ),
           ],
         ),
@@ -89,6 +89,15 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
       body: TabBarView(
         controller: _tabController,
         children: [
+          // Personal view
+          _DashboardContent(
+            dashboardState: dashboardState,
+            members: groupState.members,
+            isPersonalView: true,
+            onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
+            onPeriodChanged: (period) =>
+                ref.read(dashboardProvider.notifier).setPeriod(period),
+          ),
           // Group view
           _DashboardContent(
             dashboardState: dashboardState,
@@ -99,15 +108,6 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
                 ref.read(dashboardProvider.notifier).setPeriod(period),
             onMemberFilterChanged: (memberId) =>
                 ref.read(dashboardProvider.notifier).setMemberFilter(memberId),
-          ),
-          // Personal view
-          _DashboardContent(
-            dashboardState: dashboardState,
-            members: groupState.members,
-            isPersonalView: true,
-            onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
-            onPeriodChanged: (period) =>
-                ref.read(dashboardProvider.notifier).setPeriod(period),
           ),
         ],
       ),

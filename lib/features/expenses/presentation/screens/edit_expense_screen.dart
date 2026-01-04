@@ -95,31 +95,40 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
   final _merchantController = TextEditingController();
   final _notesController = TextEditingController();
   late DateTime _selectedDate;
-  late ExpenseCategory _selectedCategory;
+  late String _selectedCategoryId;
+  late bool _isGroupExpense;
 
   // Track initial values for unsaved changes detection
-  late final String _initialAmount;
-  late final String _initialMerchant;
-  late final String _initialNotes;
-  late final DateTime _initialDate;
-  late final ExpenseCategory _initialCategory;
+  late String _initialAmount;
+  late String _initialMerchant;
+  late String _initialNotes;
+  late DateTime _initialDate;
+  late String _initialCategoryId;
+  late bool _initialIsGroupExpense;
 
   @override
   void initState() {
     super.initState();
+    // Reset form provider state to ensure clean start
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(expenseFormProvider.notifier).reset();
+    });
+
     // Initialize form with existing expense data
     _amountController.text = widget.expense.amount.toStringAsFixed(2);
     _merchantController.text = widget.expense.merchant ?? '';
     _notesController.text = widget.expense.notes ?? '';
     _selectedDate = widget.expense.date;
-    _selectedCategory = widget.expense.category;
+    _selectedCategoryId = widget.expense.categoryId;
+    _isGroupExpense = widget.expense.isGroupExpense;
 
     // Store initial values for change detection
     _initialAmount = _amountController.text;
     _initialMerchant = _merchantController.text;
     _initialNotes = _notesController.text;
     _initialDate = _selectedDate;
-    _initialCategory = _selectedCategory;
+    _initialCategoryId = _selectedCategoryId;
+    _initialIsGroupExpense = _isGroupExpense;
   }
 
   @override
@@ -136,23 +145,27 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
         _merchantController.text != _initialMerchant ||
         _notesController.text != _initialNotes ||
         _selectedDate != _initialDate ||
-        _selectedCategory != _initialCategory;
+        _selectedCategoryId != _initialCategoryId ||
+        _isGroupExpense != _initialIsGroupExpense;
   }
 
   Future<void> _handleSave() async {
-    if (!_formKey.currentState!.validate()) return;
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
 
     final amount = Validators.parseAmount(_amountController.text);
-    if (amount == null) return;
-
+    if (amount == null) {
+      return;
+    }
     final formNotifier = ref.read(expenseFormProvider.notifier);
     final listNotifier = ref.read(expenseListProvider.notifier);
 
-    final updatedExpense = await formNotifier.updateExpense(
+    var updatedExpense = await formNotifier.updateExpense(
       expenseId: widget.expense.id,
       amount: amount,
       date: _selectedDate,
-      category: _selectedCategory,
+      categoryId: _selectedCategoryId,
       merchant: _merchantController.text.trim().isNotEmpty
           ? _merchantController.text.trim()
           : null,
@@ -161,11 +174,70 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
           : null,
     );
 
-    if (updatedExpense != null && mounted) {
+    if (updatedExpense == null) {
+      // Show error and return - user can try again or discard changes
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(ref.read(expenseFormProvider).errorMessage ?? 'Errore durante il salvataggio'),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            action: SnackBarAction(
+              label: 'OK',
+              textColor: Colors.white,
+              onPressed: () {},
+            ),
+          ),
+        );
+      }
+      return;
+    }
+
+    // Update expense classification if changed
+    if (_isGroupExpense != _initialIsGroupExpense) {
+      updatedExpense = await formNotifier.updateExpenseClassification(
+        expenseId: widget.expense.id,
+        isGroupExpense: _isGroupExpense,
+      );
+
+      if (updatedExpense == null) {
+        // Classification update failed
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(ref.read(expenseFormProvider).errorMessage ?? 'Errore durante il cambio di classificazione'),
+              backgroundColor: Theme.of(context).colorScheme.error,
+            ),
+          );
+        }
+        return;
+      }
+    }
+
+    if (mounted) {
       listNotifier.updateExpenseInList(updatedExpense);
-      // Refresh dashboard to reflect the updated expense
-      ref.read(dashboardProvider.notifier).refresh();
-      context.pop(); // Return to previous screen
+
+      // Invalidate providers to force refresh on detail page and dashboard
+      ref.invalidate(expenseProvider(widget.expense.id));
+      ref.invalidate(recentGroupExpensesProvider);
+      ref.invalidate(recentPersonalExpensesProvider);
+
+      // Reset initial values to match saved values so hasUnsavedChanges becomes false
+      setState(() {
+        _initialAmount = _amountController.text;
+        _initialMerchant = _merchantController.text;
+        _initialNotes = _notesController.text;
+        _initialDate = _selectedDate;
+        _initialCategoryId = _selectedCategoryId;
+        _initialIsGroupExpense = _isGroupExpense;
+      });
+
+      // Wait for setState rebuild to complete before navigating back
+      // This ensures PopScope sees the updated hasUnsavedChanges value
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && context.mounted) {
+          context.go('/expense/${widget.expense.id}');
+        }
+      });
     }
   }
 
@@ -194,7 +266,14 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
         appBar: AppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
-            onPressed: () => context.pop(),
+            onPressed: () async {
+              final shouldPop = await confirmDiscardChanges(context);
+              if (shouldPop && mounted) {
+                if (context.mounted) {
+                  Navigator.of(context).pop();
+                }
+              }
+            },
           ),
           title: const Text('Modifica spesa'),
         ),
@@ -248,13 +327,35 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
 
                 // Category selector
                 CategorySelector(
-                  selectedCategory: _selectedCategory,
-                  onCategorySelected: (category) {
+                  selectedCategoryId: _selectedCategoryId,
+                  onCategorySelected: (categoryId) {
                     setState(() {
-                      _selectedCategory = category;
+                      _selectedCategoryId = categoryId;
                     });
                   },
                   enabled: !formState.isSubmitting,
+                ),
+                const SizedBox(height: 16),
+
+                // Group/Personal toggle
+                SwitchListTile(
+                  title: const Text('Spesa di gruppo'),
+                  subtitle: Text(
+                    _isGroupExpense
+                        ? 'Visibile a tutti i membri del gruppo'
+                        : 'Visibile solo a te',
+                  ),
+                  value: _isGroupExpense,
+                  onChanged: formState.isSubmitting
+                      ? null
+                      : (value) {
+                          setState(() {
+                            _isGroupExpense = value;
+                          });
+                        },
+                  secondary: Icon(
+                    _isGroupExpense ? Icons.group : Icons.person,
+                  ),
                 ),
                 const SizedBox(height: 16),
 

@@ -33,9 +33,9 @@ class ExpenseListItem extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Center(
-                child: Text(
-                  expense.category.emoji,
-                  style: const TextStyle(fontSize: 24),
+                child: Icon(
+                  Icons.category,
+                  color: theme.colorScheme.onPrimaryContainer,
                 ),
               ),
             ),
@@ -50,7 +50,7 @@ class ExpenseListItem extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        expense.category.label,
+                        expense.categoryName ?? 'N/A',
                         style: theme.textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w600,
                         ),

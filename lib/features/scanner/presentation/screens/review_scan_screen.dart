@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/config/constants.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../shared/widgets/custom_text_field.dart';
@@ -28,7 +27,7 @@ class _ReviewScanScreenState extends ConsumerState<ReviewScanScreen> {
   final _merchantController = TextEditingController();
   final _notesController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
-  ExpenseCategory _selectedCategory = ExpenseCategory.altro;
+  String? _selectedCategoryId;
   bool _hasInitialized = false;
 
   @override
@@ -74,6 +73,16 @@ class _ReviewScanScreenState extends ConsumerState<ReviewScanScreen> {
     final amount = Validators.parseAmount(_amountController.text);
     if (amount == null) return;
 
+    // Validate category is selected
+    if (_selectedCategoryId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Seleziona una categoria')),
+        );
+      }
+      return;
+    }
+
     final scanState = ref.read(scannerProvider);
     final formNotifier = ref.read(expenseFormProvider.notifier);
     final listNotifier = ref.read(expenseListProvider.notifier);
@@ -81,7 +90,7 @@ class _ReviewScanScreenState extends ConsumerState<ReviewScanScreen> {
     final expense = await formNotifier.createExpense(
       amount: amount,
       date: _selectedDate,
-      category: _selectedCategory,
+      categoryId: _selectedCategoryId!,
       merchant: _merchantController.text.trim().isNotEmpty
           ? _merchantController.text.trim()
           : null,
@@ -280,10 +289,10 @@ class _ReviewScanScreenState extends ConsumerState<ReviewScanScreen> {
 
             // Category selector
             CategorySelector(
-              selectedCategory: _selectedCategory,
-              onCategorySelected: (category) {
+              selectedCategoryId: _selectedCategoryId,
+              onCategorySelected: (categoryId) {
                 setState(() {
-                  _selectedCategory = category;
+                  _selectedCategoryId = categoryId;
                 });
               },
               enabled: !formState.isSubmitting,

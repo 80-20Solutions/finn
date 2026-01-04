@@ -1,23 +1,51 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../../../core/config/constants.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../categories/domain/entities/expense_category_entity.dart';
+import '../../../categories/presentation/providers/category_provider.dart';
 
-/// Widget for selecting expense category from a grid of options.
-class CategorySelector extends StatelessWidget {
+/// Widget for selecting expense category from a grid of options loaded from database.
+class CategorySelector extends ConsumerStatefulWidget {
   const CategorySelector({
     super.key,
-    required this.selectedCategory,
+    required this.selectedCategoryId,
     required this.onCategorySelected,
     this.enabled = true,
   });
 
-  final ExpenseCategory selectedCategory;
-  final ValueChanged<ExpenseCategory> onCategorySelected;
+  final String? selectedCategoryId;
+  final ValueChanged<String> onCategorySelected;
   final bool enabled;
+
+  @override
+  ConsumerState<CategorySelector> createState() => _CategorySelectorState();
+}
+
+class _CategorySelectorState extends ConsumerState<CategorySelector> {
+  bool _hasAutoSelected = false;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = ref.watch(authProvider);
+    final groupId = authState.user?.groupId;
+
+    if (groupId == null) {
+      return const Text('Nessun gruppo disponibile');
+    }
+
+    final categoryState = ref.watch(categoryProvider(groupId));
+
+    // Auto-select first category if none is selected
+    if (!_hasAutoSelected &&
+        widget.selectedCategoryId == null &&
+        categoryState.categories.isNotEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        widget.onCategorySelected(categoryState.categories.first.id);
+        _hasAutoSelected = true;
+      });
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,20 +62,30 @@ class CategorySelector extends StatelessWidget {
         ),
 
         // Category grid
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: ExpenseCategory.values.map((category) {
-            final isSelected = category == selectedCategory;
+        if (categoryState.isLoading)
+          const Center(child: CircularProgressIndicator())
+        else if (categoryState.errorMessage != null)
+          Text(
+            categoryState.errorMessage!,
+            style: TextStyle(color: theme.colorScheme.error),
+          )
+        else if (categoryState.categories.isEmpty)
+          const Text('Nessuna categoria disponibile')
+        else
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: categoryState.categories.map((category) {
+              final isSelected = category.id == widget.selectedCategoryId;
 
-            return _CategoryChip(
-              category: category,
-              isSelected: isSelected,
-              enabled: enabled,
-              onTap: () => onCategorySelected(category),
-            );
-          }).toList(),
-        ),
+              return _CategoryChip(
+                category: category,
+                isSelected: isSelected,
+                enabled: widget.enabled,
+                onTap: () => widget.onCategorySelected(category.id),
+              );
+            }).toList(),
+          ),
       ],
     );
   }
@@ -61,7 +99,7 @@ class _CategoryChip extends StatelessWidget {
     required this.onTap,
   });
 
-  final ExpenseCategory category;
+  final ExpenseCategoryEntity category;
   final bool isSelected;
   final bool enabled;
   final VoidCallback onTap;
@@ -86,24 +124,14 @@ class _CategoryChip extends StatelessWidget {
                 ? Border.all(color: theme.colorScheme.primary, width: 2)
                 : null,
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                category.emoji,
-                style: const TextStyle(fontSize: 18),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                category.label,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: isSelected
-                      ? theme.colorScheme.onPrimaryContainer
-                      : theme.colorScheme.onSurfaceVariant,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                ),
-              ),
-            ],
+          child: Text(
+            category.name,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: isSelected
+                  ? theme.colorScheme.onPrimaryContainer
+                  : theme.colorScheme.onSurfaceVariant,
+              fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+            ),
           ),
         ),
       ),
@@ -112,36 +140,47 @@ class _CategoryChip extends StatelessWidget {
 }
 
 /// Compact category selector as a dropdown.
-class CategoryDropdown extends StatelessWidget {
+class CategoryDropdown extends ConsumerWidget {
   const CategoryDropdown({
     super.key,
-    required this.selectedCategory,
+    required this.selectedCategoryId,
     required this.onCategorySelected,
     this.enabled = true,
   });
 
-  final ExpenseCategory selectedCategory;
-  final ValueChanged<ExpenseCategory> onCategorySelected;
+  final String? selectedCategoryId;
+  final ValueChanged<String> onCategorySelected;
   final bool enabled;
 
   @override
-  Widget build(BuildContext context) {
-    return DropdownButtonFormField<ExpenseCategory>(
-      value: selectedCategory,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final authState = ref.watch(authProvider);
+    final groupId = authState.user?.groupId;
+
+    if (groupId == null) {
+      return const Text('Nessun gruppo disponibile');
+    }
+
+    final categoryState = ref.watch(categoryProvider(groupId));
+
+    if (categoryState.isLoading) {
+      return const LinearProgressIndicator();
+    }
+
+    if (categoryState.errorMessage != null) {
+      return Text(categoryState.errorMessage!);
+    }
+
+    return DropdownButtonFormField<String>(
+      value: selectedCategoryId,
       decoration: const InputDecoration(
         labelText: 'Categoria',
         prefixIcon: Icon(Icons.category_outlined),
       ),
-      items: ExpenseCategory.values.map((category) {
+      items: categoryState.categories.map((category) {
         return DropdownMenuItem(
-          value: category,
-          child: Row(
-            children: [
-              Text(category.emoji, style: const TextStyle(fontSize: 18)),
-              const SizedBox(width: 8),
-              Text(category.label),
-            ],
-          ),
+          value: category.id,
+          child: Text(category.name),
         );
       }).toList(),
       onChanged: enabled

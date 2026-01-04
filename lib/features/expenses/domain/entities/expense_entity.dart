@@ -1,7 +1,5 @@
 import 'package:equatable/equatable.dart';
 
-import '../../../../core/config/constants.dart';
-
 /// Expense entity representing a household expense.
 class ExpenseEntity extends Equatable {
   const ExpenseEntity({
@@ -10,7 +8,8 @@ class ExpenseEntity extends Equatable {
     required this.createdBy,
     required this.amount,
     required this.date,
-    required this.category,
+    required this.categoryId,
+    this.categoryName,
     this.isGroupExpense = true,
     this.merchant,
     this.notes,
@@ -35,8 +34,11 @@ class ExpenseEntity extends Equatable {
   /// Date of the expense
   final DateTime date;
 
-  /// Expense category
-  final ExpenseCategory category;
+  /// Category ID (foreign key to expense_categories table)
+  final String categoryId;
+
+  /// Category name for display (denormalized from expense_categories)
+  final String? categoryName;
 
   /// Expense classification: true for group expenses (visible to all), false for personal (visible only to creator)
   final bool isGroupExpense;
@@ -83,7 +85,8 @@ class ExpenseEntity extends Equatable {
       createdBy: '',
       amount: 0,
       date: DateTime.now(),
-      category: ExpenseCategory.altro,
+      categoryId: '',
+      categoryName: null,
     );
   }
 
@@ -100,7 +103,8 @@ class ExpenseEntity extends Equatable {
     String? createdBy,
     double? amount,
     DateTime? date,
-    ExpenseCategory? category,
+    String? categoryId,
+    String? categoryName,
     bool? isGroupExpense,
     String? merchant,
     String? notes,
@@ -115,7 +119,8 @@ class ExpenseEntity extends Equatable {
       createdBy: createdBy ?? this.createdBy,
       amount: amount ?? this.amount,
       date: date ?? this.date,
-      category: category ?? this.category,
+      categoryId: categoryId ?? this.categoryId,
+      categoryName: categoryName ?? this.categoryName,
       isGroupExpense: isGroupExpense ?? this.isGroupExpense,
       merchant: merchant ?? this.merchant,
       notes: notes ?? this.notes,
@@ -133,7 +138,8 @@ class ExpenseEntity extends Equatable {
         createdBy,
         amount,
         date,
-        category,
+        categoryId,
+        categoryName,
         isGroupExpense,
         merchant,
         notes,
@@ -145,6 +151,6 @@ class ExpenseEntity extends Equatable {
 
   @override
   String toString() {
-    return 'ExpenseEntity(id: $id, amount: $formattedAmount, merchant: $merchant, category: ${category.label})';
+    return 'ExpenseEntity(id: $id, amount: $formattedAmount, merchant: $merchant, category: $categoryName)';
   }
 }

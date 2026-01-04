@@ -18,8 +18,9 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   Future<Either<Failure, List<ExpenseEntity>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
-    String? category,
+    String? categoryId,
     String? createdBy,
+    bool? isGroupExpense,
     int? limit,
     int? offset,
   }) async {
@@ -27,8 +28,9 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       final expenses = await remoteDataSource.getExpenses(
         startDate: startDate,
         endDate: endDate,
-        category: category,
+        categoryId: categoryId,
         createdBy: createdBy,
+        isGroupExpense: isGroupExpense,
         limit: limit,
         offset: offset,
       );
@@ -62,7 +64,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
   Future<Either<Failure, ExpenseEntity>> createExpense({
     required double amount,
     required DateTime date,
-    required String category,
+    required String categoryId,
     String? merchant,
     String? notes,
     Uint8List? receiptImage,
@@ -73,7 +75,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
       var expense = await remoteDataSource.createExpense(
         amount: amount,
         date: date,
-        category: category,
+        categoryId: categoryId,
         merchant: merchant,
         notes: notes,
         isGroupExpense: isGroupExpense,
@@ -105,7 +107,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     required String expenseId,
     double? amount,
     DateTime? date,
-    String? category,
+    String? categoryId,
     String? merchant,
     String? notes,
   }) async {
@@ -114,7 +116,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         expenseId: expenseId,
         amount: amount,
         date: date,
-        category: category,
+        categoryId: categoryId,
         merchant: merchant,
         notes: notes,
       );
@@ -212,7 +214,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         totalAmount += expense.amount;
 
         // By category
-        final categoryKey = expense.category.value;
+        final categoryKey = expense.categoryName ?? 'N/A';
         byCategory[categoryKey] = (byCategory[categoryKey] ?? 0) + expense.amount;
 
         // By member
