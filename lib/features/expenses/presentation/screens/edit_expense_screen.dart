@@ -95,7 +95,7 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
   final _merchantController = TextEditingController();
   final _notesController = TextEditingController();
   late DateTime _selectedDate;
-  late String _selectedCategoryId;
+  String? _selectedCategoryId;
   late bool _isGroupExpense;
 
   // Track initial values for unsaved changes detection
@@ -103,7 +103,7 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
   late String _initialMerchant;
   late String _initialNotes;
   late DateTime _initialDate;
-  late String _initialCategoryId;
+  String? _initialCategoryId;
   late bool _initialIsGroupExpense;
 
   @override

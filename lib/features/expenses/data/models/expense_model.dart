@@ -10,7 +10,7 @@ class ExpenseModel extends ExpenseEntity {
     required super.createdBy,
     required super.amount,
     required super.date,
-    required super.categoryId,
+    super.categoryId,
     super.categoryName,
     super.isGroupExpense = true,
     super.merchant,
@@ -29,7 +29,7 @@ class ExpenseModel extends ExpenseEntity {
       createdBy: json['created_by'] as String,
       amount: (json['amount'] as num).toDouble(),
       date: DateTime.parse(json['date'] as String),
-      categoryId: json['category_id'] as String,
+      categoryId: json['category_id'] as String?,
       categoryName: json['category_name'] as String?,
       // Backward compatibility: default to true if field doesn't exist
       isGroupExpense: json['is_group_expense'] as bool? ?? true,

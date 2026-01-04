@@ -8,7 +8,7 @@ class ExpenseEntity extends Equatable {
     required this.createdBy,
     required this.amount,
     required this.date,
-    required this.categoryId,
+    this.categoryId,
     this.categoryName,
     this.isGroupExpense = true,
     this.merchant,
@@ -34,8 +34,8 @@ class ExpenseEntity extends Equatable {
   /// Date of the expense
   final DateTime date;
 
-  /// Category ID (foreign key to expense_categories table)
-  final String categoryId;
+  /// Category ID (foreign key to expense_categories table) - nullable for orphaned expenses
+  final String? categoryId;
 
   /// Category name for display (denormalized from expense_categories)
   final String? categoryName;
@@ -85,7 +85,7 @@ class ExpenseEntity extends Equatable {
       createdBy: '',
       amount: 0,
       date: DateTime.now(),
-      categoryId: '',
+      categoryId: null,
       categoryName: null,
     );
   }

@@ -90,15 +90,15 @@ description: "Task list for Italian Categories and Budget Management System"
 
 ### Implementation for User Story 2
 
-- [ ] T027 [P] [US2] Create data model `lib/features/budgets/data/models/category_budget_model.dart` extending CategoryBudgetEntity with fromJson/toJson
-- [ ] T028 [P] [US2] Create repository interface `lib/features/budgets/domain/repositories/budget_repository.dart` with category budget CRUD methods
-- [ ] T029 [US2] Create remote datasource `lib/features/budgets/data/datasources/budget_remote_datasource.dart` with Supabase category budget queries
-- [ ] T030 [US2] Implement repository `lib/features/budgets/data/repositories/budget_repository_impl.dart` calling remote datasource
-- [ ] T031 [US2] Create Riverpod provider `lib/features/budgets/presentation/providers/budget_provider.dart` for category budgets state management
-- [ ] T032 [US2] Create screen `lib/features/categories/presentation/screens/category_management_screen.dart` for managing categories and their budgets
-- [ ] T033 [US2] Create widget `lib/features/categories/presentation/widgets/category_budget_card.dart` showing category with editable budget field
-- [ ] T034 [US2] Add budget amount input field and validation to category management screen for creating/editing budgets
-- [ ] T035 [US2] Implement save/update/delete budget logic in category management screen calling budget repository methods
+- [X] T027 [P] [US2] Create data model `lib/features/budgets/data/models/category_budget_model.dart` extending CategoryBudgetEntity with fromJson/toJson
+- [X] T028 [P] [US2] Create repository interface `lib/features/budgets/domain/repositories/budget_repository.dart` with category budget CRUD methods
+- [X] T029 [US2] Create remote datasource `lib/features/budgets/data/datasources/budget_remote_datasource.dart` with Supabase category budget queries
+- [X] T030 [US2] Implement repository `lib/features/budgets/data/repositories/budget_repository_impl.dart` calling remote datasource
+- [X] T031 [US2] Create Riverpod provider `lib/features/budgets/presentation/providers/budget_provider.dart` for category budgets state management
+- [X] T032 [US2] Create screen `lib/features/categories/presentation/screens/category_management_screen.dart` for managing categories and their budgets
+- [X] T033 [US2] Create widget `lib/features/categories/presentation/widgets/category_budget_card.dart` showing category with editable budget field
+- [X] T034 [US2] Add budget amount input field and validation to category management screen for creating/editing budgets
+- [X] T035 [US2] Implement save/update/delete budget logic in category management screen calling budget repository methods
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - Italian categories displayed, budgets configurable in settings
 
@@ -112,15 +112,15 @@ description: "Task list for Italian Categories and Budget Management System"
 
 ### Implementation for User Story 3
 
-- [ ] T036 [P] [US3] Create data model `lib/features/categories/data/models/user_category_usage_model.dart` extending UserCategoryUsageEntity with fromJson/toJson
-- [ ] T037 [US3] Add virgin category tracking methods to category remote datasource `lib/features/categories/data/datasources/category_remote_datasource.dart`
-- [ ] T038 [US3] Add virgin category check methods to category repository interface `lib/features/categories/domain/repositories/category_repository.dart`
-- [ ] T039 [US3] Implement virgin category methods in category repository `lib/features/categories/data/repositories/category_repository_impl.dart`
-- [ ] T040 [US3] Create widget `lib/features/categories/presentation/widgets/budget_prompt_dialog.dart` for virgin category budget setup
-- [ ] T041 [US3] Modify add expense screen `lib/features/expenses/presentation/screens/add_expense_screen.dart` to check virgin category and show prompt
-- [ ] T042 [US3] Implement budget prompt logic: save budget if user sets amount, use "Varie" budget if declined
-- [ ] T043 [US3] Create user_category_usage record after first expense creation in virgin category
-- [ ] T044 [US3] Add per-user tracking to ensure each family member gets prompted independently
+- [X] T036 [P] [US3] Create data model `lib/features/categories/data/models/user_category_usage_model.dart` extending UserCategoryUsageEntity with fromJson/toJson
+- [X] T037 [US3] Add virgin category tracking methods to category remote datasource `lib/features/categories/data/datasources/category_remote_datasource.dart`
+- [X] T038 [US3] Add virgin category check methods to category repository interface `lib/features/categories/domain/repositories/category_repository.dart`
+- [X] T039 [US3] Implement virgin category methods in category repository `lib/features/categories/data/repositories/category_repository_impl.dart`
+- [X] T040 [US3] Create widget `lib/features/categories/presentation/widgets/budget_prompt_dialog.dart` for virgin category budget setup
+- [X] T041 [US3] Modify add expense screen `lib/features/expenses/presentation/screens/add_expense_screen.dart` to check virgin category and show prompt
+- [X] T042 [US3] Implement budget prompt logic: save budget if user sets amount, use "Varie" budget if declined
+- [X] T043 [US3] Create user_category_usage record after first expense creation in virgin category
+- [X] T044 [US3] Add per-user tracking to ensure each family member gets prompted independently
 
 **Checkpoint**: All user stories 1-3 should now work independently - Italian categories, configurable budgets, virgin prompts per user
 
@@ -134,20 +134,20 @@ description: "Task list for Italian Categories and Budget Management System"
 
 ### Implementation for User Story 4
 
-- [ ] T045 [P] [US4] Create data model `lib/features/budgets/data/models/monthly_budget_stats_model.dart` extending MonthlyBudgetStatsEntity with fromJson
-- [ ] T046 [P] [US4] Create data model `lib/features/budgets/data/models/overall_group_budget_stats_model.dart` extending OverallGroupBudgetStatsEntity with fromJson
-- [ ] T047 [US4] Add RPC method `getCategoryBudgetStats` to budget remote datasource `lib/features/budgets/data/datasources/budget_remote_datasource.dart`
-- [ ] T048 [US4] Add RPC method `getOverallGroupBudgetStats` to budget remote datasource `lib/features/budgets/data/datasources/budget_remote_datasource.dart`
-- [ ] T049 [US4] Add budget stats methods to budget repository interface `lib/features/budgets/domain/repositories/budget_repository.dart`
-- [ ] T050 [US4] Implement budget stats methods in budget repository `lib/features/budgets/data/repositories/budget_repository_impl.dart`
-- [ ] T051 [US4] Create Riverpod provider `lib/features/budgets/presentation/providers/monthly_budget_stats_provider.dart` for category budget stats
-- [ ] T052 [US4] Create Riverpod provider `lib/features/budgets/presentation/providers/overall_budget_stats_provider.dart` for dashboard overall stats
-- [ ] T053 [US4] Create widget `lib/features/dashboard/presentation/widgets/budget_summary_widget.dart` for overall budget summary display
-- [ ] T054 [US4] Create widget `lib/features/dashboard/presentation/widgets/category_budget_list_widget.dart` for individual category budget cards
-- [ ] T055 [US4] Create widget `lib/features/budgets/presentation/widgets/category_budget_indicator.dart` showing progress bar and over-budget highlights
-- [ ] T056 [US4] Modify dashboard screen `lib/features/dashboard/presentation/screens/dashboard_screen.dart` to include budget summary and category list widgets
-- [ ] T057 [US4] Implement visual highlighting for over-budget categories using color indicators in category budget indicator widget
-- [ ] T058 [US4] Add zero-state handling for dashboard when no budgets exist (show "Set up budgets" prompt)
+- [X] T045 [P] [US4] Create data model `lib/features/budgets/data/models/monthly_budget_stats_model.dart` extending MonthlyBudgetStatsEntity with fromJson
+- [X] T046 [P] [US4] Create data model `lib/features/budgets/data/models/overall_group_budget_stats_model.dart` extending OverallGroupBudgetStatsEntity with fromJson
+- [X] T047 [US4] Add RPC method `getCategoryBudgetStats` to budget remote datasource `lib/features/budgets/data/datasources/budget_remote_datasource.dart`
+- [X] T048 [US4] Add RPC method `getOverallGroupBudgetStats` to budget remote datasource `lib/features/budgets/data/datasources/budget_remote_datasource.dart`
+- [X] T049 [US4] Add budget stats methods to budget repository interface `lib/features/budgets/domain/repositories/budget_repository.dart`
+- [X] T050 [US4] Implement budget stats methods in budget repository `lib/features/budgets/data/repositories/budget_repository_impl.dart`
+- [X] T051 [US4] Create Riverpod provider `lib/features/budgets/presentation/providers/monthly_budget_stats_provider.dart` for category budget stats
+- [X] T052 [US4] Create Riverpod provider `lib/features/budgets/presentation/providers/overall_budget_stats_provider.dart` for dashboard overall stats
+- [X] T053 [US4] Create widget `lib/features/dashboard/presentation/widgets/budget_summary_widget.dart` for overall budget summary display
+- [X] T054 [US4] Create widget `lib/features/dashboard/presentation/widgets/category_budget_list_widget.dart` for individual category budget cards
+- [X] T055 [US4] Create widget `lib/features/budgets/presentation/widgets/category_budget_indicator.dart` showing progress bar and over-budget highlights
+- [X] T056 [US4] Modify dashboard screen `lib/features/dashboard/presentation/screens/dashboard_screen.dart` to include budget summary and category list widgets
+- [X] T057 [US4] Implement visual highlighting for over-budget categories using color indicators in category budget indicator widget
+- [X] T058 [US4] Add zero-state handling for dashboard when no budgets exist (show "Set up budgets" prompt)
 
 **Checkpoint**: Dashboard displays all budget information - category budgets with spending percentages and overall budget totals
 
@@ -161,13 +161,13 @@ description: "Task list for Italian Categories and Budget Management System"
 
 ### Implementation for User Story 5
 
-- [ ] T059 [US5] Create widget `lib/features/expenses/presentation/widgets/budget_context_widget.dart` displaying category budget status for an expense
-- [ ] T060 [US5] Modify expense detail screen `lib/features/expenses/presentation/screens/expense_detail_screen.dart` to show budget context widget in lower section
-- [ ] T061 [US5] Fetch category budget stats for the expense's category in expense detail screen using budget stats provider
-- [ ] T062 [US5] Display remaining budget amount and percentage used in budget context widget
-- [ ] T063 [US5] Add special indicator in budget context widget when expense uses generic "Varie" budget
-- [ ] T064 [US5] Highlight in budget context widget when the category budget was exceeded by this expense
-- [ ] T065 [US5] Handle null category_id case (orphaned expenses) by showing "No budget assigned" message in budget context widget
+- [X] T059 [US5] Create widget `lib/features/expenses/presentation/widgets/budget_context_widget.dart` displaying category budget status for an expense
+- [X] T060 [US5] Modify expense detail screen `lib/features/expenses/presentation/screens/expense_detail_screen.dart` to show budget context widget in lower section
+- [X] T061 [US5] Fetch category budget stats for the expense's category in expense detail screen using budget stats provider
+- [X] T062 [US5] Display remaining budget amount and percentage used in budget context widget
+- [X] T063 [US5] Add special indicator in budget context widget when expense uses generic "Varie" budget
+- [X] T064 [US5] Highlight in budget context widget when the category budget was exceeded by this expense
+- [X] T065 [US5] Handle null category_id case (orphaned expenses) by showing "No budget assigned" message in budget context widget
 
 **Checkpoint**: All user stories 1-5 complete - expense details show contextual budget information for every transaction
 
@@ -181,18 +181,18 @@ description: "Task list for Italian Categories and Budget Management System"
 
 ### Implementation for Orphaned Expense Handling
 
-- [ ] T066 [P] Create screen `lib/features/categories/presentation/screens/orphaned_expenses_screen.dart` for displaying uncategorized expenses
-- [ ] T067 [P] Create Riverpod provider `lib/features/expenses/presentation/providers/orphaned_expenses_provider.dart` for orphaned expense list
-- [ ] T068 Add query method `getOrphanedExpenses` to expense remote datasource `lib/features/expenses/data/datasources/expense_remote_datasource.dart`
-- [ ] T069 Add orphaned expenses method to expense repository interface `lib/features/expenses/domain/repositories/expense_repository.dart`
-- [ ] T070 Implement orphaned expenses method in expense repository `lib/features/expenses/data/repositories/expense_repository_impl.dart`
-- [ ] T071 Implement multi-select UI in orphaned expenses screen with long-press to enter selection mode
-- [ ] T072 Add bottom action sheet to orphaned expenses screen with "Assegna categoria" button
-- [ ] T073 Create category picker modal for bulk re-categorization in orphaned expenses screen
-- [ ] T074 Add RPC method `batchReassignOrphanedExpenses` to expense remote datasource calling `batch_reassign_orphaned_expenses` function
-- [ ] T075 Implement batch update logic in orphaned expenses screen calling RPC method with selected expense IDs
-- [ ] T076 Add notification on app launch to alert user of orphaned expenses count with navigation to orphaned expenses screen
-- [ ] T077 Add loading indicator and error handling for batch re-categorization operations
+- [X] T066 [P] Create screen `lib/features/categories/presentation/screens/orphaned_expenses_screen.dart` for displaying uncategorized expenses
+- [X] T067 [P] Create Riverpod provider `lib/features/expenses/presentation/providers/orphaned_expenses_provider.dart` for orphaned expense list
+- [X] T068 Add query method `getOrphanedExpenses` to expense remote datasource `lib/features/expenses/data/datasources/expense_remote_datasource.dart`
+- [X] T069 Add orphaned expenses method to expense repository interface `lib/features/expenses/domain/repositories/expense_repository.dart`
+- [X] T070 Implement orphaned expenses method in expense repository `lib/features/expenses/data/repositories/expense_repository_impl.dart`
+- [X] T071 Implement multi-select UI in orphaned expenses screen with long-press to enter selection mode
+- [X] T072 Add bottom action sheet to orphaned expenses screen with "Assegna categoria" button
+- [X] T073 Create category picker modal for bulk re-categorization in orphaned expenses screen
+- [X] T074 Add RPC method `batchReassignOrphanedExpenses` to expense remote datasource calling `batch_reassign_orphaned_expenses` function
+- [X] T075 Implement batch update logic in orphaned expenses screen calling RPC method with selected expense IDs
+- [X] T076 Add notification on app launch to alert user of orphaned expenses count with navigation to orphaned expenses screen
+- [X] T077 Add loading indicator and error handling for batch re-categorization operations
 
 **Checkpoint**: Users can efficiently re-categorize all orphaned expenses from migration using bulk selection UI
 
@@ -202,13 +202,13 @@ description: "Task list for Italian Categories and Budget Management System"
 
 **Purpose**: Refinements and quality improvements across all user stories
 
-- [ ] T078 [P] Add monthly budget reset documentation in `lib/core/utils/budget_calculator.dart` comments explaining implicit reset via date queries
-- [ ] T079 [P] Verify all budget calculations use TimezoneHandler for month boundaries in budget remote datasource
-- [ ] T080 [P] Add validation in category budget forms to prevent negative budget amounts
-- [ ] T081 [P] Add confirmation dialog before deleting category budgets in category management screen
+- [X] T078 [P] Add monthly budget reset documentation in `lib/core/utils/budget_calculator.dart` comments explaining implicit reset via date queries
+- [X] T079 [P] Verify all budget calculations use TimezoneHandler for month boundaries in budget remote datasource
+- [X] T080 [P] Add validation in category budget forms to prevent negative budget amounts
+- [X] T081 [P] Add confirmation dialog before deleting category budgets in category management screen
 - [ ] T082 [P] Implement optimistic UI updates for budget modifications using Riverpod state management
 - [ ] T083 [P] Add error handling and user feedback (SnackBars) for all budget operations throughout the app
-- [ ] T084 Add navigation from dashboard budget widgets to detailed category budget view in category management screen
+- [X] T084 Add navigation from dashboard budget widgets to detailed category budget view in category management screen
 - [ ] T085 Verify RLS policies enforce group membership for all budget queries by testing with multiple users
 - [ ] T086 Test budget calculations with edge cases (deleted expenses, category changes, month boundaries)
 - [ ] T087 Verify virgin category prompts work correctly for multiple family members independently

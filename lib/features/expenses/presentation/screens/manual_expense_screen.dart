@@ -8,7 +8,13 @@ import '../../../../shared/widgets/custom_text_field.dart';
 import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/navigation_guard.dart';
 import '../../../../shared/widgets/primary_button.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../budgets/presentation/providers/budget_repository_provider.dart';
+import '../../../categories/presentation/providers/category_provider.dart';
+import '../../../categories/presentation/providers/category_repository_provider.dart';
+import '../../../categories/presentation/widgets/budget_prompt_dialog.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
+import '../../../groups/presentation/providers/group_provider.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/expense_type_toggle.dart';
@@ -103,9 +109,83 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
 
     if (expense != null && mounted) {
       listNotifier.addExpense(expense);
+
+      // Check for virgin category and show budget prompt (Feature 004: T041-T044)
+      await _checkAndPromptForVirginCategory();
+
       // Refresh dashboard to reflect the new expense
       ref.read(dashboardProvider.notifier).refresh();
-      context.pop(); // Return to previous screen (MainNavigationScreen with Spese tab)
+
+      if (mounted) {
+        context.pop(); // Return to previous screen (MainNavigationScreen with Spese tab)
+      }
+    }
+  }
+
+  /// Check if this is the first time user uses this category, and show budget prompt if so.
+  /// Feature 004: Virgin Category Prompts (T041-T044)
+  Future<void> _checkAndPromptForVirginCategory() async {
+    if (_selectedCategoryId == null || !mounted) return;
+
+    final userId = ref.read(currentUserIdProvider);
+    final categoryRepository = ref.read(categoryRepositoryProvider);
+    final budgetRepository = ref.read(budgetRepositoryProvider);
+    final groupId = ref.read(currentGroupIdProvider);
+
+    // Check if user has used this category before (T041)
+    final hasUsedResult = await categoryRepository.hasUserUsedCategory(
+      userId: userId,
+      categoryId: _selectedCategoryId!,
+    );
+
+    final hasUsed = hasUsedResult.fold(
+      (failure) => true, // On error, assume used to avoid showing prompt
+      (hasUsed) => hasUsed,
+    );
+
+    if (hasUsed) return; // Category already used, no prompt needed
+
+    // Get category name for the prompt
+    final categoriesState = ref.read(categoryProvider(groupId));
+    try {
+      final category = categoriesState.categories.firstWhere(
+        (cat) => cat.id == _selectedCategoryId,
+      );
+
+      if (!mounted) return;
+
+      // Show budget prompt dialog (T041, T042)
+      await showBudgetPrompt(
+        context: context,
+        categoryName: category.name,
+        onDecline: () {
+          // User declined - do nothing (T042)
+          // Could optionally use "Varie" budget, but spec says just track usage
+        },
+        onSetBudget: (amountInCents) async {
+          // User set a budget - save it (T042)
+          final now = DateTime.now();
+          await budgetRepository.createCategoryBudget(
+            categoryId: _selectedCategoryId!,
+            groupId: groupId,
+            amount: amountInCents,
+            month: now.month,
+            year: now.year,
+          );
+        },
+      );
+
+      // Mark category as used for this user (T043)
+      await categoryRepository.markCategoryAsUsed(
+        userId: userId,
+        categoryId: _selectedCategoryId!,
+      );
+
+      // Refresh category budgets to show the new budget if created
+      ref.invalidate(categoryProvider(groupId));
+    } catch (e) {
+      // Category not found or error occurred - skip prompt
+      return;
     }
   }
 

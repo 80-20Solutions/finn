@@ -12,6 +12,9 @@ import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
 import '../../domain/entities/dashboard_stats_entity.dart';
 import '../providers/dashboard_provider.dart';
+import '../../../categories/presentation/widgets/orphaned_expenses_notification.dart';
+import '../widgets/budget_summary_card.dart';
+import '../widgets/category_budget_list.dart';
 import '../widgets/category_pie_chart.dart';
 import '../widgets/member_breakdown_list.dart';
 import '../widgets/member_filter.dart';
@@ -157,6 +160,9 @@ class _DashboardContent extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Orphaned expenses notification (Feature 004)
+            if (!isPersonalView) const OrphanedExpensesNotification(),
+
             // Period selector
             Center(
               child: PeriodSelector(
@@ -219,6 +225,23 @@ class _DashboardContent extends ConsumerWidget {
                       context.push('/budget-settings');
                     },
                   );
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Category budget summary (Feature 004)
+              BudgetSummaryCard(
+                onTap: () {
+                  context.push('/budget-management');
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Category budget list (Feature 004)
+              CategoryBudgetList(
+                maxItems: 5,
+                onViewAll: () {
+                  context.push('/budget-management');
                 },
               ),
               const SizedBox(height: 16),

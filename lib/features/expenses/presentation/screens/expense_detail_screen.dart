@@ -7,10 +7,10 @@ import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../../shared/widgets/receipt_image_viewer.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
 import '../providers/expense_provider.dart';
 import '../providers/receipt_image_provider.dart';
+import '../widgets/budget_context_widget.dart';
 
 /// Screen showing full expense details with receipt image.
 class ExpenseDetailScreen extends ConsumerWidget {
@@ -187,6 +187,15 @@ class ExpenseDetailScreen extends ConsumerWidget {
                     ),
                   ),
                 ],
+
+                // Budget context widget (Feature 004: T060-T065)
+                const SizedBox(height: 16),
+                BudgetContextWidget(
+                  categoryId: expense.categoryId,
+                  categoryName: expense.categoryName,
+                  expenseAmount: (expense.amount * 100).toInt(), // Convert EUR to cents
+                  expenseDate: expense.date,
+                ),
 
                 // Receipt image
                 if (expense.hasReceipt) ...[

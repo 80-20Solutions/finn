@@ -24,6 +24,8 @@ import '../features/auth/presentation/screens/main_navigation_screen.dart';
 import '../features/auth/presentation/screens/profile_screen.dart';
 import '../features/budgets/presentation/screens/budget_settings_screen.dart';
 import '../features/categories/presentation/screens/category_management_screen.dart';
+import '../features/categories/presentation/screens/budget_management_screen.dart';
+import '../features/categories/presentation/screens/orphaned_expenses_screen.dart';
 import '../features/upload/presentation/screens/upload_file_screen.dart';
 
 /// Route paths
@@ -53,9 +55,13 @@ class AppRoutes {
 
   // Budget routes
   static const budgetSettings = '/budget-settings';
+  static const budgetManagement = '/budget-management';
 
   // Category routes
   static const categoryManagement = '/category-management';
+
+  // Orphaned expenses
+  static const orphanedExpenses = '/orphaned-expenses';
 
   // Dashboard
   static const dashboard = '/dashboard';
@@ -200,12 +206,24 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'budgetSettings',
         builder: (context, state) => const BudgetSettingsScreen(),
       ),
+      GoRoute(
+        path: AppRoutes.budgetManagement,
+        name: 'budgetManagement',
+        builder: (context, state) => const BudgetManagementScreen(),
+      ),
 
       // Category routes
       GoRoute(
         path: AppRoutes.categoryManagement,
         name: 'categoryManagement',
         builder: (context, state) => const CategoryManagementScreen(),
+      ),
+
+      // Orphaned expenses route
+      GoRoute(
+        path: AppRoutes.orphanedExpenses,
+        name: 'orphanedExpenses',
+        builder: (context, state) => const OrphanedExpensesScreen(),
       ),
 
       // Dashboard route (standalone, without bottom nav)

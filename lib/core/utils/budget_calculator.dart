@@ -2,6 +2,40 @@
 ///
 /// Handles budget math including percentage calculations, rounding,
 /// and budget status determination
+///
+/// ## Monthly Budget Reset Behavior (Feature 004)
+///
+/// **IMPORTANT**: Budgets do NOT reset automatically via code or database triggers.
+/// Instead, budget "reset" is achieved implicitly through date-based queries:
+///
+/// 1. **Budget Storage**: Each budget record stores `month` and `year` fields
+///    (e.g., month=1, year=2026 for January 2026)
+///
+/// 2. **Implicit Reset**: When a new month begins:
+///    - Queries filter by current month/year (via RPC functions)
+///    - Previous month's spending automatically becomes inaccessible
+///    - Budget amounts remain the same, but spent amounts start at 0
+///
+/// 3. **RPC Implementation**: Budget stats RPC functions use date-based queries:
+///    ```sql
+///    WHERE EXTRACT(MONTH FROM e.date) = p_month
+///      AND EXTRACT(YEAR FROM e.date) = p_year
+///    ```
+///
+/// 4. **Multi-Month Tracking**: Each month's budget is independent:
+///    - January 2026 budget: €500 budgeted, €300 spent
+///    - February 2026 budget: €500 budgeted, €0 spent (new month)
+///    - Historical data remains queryable by specifying past month/year
+///
+/// 5. **Timezone Handling**: All date comparisons use UTC timezone to ensure
+///    consistent month boundaries across different user timezones
+///    (see [TimezoneHandler] for details)
+///
+/// This approach provides several benefits:
+/// - No scheduled jobs or maintenance required
+/// - Historical budget data preserved automatically
+/// - Month boundaries handled correctly across timezones
+/// - Query performance optimized via indexed date columns
 class BudgetCalculator {
   /// Calculate spent amount from expense amounts (rounded up to whole euros)
   ///
