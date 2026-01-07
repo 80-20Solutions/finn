@@ -154,9 +154,9 @@ Flutter mobile app with Clean Architecture:
 
 ### Data Layer for User Story 2
 
-- [ ] T069 [US2] Implement updateOfflineExpense() method in OfflineExpenseLocalDataSourceImpl in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
-- [ ] T070 [US2] Implement deleteOfflineExpense() method in OfflineExpenseLocalDataSourceImpl in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
-- [ ] T071 [US2] Update _addToSyncQueue() to support 'update' and 'delete' operations in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
+- [X] T069 [US2] Implement updateOfflineExpense() method in OfflineExpenseLocalDataSourceImpl in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
+- [X] T070 [US2] Implement deleteOfflineExpense() method in OfflineExpenseLocalDataSourceImpl in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
+- [X] T071 [US2] Update _addToSyncQueue() to support 'update' and 'delete' operations in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
 
 ### Domain Layer for User Story 2
 
