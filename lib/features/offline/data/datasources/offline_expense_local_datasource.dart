@@ -380,4 +380,68 @@ class OfflineExpenseLocalDataSourceImpl
       payload: payload,
     );
   }
+
+  // ========================================================================
+  // USER STORY 4: Conflict Resolution
+  // ========================================================================
+
+  /// T095: Record sync conflict for manual resolution
+  Future<void> recordConflict({
+    required String userId,
+    required String expenseId,
+    required String conflictType,
+    required Map<String, dynamic> localVersion,
+    required Map<String, dynamic> serverVersion,
+    String resolutionStrategy = 'server_wins',
+  }) async {
+    final companion = SyncConflictsCompanion.insert(
+      userId: userId,
+      expenseId: expenseId,
+      conflictType: conflictType,
+      localVersion: jsonEncode(localVersion),
+      serverVersion: jsonEncode(serverVersion),
+      detectedAt: DateTime.now(),
+      resolutionStrategy: drift.Value(resolutionStrategy),
+      resolved: const drift.Value(false),
+    );
+
+    await _db.into(_db.syncConflicts).insert(companion);
+  }
+
+  /// T096: Get unresolved conflicts for user
+  Future<List<SyncConflict>> getUnresolvedConflicts(String userId) async {
+    return await (_db.select(_db.syncConflicts)
+          ..where((tbl) =>
+              tbl.userId.equals(userId) & tbl.resolved.equals(false))
+          ..orderBy([
+            (tbl) => OrderingTerm.desc(tbl.detectedAt),
+          ]))
+        .get();
+  }
+
+  /// T097: Resolve conflict with chosen strategy
+  Future<void> resolveConflict({
+    required int conflictId,
+    required String resolutionStrategy,
+  }) async {
+    final companion = SyncConflictsCompanion(
+      id: drift.Value(conflictId),
+      resolved: const drift.Value(true),
+      resolvedAt: drift.Value(DateTime.now()),
+      resolutionStrategy: drift.Value(resolutionStrategy),
+    );
+
+    await (_db.update(_db.syncConflicts)
+          ..where((tbl) => tbl.id.equals(conflictId)))
+        .write(companion);
+  }
+
+  /// T098: Get conflict by expense ID
+  Future<SyncConflict?> getConflictByExpenseId(String expenseId) async {
+    return await (_db.select(_db.syncConflicts)
+          ..where((tbl) =>
+              tbl.expenseId.equals(expenseId) & tbl.resolved.equals(false))
+          ..limit(1))
+        .getSingleOrNull();
+  }
 }

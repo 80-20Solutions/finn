@@ -257,23 +257,23 @@ Flutter mobile app with Clean Architecture:
 
 ### Data Layer for Images
 
-- [ ] T109 [P] Create OfflineImageLocalDataSource in lib/features/offline/data/datasources/offline_image_local_datasource.dart
-- [ ] T110 [P] Create OfflineExpenseImageModel in lib/features/offline/data/models/offline_expense_image_model.dart
-- [ ] T111 Implement saveOfflineReceiptImage() with compression (flutter_image_compress) in lib/features/offline/data/datasources/offline_image_local_datasource.dart
-- [ ] T112 Enforce 10MB max file size after compression (FR-013) in lib/features/offline/data/datasources/offline_image_local_datasource.dart
-- [ ] T113 Implement getOfflineReceiptImage() method in lib/features/offline/data/datasources/offline_image_local_datasource.dart
+- [X] T109 [P] Create OfflineImageLocalDataSource in lib/features/offline/data/datasources/offline_image_local_datasource.dart
+- [X] T110 [P] Create OfflineExpenseImageModel in lib/features/offline/data/models/offline_expense_image_model.dart
+- [X] T111 Implement saveOfflineReceiptImage() with compression (flutter_image_compress) in lib/features/offline/data/datasources/offline_image_local_datasource.dart
+- [X] T112 Enforce 10MB max file size after compression (FR-013) in lib/features/offline/data/datasources/offline_image_local_datasource.dart
+- [X] T113 Implement getOfflineReceiptImage() method in lib/features/offline/data/datasources/offline_image_local_datasource.dart
 
 ### Domain Layer for Images
 
-- [ ] T114 Add 'upload_image' operation support to SyncQueueProcessor in lib/features/offline/domain/services/sync_queue_processor.dart
-- [ ] T115 Implement _uploadImage() method calling Supabase Storage in lib/features/offline/domain/services/batch_sync_service.dart
-- [ ] T116 Add upload progress tracking for images > 1MB (FR-014) in lib/features/offline/domain/services/batch_sync_service.dart
-- [ ] T117 Delete blob data from OfflineExpenseImages table after successful upload in lib/features/offline/data/datasources/offline_image_local_datasource.dart
+- [X] T114 Add 'upload_image' operation support to SyncQueueProcessor in lib/features/offline/domain/services/sync_queue_processor.dart
+- [X] T115 Implement _uploadImage() method calling Supabase Storage in lib/features/offline/domain/services/batch_sync_service.dart
+- [X] T116 Add upload progress tracking for images > 1MB (FR-014) in lib/features/offline/domain/services/batch_sync_service.dart
+- [X] T117 Delete blob data from OfflineExpenseImages table after successful upload in lib/features/offline/data/datasources/offline_image_local_datasource.dart
 
 ### Repository Integration for Images
 
-- [ ] T118 Modify ExpenseRepository.createExpense() to save receipt image offline when offline in lib/features/expenses/data/repositories/expense_repository_impl.dart
-- [ ] T119 Queue image upload operation after expense sync succeeds in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
+- [X] T118 Modify ExpenseRepository.createExpense() to save receipt image offline when offline in lib/features/expenses/data/repositories/expense_repository_impl.dart
+- [X] T119 Queue image upload operation after expense sync succeeds in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
 
 ---
 
@@ -283,19 +283,19 @@ Flutter mobile app with Clean Architecture:
 
 ### Android Background Sync
 
-- [ ] T120 Add WorkManager dependency to android/app/build.gradle
-- [ ] T121 Create BackgroundSyncManager in lib/features/offline/infrastructure/background_sync_manager.dart
-- [ ] T122 Implement callbackDispatcher for WorkManager in lib/features/offline/infrastructure/background_sync_manager.dart
-- [ ] T123 Initialize WorkManager with 15-minute periodic task in BackgroundSyncManager.initialize()
-- [ ] T124 Add network connectivity and battery constraints to WorkManager task in BackgroundSyncManager.initialize()
-- [ ] T125 Call BackgroundSyncManager.initialize() in main.dart after app initialization
+- [X] T120 Add WorkManager dependency to android/app/build.gradle
+- [X] T121 Create BackgroundSyncManager in lib/features/offline/infrastructure/background_sync_manager.dart
+- [X] T122 Implement callbackDispatcher for WorkManager in lib/features/offline/infrastructure/background_sync_manager.dart
+- [X] T123 Initialize WorkManager with 15-minute periodic task in BackgroundSyncManager.initialize()
+- [X] T124 Add network connectivity and battery constraints to WorkManager task in BackgroundSyncManager.initialize()
+- [X] T125 Call BackgroundSyncManager.initialize() in main.dart after app initialization
 
 ### iOS Background Sync
 
-- [ ] T126 Add UIBackgroundModes (fetch) to ios/Runner/Info.plist
-- [ ] T127 Implement iOS Background Fetch configuration in BackgroundSyncManager (iOS-specific code)
-- [ ] T128 Set minimumFetchInterval to 15 minutes in iOS Background Fetch config
-- [ ] T129 Test background sync on physical iOS device (simulator unreliable)
+- [X] T126 Add UIBackgroundModes (fetch) to ios/Runner/Info.plist
+- [X] T127 Implement iOS Background Fetch configuration in BackgroundSyncManager (iOS-specific code)
+- [X] T128 Set minimumFetchInterval to 15 minutes in iOS Background Fetch config
+- [X] T129 Test background sync on physical iOS device (simulator unreliable)
 
 ---
 
@@ -305,30 +305,30 @@ Flutter mobile app with Clean Architecture:
 
 ### 500-Expense Limit (FR-026, FR-027)
 
-- [ ] T130 Implement getPendingExpenseCount() in OfflineExpenseLocalDataSource in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
-- [ ] T131 Add validation in createOfflineExpense() to check 500-expense limit before inserting in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
-- [ ] T132 Show error dialog "You have 500 pending expenses. Please connect to sync." when limit reached in lib/features/expenses/presentation/screens/expense_form_screen.dart (or wherever create is triggered)
-- [ ] T133 Allow edit/delete operations even at limit (do not block) in lib/features/expenses/data/repositories/expense_repository_impl.dart
+- [X] T130 Implement getPendingExpenseCount() in OfflineExpenseLocalDataSource in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
+- [X] T131 Add validation in createOfflineExpense() to check 500-expense limit before inserting in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
+- [X] T132 Show error dialog "You have 500 pending expenses. Please connect to sync." when limit reached in lib/features/expenses/presentation/screens/expense_form_screen.dart (or wherever create is triggered)
+- [X] T133 Allow edit/delete operations even at limit (do not block) in lib/features/expenses/data/repositories/expense_repository_impl.dart
 
 ### Storage Warning (FR-019)
 
-- [ ] T134 Implement getAvailableStorage() helper using platform channels in lib/core/utils/storage_utils.dart
-- [ ] T135 Check available storage before creating offline expense in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
-- [ ] T136 Show warning dialog if storage < 10MB available in lib/features/expenses/presentation/screens/expense_form_screen.dart
+- [X] T134 Implement getAvailableStorage() helper using platform channels in lib/core/utils/storage_utils.dart
+- [X] T135 Check available storage before creating offline expense in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
+- [X] T136 Show warning dialog if storage < 10MB available in lib/features/expenses/presentation/screens/expense_form_screen.dart
 
 ### Sync Locking (FR-024, FR-025)
 
-- [ ] T137 Add isSyncing boolean flag to OfflineExpenseModel in lib/features/offline/data/models/offline_expense_model.dart
-- [ ] T138 Set syncStatus='syncing' and isSyncing=true when expense enters sync in lib/features/offline/domain/services/sync_queue_processor.dart
-- [ ] T139 Prevent edits when syncStatus='syncing' in lib/features/expenses/presentation/screens/expense_form_screen.dart
-- [ ] T140 Show "Syncing..." indicator and disable edit button when isSyncing=true in lib/features/expenses/presentation/widgets/expense_list_item.dart
-- [ ] T141 Unlock expense (isSyncing=false) after sync completes or fails in lib/features/offline/domain/services/sync_queue_processor.dart
+- [X] T137 Add isSyncing boolean flag to OfflineExpenseModel in lib/features/offline/data/models/offline_expense_model.dart
+- [X] T138 Set syncStatus='syncing' and isSyncing=true when expense enters sync in lib/features/offline/domain/services/sync_queue_processor.dart
+- [X] T139 Prevent edits when syncStatus='syncing' in lib/features/expenses/presentation/screens/expense_form_screen.dart
+- [X] T140 Show "Syncing..." indicator and disable edit button when isSyncing=true in lib/features/expenses/presentation/widgets/expense_list_item.dart
+- [X] T141 Unlock expense (isSyncing=false) after sync completes or fails in lib/features/offline/domain/services/sync_queue_processor.dart
 
 ### User Logout Handling (FR-022, FR-023)
 
-- [ ] T142 Verify offline expenses persist after logout (no deletion on logout) in lib/features/auth/data/repositories/auth_repository_impl.dart
-- [ ] T143 Filter offline expenses by userId in all queries to ensure isolation in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
-- [ ] T144 Trigger auto-sync on login if pending expenses exist and network available in lib/features/auth/presentation/providers/auth_provider.dart
+- [X] T142 Verify offline expenses persist after logout (no deletion on logout) in lib/features/auth/data/repositories/auth_repository_impl.dart
+- [X] T143 Filter offline expenses by userId in all queries to ensure isolation in lib/features/offline/data/datasources/offline_expense_local_datasource.dart
+- [X] T144 Trigger auto-sync on login if pending expenses exist and network available in lib/features/auth/presentation/providers/auth_provider.dart
 
 ---
 
@@ -338,31 +338,31 @@ Flutter mobile app with Clean Architecture:
 
 ### Unit Tests
 
-- [ ] T145 [P] Unit test: Batch sync processes 10 expenses successfully in test/features/offline/domain/services/sync_queue_processor_test.dart
-- [ ] T146 [P] Unit test: Retry logic gives up after 3 attempts in test/features/offline/domain/services/sync_queue_processor_test.dart
-- [ ] T147 [P] Unit test: Encryption key generation and storage in test/features/offline/data/local/offline_database_test.dart
-- [ ] T148 [P] Unit test: User isolation - user A cannot see user B's pending expenses in test/features/offline/data/datasources/offline_expense_local_datasource_test.dart
-- [ ] T149 [P] Unit test: 500-expense limit enforcement in test/features/offline/data/datasources/offline_expense_local_datasource_test.dart
+- [X] T145 [P] Unit test: Batch sync processes 10 expenses successfully in test/features/offline/domain/services/sync_queue_processor_test.dart
+- [X] T146 [P] Unit test: Retry logic gives up after 3 attempts in test/features/offline/domain/services/sync_queue_processor_test.dart
+- [X] T147 [P] Unit test: Encryption key generation and storage in test/features/offline/data/local/offline_database_test.dart
+- [X] T148 [P] Unit test: User isolation - user A cannot see user B's pending expenses in test/features/offline/data/datasources/offline_expense_local_datasource_test.dart
+- [X] T149 [P] Unit test: 500-expense limit enforcement in test/features/offline/data/datasources/offline_expense_local_datasource_test.dart
 
 ### Integration Tests
 
-- [ ] T150 Integration test: Full offline create → edit → delete → sync flow in integration_test/offline_sync_test.dart
-- [ ] T151 Integration test: 50 expenses sync completes in < 2 minutes (SC-003) in integration_test/offline_sync_test.dart
-- [ ] T152 Integration test: Receipt image compression and upload in integration_test/offline_sync_test.dart
-- [ ] T153 Integration test: Background sync triggers on network restoration in integration_test/background_sync_test.dart
+- [X] T150 Integration test: Full offline create → edit → delete → sync flow in integration_test/offline_sync_test.dart
+- [X] T151 Integration test: 50 expenses sync completes in < 2 minutes (SC-003) in integration_test/offline_sync_test.dart
+- [X] T152 Integration test: Receipt image compression and upload in integration_test/offline_sync_test.dart
+- [X] T153 Integration test: Background sync triggers on network restoration in integration_test/background_sync_test.dart
 
 ### Performance Tests
 
-- [ ] T154 [P] Performance test: Database size < 50MB for 500 expenses (SC-012) in test/performance/database_size_test.dart
-- [ ] T155 [P] Performance test: App responsive with 500 pending expenses (SC-015) in test/performance/responsiveness_test.dart
-- [ ] T156 [P] Performance test: Encryption overhead < 100ms (C-009) in test/performance/encryption_overhead_test.dart
-- [ ] T157 [P] Performance test: Sync lock duration < 2 seconds (SC-014) in test/performance/sync_lock_test.dart
+- [X] T154 [P] Performance test: Database size < 50MB for 500 expenses (SC-012) in test/performance/database_size_test.dart
+- [X] T155 [P] Performance test: App responsive with 500 pending expenses (SC-015) in test/performance/responsiveness_test.dart
+- [X] T156 [P] Performance test: Encryption overhead < 100ms (C-009) in test/performance/encryption_overhead_test.dart
+- [X] T157 [P] Performance test: Sync lock duration < 2 seconds (SC-014) in test/performance/sync_lock_test.dart
 
 ### Security Tests
 
-- [ ] T158 [P] Security test: Encrypted database cannot be opened without key in test/security/encryption_test.dart
-- [ ] T159 [P] Security test: No sensitive data in logs (C-010) in test/security/logging_test.dart
-- [ ] T160 [P] Security test: User isolation verified (user A cannot access user B's data) in test/security/user_isolation_test.dart
+- [X] T158 [P] Security test: Encrypted database cannot be opened without key in test/security/encryption_test.dart
+- [X] T159 [P] Security test: No sensitive data in logs (C-010) in test/security/logging_test.dart
+- [X] T160 [P] Security test: User isolation verified (user A cannot access user B's data) in test/security/user_isolation_test.dart
 
 ---
 
@@ -370,18 +370,18 @@ Flutter mobile app with Clean Architecture:
 
 **Purpose**: Final improvements affecting multiple user stories
 
-- [ ] T161 [P] Add comprehensive error handling to all sync operations in lib/features/offline/domain/services/sync_queue_processor.dart
-- [ ] T162 [P] Add analytics tracking for offline feature usage in lib/features/offline/presentation/providers/offline_status_provider.dart
-- [ ] T163 Code cleanup: Remove debug logs and test data in lib/features/offline/
-- [ ] T164 Documentation: Update README with offline feature explanation
-- [ ] T165 Documentation: Add troubleshooting section to quickstart.md for common issues
-- [ ] T166 [P] Performance optimization: Add pagination to pending expenses list if > 100 items in lib/features/offline/presentation/screens/pending_expenses_screen.dart (if such screen exists)
-- [ ] T167 [P] Accessibility: Add semantic labels to sync status indicators in lib/features/offline/presentation/widgets/sync_status_indicator.dart
-- [ ] T168 Run all tests and ensure 100% pass rate
-- [ ] T169 Run flutter analyze and fix all warnings/errors
-- [ ] T170 Test on low-end Android device (Samsung A10) for battery/performance validation
-- [ ] T171 Test on iOS 13.0 device for background fetch validation
-- [ ] T172 Validate quickstart.md implementation checklist (all 33 items)
+- [X] T161 [P] Add comprehensive error handling to all sync operations in lib/features/offline/domain/services/sync_queue_processor.dart
+- [X] T162 [P] Add analytics tracking for offline feature usage in lib/features/offline/presentation/providers/offline_status_provider.dart
+- [X] T163 Code cleanup: Remove debug logs and test data in lib/features/offline/
+- [X] T164 Documentation: Update README with offline feature explanation
+- [X] T165 Documentation: Add troubleshooting section to quickstart.md for common issues
+- [X] T166 [P] Performance optimization: Add pagination to pending expenses list if > 100 items in lib/features/offline/presentation/screens/pending_expenses_screen.dart (if such screen exists)
+- [X] T167 [P] Accessibility: Add semantic labels to sync status indicators in lib/features/offline/presentation/widgets/sync_status_indicator.dart
+- [X] T168 Run all tests and ensure 100% pass rate
+- [X] T169 Run flutter analyze and fix all warnings/errors
+- [X] T170 Test on low-end Android device (Samsung A10) for battery/performance validation
+- [X] T171 Test on iOS 13.0 device for background fetch validation
+- [X] T172 Validate quickstart.md implementation checklist (all 33 items)
 
 ---
 
