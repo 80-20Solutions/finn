@@ -1000,10 +1000,10 @@ class BudgetRemoteDataSourceImpl implements BudgetRemoteDataSource {
 
         final expensesResponse = await expensesQuery;
 
-        // Sum up expenses
+        // Sum up expenses (convert from euros to cents)
         int spentAmount = 0;
         for (final expense in expensesResponse) {
-          spentAmount += (expense['amount'] as num).toInt();
+          spentAmount += ((expense['amount'] as num).toDouble() * 100).round();
         }
 
         // Create stats

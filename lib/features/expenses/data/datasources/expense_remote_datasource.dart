@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/errors/exceptions.dart';
@@ -197,6 +198,9 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
       // Normalize date to UTC date only (no time component)
       final normalizedDate = DateTime.utc(date.year, date.month, date.day);
 
+      // DEBUG: Log the amount being saved
+      debugPrint('🔍 SAVE EXPENSE: Saving to DB amount=$amount (type: ${amount.runtimeType})');
+
       final response = await supabaseClient
           .from('expenses')
           .insert({
@@ -215,12 +219,18 @@ class ExpenseRemoteDataSourceImpl implements ExpenseRemoteDataSource {
           .select('*, category_name:expense_categories(name)')
           .single();
 
+      // DEBUG: Log the response from database
+      debugPrint('🔍 SAVE EXPENSE: Database returned amount=${response['amount']} (type: ${response['amount'].runtimeType})');
+
       // Extract category_name from nested object if present
       if (response['category_name'] != null && response['category_name'] is Map) {
         response['category_name'] = response['category_name']['name'];
       }
 
-      return ExpenseModel.fromJson(response);
+      final expenseModel = ExpenseModel.fromJson(response);
+      debugPrint('🔍 SAVE EXPENSE: ExpenseModel.amount=${expenseModel.amount} (type: ${expenseModel.amount.runtimeType})');
+
+      return expenseModel;
     } on PostgrestException catch (e) {
       throw ServerException(e.message, e.code);
     } catch (e) {

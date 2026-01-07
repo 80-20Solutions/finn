@@ -1,6 +1,7 @@
 // Riverpod Provider: Unified Budget Stats Provider
 // Aggregates group, personal, and category budgets for unified dashboard view
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -99,14 +100,14 @@ final unifiedBudgetStatsProvider = FutureProvider.family<
             .select()
             .eq('group_id', params.groupId)
             .eq('category_id', categoryId)
-            .gte('expense_date', startOfMonth.toUtc().toIso8601String())
-            .lte('expense_date', endOfMonth.toUtc().toIso8601String());
+            .gte('date', startOfMonth.toIso8601String().split('T')[0])
+            .lte('date', endOfMonth.toIso8601String().split('T')[0]);
 
         // Filter by budget type
         if (isGroupBudget) {
-          query = query.eq('is_personal', false);
+          query = query.eq('is_group_expense', true);
         } else {
-          query = query.eq('is_personal', true).eq('created_by', params.userId);
+          query = query.eq('is_group_expense', false).eq('created_by', params.userId);
         }
 
         final expenseData = await query as List<dynamic>;
@@ -115,12 +116,21 @@ final unifiedBudgetStatsProvider = FutureProvider.family<
         // Database stores amounts as DECIMAL in euros, but budgets are in cents
         // Convert euros to cents to match budget unit
         int spentAmountCents = 0;
+        debugPrint('🔍 DEBUG Category ${category.name}: Found ${expenseData.length} expenses');
         for (final expense in expenseData) {
+          final rawAmount = expense['amount'];
+          debugPrint('🔍 DEBUG  - Expense raw amount: $rawAmount (type: ${rawAmount.runtimeType})');
           final amountEur = (expense['amount'] as num).toDouble();
-          spentAmountCents += (amountEur * 100).toInt(); // Convert euros to cents
+          debugPrint('🔍 DEBUG  - Converted to euros: $amountEur');
+          final amountCents = (amountEur * 100).round();
+          debugPrint('🔍 DEBUG  - Converted to cents: $amountCents');
+          spentAmountCents += amountCents;
         }
 
         int spentAmount = spentAmountCents;
+
+        // DEBUG: Print values for debugging
+        debugPrint('🔍 DEBUG Category ${category.name}: budgetAmount=$budgetAmount cents, spentAmount=$spentAmount cents (from ${expenseData.length} expenses)');
 
         // Calculate percentage (both amounts are in cents)
         final percentageUsed = budgetAmount > 0

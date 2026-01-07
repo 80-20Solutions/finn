@@ -36,8 +36,8 @@ class PersonalBudgetEntity extends Equatable {
   /// When the budget was last updated
   final DateTime updatedAt;
 
-  /// Get formatted amount string
-  String get formattedAmount => '€$amount';
+  /// Get formatted amount string (converts cents to euros)
+  String get formattedAmount => '€${(amount / 100).toStringAsFixed(2)}';
 
   /// Get formatted month/year string (e.g., "January 2025")
   String get formattedMonthYear {
