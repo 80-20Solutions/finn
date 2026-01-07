@@ -1,0 +1,383 @@
+import 'dart:convert';
+import 'package:drift/drift.dart';
+import 'package:uuid/uuid.dart';
+
+import '../local/offline_database.dart';
+import '../models/offline_expense_model.dart';
+import '../models/sync_queue_item_model.dart';
+import '../../domain/entities/offline_expense_entity.dart';
+
+/// Local data source for offline expenses using Drift database
+///
+/// Responsibilities:
+/// - CRUD operations on offline expenses
+/// - Sync queue management
+/// - User isolation (all queries filtered by user_id)
+abstract class OfflineExpenseLocalDataSource {
+  /// Create a new offline expense
+  Future<OfflineExpenseEntity> createOfflineExpense({
+    required String userId,
+    required double amount,
+    required DateTime date,
+    required String categoryId,
+    String? merchant,
+    String? notes,
+    bool isGroupExpense = true,
+  });
+
+  /// Get all offline expenses for current user
+  Future<List<OfflineExpenseEntity>> getAllOfflineExpenses(String userId);
+
+  /// Get offline expenses by sync status
+  Future<List<OfflineExpenseEntity>> getOfflineExpensesByStatus(
+    String userId,
+    String status,
+  );
+
+  /// Get pending expenses (pending + failed that can retry)
+  Future<List<OfflineExpenseEntity>> getPendingExpenses(String userId);
+
+  /// Update sync status of an expense
+  Future<void> updateSyncStatus(
+    String expenseId,
+    String status, {
+    String? errorMessage,
+  });
+
+  /// Delete offline expense after successful sync
+  Future<void> deleteOfflineExpense(String expenseId);
+
+  /// Add operation to sync queue
+  Future<void> addToSyncQueue({
+    required String userId,
+    required String operation,
+    required String entityType,
+    required String entityId,
+    required Map<String, dynamic> payload,
+    int priority = 0,
+  });
+
+  /// Get pending sync queue items (max batch size)
+  Future<List<SyncQueueItem>> getPendingSyncItems(
+    String userId, {
+    int limit = 10,
+  });
+
+  /// Update sync queue item status
+  Future<void> updateSyncQueueItem(SyncQueueItemsCompanion companion);
+
+  /// Delete completed sync queue items
+  Future<void> deleteCompletedSyncItems(List<int> itemIds);
+
+  /// Get count of pending sync items
+  Future<int> getPendingSyncCount(String userId);
+}
+
+class OfflineExpenseLocalDataSourceImpl
+    implements OfflineExpenseLocalDataSource {
+  final OfflineDatabase _db;
+  final Uuid _uuid;
+
+  OfflineExpenseLocalDataSourceImpl({
+    required OfflineDatabase database,
+    Uuid? uuid,
+  })  : _db = database,
+        _uuid = uuid ?? const Uuid();
+
+  @override
+  Future<OfflineExpenseEntity> createOfflineExpense({
+    required String userId,
+    required double amount,
+    required DateTime date,
+    required String categoryId,
+    String? merchant,
+    String? notes,
+    bool isGroupExpense = true,
+  }) async {
+    final expenseId = _uuid.v4();
+    final now = DateTime.now();
+
+    // Create offline expense record
+    final companion = OfflineExpensesCompanion.insert(
+      id: expenseId,
+      userId: userId,
+      amount: amount,
+      date: date,
+      categoryId: categoryId,
+      merchant: Value(merchant),
+      notes: Value(notes),
+      isGroupExpense: Value(isGroupExpense),
+      syncStatus: 'pending',
+      localCreatedAt: now,
+      localUpdatedAt: now,
+    );
+
+    await _db.into(_db.offlineExpenses).insert(companion);
+
+    // Add to sync queue
+    final payload = {
+      'id': expenseId,
+      'amount': amount,
+      'date': date.toIso8601String(),
+      'category_id': categoryId,
+      'merchant': merchant,
+      'notes': notes,
+      'is_group_expense': isGroupExpense,
+      'created_at': now.toIso8601String(),
+    };
+
+    await addToSyncQueue(
+      userId: userId,
+      operation: 'create',
+      entityType: 'expense',
+      entityId: expenseId,
+      payload: payload,
+    );
+
+    // Return created entity
+    final created = await (_db.select(_db.offlineExpenses)
+          ..where((tbl) => tbl.id.equals(expenseId)))
+        .getSingle();
+
+    return OfflineExpenseModel(created).toEntity();
+  }
+
+  @override
+  Future<List<OfflineExpenseEntity>> getAllOfflineExpenses(
+    String userId,
+  ) async {
+    final expenses = await (_db.select(_db.offlineExpenses)
+          ..where((tbl) => tbl.userId.equals(userId))
+          ..orderBy([
+            (tbl) => OrderingTerm.desc(tbl.localCreatedAt),
+          ]))
+        .get();
+
+    return expenses.map((e) => OfflineExpenseModel(e).toEntity()).toList();
+  }
+
+  @override
+  Future<List<OfflineExpenseEntity>> getOfflineExpensesByStatus(
+    String userId,
+    String status,
+  ) async {
+    final expenses = await (_db.select(_db.offlineExpenses)
+          ..where((tbl) =>
+              tbl.userId.equals(userId) & tbl.syncStatus.equals(status))
+          ..orderBy([
+            (tbl) => OrderingTerm.desc(tbl.localCreatedAt),
+          ]))
+        .get();
+
+    return expenses.map((e) => OfflineExpenseModel(e).toEntity()).toList();
+  }
+
+  @override
+  Future<List<OfflineExpenseEntity>> getPendingExpenses(String userId) async {
+    final expenses = await (_db.select(_db.offlineExpenses)
+          ..where((tbl) =>
+              tbl.userId.equals(userId) &
+              (tbl.syncStatus.equals('pending') |
+                  tbl.syncStatus.equals('failed')))
+          ..orderBy([
+            (tbl) => OrderingTerm.asc(tbl.localCreatedAt),
+          ]))
+        .get();
+
+    return expenses.map((e) => OfflineExpenseModel(e).toEntity()).toList();
+  }
+
+  @override
+  Future<void> updateSyncStatus(
+    String expenseId,
+    String status, {
+    String? errorMessage,
+  }) async {
+    await (_db.update(_db.offlineExpenses)
+          ..where((tbl) => tbl.id.equals(expenseId)))
+        .write(
+      OfflineExpensesCompanion(
+        syncStatus: Value(status),
+        syncErrorMessage: Value(errorMessage),
+        lastSyncAttemptAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  @override
+  Future<void> deleteOfflineExpense(String expenseId) async {
+    await (_db.delete(_db.offlineExpenses)
+          ..where((tbl) => tbl.id.equals(expenseId)))
+        .go();
+  }
+
+  @override
+  Future<void> addToSyncQueue({
+    required String userId,
+    required String operation,
+    required String entityType,
+    required String entityId,
+    required Map<String, dynamic> payload,
+    int priority = 0,
+  }) async {
+    final companion = SyncQueueItemModel.create(
+      userId: userId,
+      operation: operation,
+      entityType: entityType,
+      entityId: entityId,
+      payload: jsonEncode(payload),
+      priority: priority,
+    );
+
+    await _db.into(_db.syncQueueItems).insert(companion);
+  }
+
+  @override
+  Future<List<SyncQueueItem>> getPendingSyncItems(
+    String userId, {
+    int limit = 10,
+  }) async {
+    return await (_db.select(_db.syncQueueItems)
+          ..where((tbl) =>
+              tbl.userId.equals(userId) &
+              (tbl.syncStatus.equals('pending') |
+                  tbl.syncStatus.equals('failed')))
+          ..orderBy([
+            (tbl) => OrderingTerm.desc(tbl.priority),
+            (tbl) => OrderingTerm.asc(tbl.createdAt),
+          ])
+          ..limit(limit))
+        .get();
+  }
+
+  @override
+  Future<void> updateSyncQueueItem(SyncQueueItemsCompanion companion) async {
+    await (_db.update(_db.syncQueueItems)
+          ..where((tbl) => tbl.id.equals(companion.id.value)))
+        .write(companion);
+  }
+
+  @override
+  Future<void> deleteCompletedSyncItems(List<int> itemIds) async {
+    await (_db.delete(_db.syncQueueItems)
+          ..where((tbl) => tbl.id.isIn(itemIds)))
+        .go();
+  }
+
+  @override
+  Future<int> getPendingSyncCount(String userId) async {
+    final query = _db.selectOnly(_db.syncQueueItems)
+      ..addColumns([_db.syncQueueItems.id.count()])
+      ..where(_db.syncQueueItems.userId.equals(userId) &
+          (_db.syncQueueItems.syncStatus.equals('pending') |
+              _db.syncQueueItems.syncStatus.equals('failed')));
+
+    final result = await query.getSingle();
+    return result.read(_db.syncQueueItems.id.count()) ?? 0;
+  }
+
+  // ========================================================================
+  // USER STORY 2: Edit Offline Expenses Before Sync
+  // ========================================================================
+
+  /// T069: Update offline expense
+  Future<OfflineExpenseEntity> updateOfflineExpense({
+    required String expenseId,
+    required String userId,
+    double? amount,
+    DateTime? date,
+    String? categoryId,
+    String? merchant,
+    String? notes,
+    bool? isGroupExpense,
+  }) async {
+    final now = DateTime.now();
+
+    // Build update companion
+    final companion = OfflineExpensesCompanion(
+      amount: amount != null ? drift.Value(amount) : const drift.Value.absent(),
+      date: date != null ? drift.Value(date) : const drift.Value.absent(),
+      categoryId: categoryId != null ? drift.Value(categoryId) : const drift.Value.absent(),
+      merchant: merchant != null ? drift.Value(merchant) : const drift.Value.absent(),
+      notes: notes != null ? drift.Value(notes) : const drift.Value.absent(),
+      isGroupExpense: isGroupExpense != null ? drift.Value(isGroupExpense) : const drift.Value.absent(),
+      localUpdatedAt: drift.Value(now),
+      syncStatus: const drift.Value('pending'), // Reset to pending
+    );
+
+    // Update offline expense
+    await (_db.update(_db.offlineExpenses)
+          ..where((tbl) => tbl.id.equals(expenseId) & tbl.userId.equals(userId)))
+        .write(companion);
+
+    // Get updated expense
+    final updated = await (_db.select(_db.offlineExpenses)
+          ..where((tbl) => tbl.id.equals(expenseId)))
+        .getSingle();
+
+    // T071: Update sync queue to 'update' operation (replace previous queue items for same expense)
+    await _updateSyncQueue(
+      userId: userId,
+      expenseId: expenseId,
+      operation: 'update',
+      payload: {
+        'id': expenseId,
+        'amount': updated.amount,
+        'date': updated.date.toIso8601String(),
+        'category_id': updated.categoryId,
+        'merchant': updated.merchant,
+        'notes': updated.notes,
+        'is_group_expense': updated.isGroupExpense,
+        'client_updated_at': now.toIso8601String(),
+      },
+    );
+
+    return OfflineExpenseModel(updated).toEntity();
+  }
+
+  /// T070: Delete offline expense
+  Future<void> deleteOfflineExpense({
+    required String expenseId,
+    required String userId,
+  }) async {
+    // Delete from offline expenses table
+    await (_db.delete(_db.offlineExpenses)
+          ..where((tbl) => tbl.id.equals(expenseId) & tbl.userId.equals(userId)))
+        .go();
+
+    // T071: Update sync queue to 'delete' operation (replace previous queue items)
+    await _updateSyncQueue(
+      userId: userId,
+      expenseId: expenseId,
+      operation: 'delete',
+      payload: {
+        'id': expenseId,
+      },
+    );
+  }
+
+  /// T071: Helper to update sync queue (ensures only final operation is queued)
+  Future<void> _updateSyncQueue({
+    required String userId,
+    required String expenseId,
+    required String operation,
+    required Map<String, dynamic> payload,
+  }) async {
+    // Delete all previous queue items for this expense
+    await (_db.delete(_db.syncQueueItems)
+          ..where((tbl) =>
+              tbl.userId.equals(userId) &
+              tbl.entityId.equals(expenseId) &
+              tbl.entityType.equals('expense')))
+        .go();
+
+    // Add new queue item
+    await addToSyncQueue(
+      userId: userId,
+      operation: operation,
+      entityType: 'expense',
+      entityId: expenseId,
+      payload: payload,
+    );
+  }
+}

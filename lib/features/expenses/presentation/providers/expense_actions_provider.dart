@@ -33,7 +33,8 @@ class ExpenseActions {
       createdBy: _ref.read(currentUserIdProvider),
       amount: amount,
       date: date,
-      category: category,
+      categoryId: category.value,
+      categoryName: category.label,
       isGroupExpense: isGroupExpense,
       merchant: merchant,
       notes: notes,
@@ -53,7 +54,7 @@ class ExpenseActions {
     final result = await _ref.read(expenseFormProvider.notifier).createExpense(
           amount: amount,
           date: date,
-          category: category,
+          categoryId: category.value,
           merchant: merchant,
           notes: notes,
           receiptImage: receiptImage,
@@ -91,7 +92,8 @@ class ExpenseActions {
     final updatedExpense = currentExpense.copyWith(
       amount: amount,
       date: date,
-      category: category,
+      categoryId: category?.value,
+      categoryName: category?.label,
       merchant: merchant,
       notes: notes,
     );
@@ -111,7 +113,7 @@ class ExpenseActions {
           expenseId: currentExpense.id,
           amount: amount,
           date: date,
-          category: category,
+          categoryId: category?.value,
           merchant: merchant,
           notes: notes,
         );
