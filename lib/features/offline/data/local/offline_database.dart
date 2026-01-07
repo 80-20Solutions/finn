@@ -132,18 +132,41 @@ class SyncConflicts extends Table {
   DateTimeColumn get detectedAt => dateTime()();
 }
 
+// Table 5: CachedCategories
+// Cache expense categories for offline access
+@TableIndex(name: 'cached_categories_group_idx', columns: {#groupId})
+class CachedCategories extends Table {
+  // Primary Key
+  TextColumn get id => text()(); // Category ID from server
+
+  // Category Data
+  TextColumn get name => text()();
+  TextColumn get groupId => text()();
+  BoolColumn get isDefault => boolean()();
+  TextColumn get createdBy => text().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  // Cache Metadata
+  DateTimeColumn get cachedAt => dateTime()(); // When this was cached
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // Database Definition
 @DriftDatabase(tables: [
   OfflineExpenses,
   SyncQueueItems,
   OfflineExpenseImages,
   SyncConflicts,
+  CachedCategories,
 ])
 class OfflineDatabase extends _$OfflineDatabase {
   OfflineDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -151,7 +174,10 @@ class OfflineDatabase extends _$OfflineDatabase {
       await m.createAll();
     },
     onUpgrade: (Migrator m, int from, int to) async {
-      // Future migrations go here
+      if (from < 2) {
+        // Add CachedCategories table for offline category caching
+        await m.createTable(cachedCategories);
+      }
     },
   );
 

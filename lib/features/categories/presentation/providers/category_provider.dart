@@ -7,6 +7,8 @@ import '../../domain/entities/expense_category_entity.dart';
 import '../../domain/repositories/category_repository.dart';
 import 'category_repository_provider.dart';
 import '../../../../core/config/default_italian_categories.dart';
+import '../../../offline/data/datasources/category_cache_provider.dart';
+import '../../../offline/data/datasources/category_cache_datasource.dart';
 
 /// State for category management
 class CategoryState {
@@ -59,6 +61,7 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
   CategoryNotifier(
     this._repository,
     this._supabaseClient,
+    this._cacheDataSource,
     this._groupId,
   ) : super(CategoryState.initial()) {
     _init();
@@ -66,6 +69,7 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
 
   final CategoryRepository _repository;
   final SupabaseClient _supabaseClient;
+  final CategoryCacheDataSource _cacheDataSource;
   final String _groupId;
 
   RealtimeChannel? _categoriesChannel;
@@ -86,15 +90,27 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
       );
 
       result.fold(
-        (failure) {
+        (failure) async {
           // Check if this is a network error
           if (_isNetworkError(failure.message)) {
-            // Use offline fallback categories
-            state = state.copyWith(
-              categories: _getOfflineFallbackCategories(),
-              isLoading: false,
-              errorMessage: null, // Clear error since we have fallback
-            );
+            // Try to load from cache first
+            final cachedCategories = await _loadFromCache();
+
+            if (cachedCategories.isNotEmpty) {
+              // Use cached categories (includes custom categories!)
+              state = state.copyWith(
+                categories: cachedCategories,
+                isLoading: false,
+                errorMessage: null,
+              );
+            } else {
+              // No cache, use default Italian categories as last resort
+              state = state.copyWith(
+                categories: _getOfflineFallbackCategories(),
+                isLoading: false,
+                errorMessage: null,
+              );
+            }
           } else {
             state = state.copyWith(
               isLoading: false,
@@ -102,10 +118,15 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
             );
           }
         },
-        (categories) => state = state.copyWith(
-          categories: categories,
-          isLoading: false,
-        ),
+        (categories) async {
+          // Successfully loaded from server - cache them for offline use
+          await _cacheDataSource.cacheCategories(_groupId, categories);
+
+          state = state.copyWith(
+            categories: categories,
+            isLoading: false,
+          );
+        },
       );
     } catch (e) {
       // Check if this is a network-related exception
@@ -113,18 +134,40 @@ class CategoryNotifier extends StateNotifier<CategoryState> {
           e.toString().contains('SocketException') ||
           e.toString().contains('Failed host lookup') ||
           e.toString().contains('ClientException')) {
-        // Use offline fallback categories
-        state = state.copyWith(
-          categories: _getOfflineFallbackCategories(),
-          isLoading: false,
-          errorMessage: null, // Clear error since we have fallback
-        );
+        // Try to load from cache first
+        final cachedCategories = await _loadFromCache();
+
+        if (cachedCategories.isNotEmpty) {
+          // Use cached categories (includes custom categories!)
+          state = state.copyWith(
+            categories: cachedCategories,
+            isLoading: false,
+            errorMessage: null,
+          );
+        } else {
+          // No cache, use default Italian categories as last resort
+          state = state.copyWith(
+            categories: _getOfflineFallbackCategories(),
+            isLoading: false,
+            errorMessage: null,
+          );
+        }
       } else {
         state = state.copyWith(
           isLoading: false,
           errorMessage: 'Failed to load categories: $e',
         );
       }
+    }
+  }
+
+  /// Load categories from local cache
+  Future<List<ExpenseCategoryEntity>> _loadFromCache() async {
+    try {
+      return await _cacheDataSource.getCachedCategories(_groupId);
+    } catch (e) {
+      // If cache fails, return empty list
+      return [];
     }
   }
 
@@ -197,10 +240,12 @@ final categoryProvider = StateNotifierProvider.family<CategoryNotifier, Category
   (ref, groupId) {
     final supabaseClient = Supabase.instance.client;
     final repository = ref.watch(categoryRepositoryProvider);
+    final cacheDataSource = ref.watch(categoryCacheDataSourceProvider);
 
     return CategoryNotifier(
       repository,
       supabaseClient,
+      cacheDataSource,
       groupId,
     );
   },
