@@ -110,11 +110,16 @@ final unifiedBudgetStatsProvider = FutureProvider.family<
 
         final expenseData = await query as List<dynamic>;
 
-        // Calculate spent amount (sum of amounts in cents)
-        int spentAmount = 0;
+        // Calculate spent amount (convert from cents to euros)
+        // Database stores amounts in cents, but we calculate in euros for consistency
+        double spentAmountEur = 0.0;
         for (final expense in expenseData) {
-          spentAmount += (expense['amount'] as int);
+          final amountCents = expense['amount'] as int;
+          spentAmountEur += amountCents / 100.0; // Convert cents to euros
         }
+
+        // Round up to whole euros (matching BudgetCalculator behavior)
+        int spentAmount = spentAmountEur.ceil();
 
         // Calculate percentage
         final percentageUsed = budgetAmount > 0
