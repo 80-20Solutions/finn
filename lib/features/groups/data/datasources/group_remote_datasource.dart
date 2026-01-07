@@ -1,3 +1,5 @@
+import 'dart:io';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/errors/exceptions.dart';
@@ -33,9 +35,16 @@ abstract class GroupRemoteDataSource {
 
 /// Implementation of [GroupRemoteDataSource] using Supabase.
 class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
-  GroupRemoteDataSourceImpl({required this.supabaseClient});
+  GroupRemoteDataSourceImpl({
+    required this.supabaseClient,
+    FlutterSecureStorage? secureStorage,
+  }) : _secureStorage = secureStorage ?? const FlutterSecureStorage();
 
   final SupabaseClient supabaseClient;
+  final FlutterSecureStorage _secureStorage;
+
+  static const String _groupIdKey = 'cached_group_id';
+  static const String _groupDataKey = 'cached_group_data';
 
   String get _currentUserId {
     final userId = supabaseClient.auth.currentUser?.id;
@@ -43,6 +52,47 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
       throw const AppAuthException('Nessun utente autenticato', 'not_authenticated');
     }
     return userId;
+  }
+
+  /// Cache group ID in secure storage
+  Future<void> _cacheGroupId(String groupId) async {
+    try {
+      await _secureStorage.write(key: _groupIdKey, value: groupId);
+    } catch (e) {
+      // Ignore cache errors
+      print('Failed to cache group ID: $e');
+    }
+  }
+
+  /// Get cached group ID
+  Future<String?> _getCachedGroupId() async {
+    try {
+      return await _secureStorage.read(key: _groupIdKey);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /// Cache group data
+  Future<void> _cacheGroupData(FamilyGroupModel group) async {
+    try {
+      await _secureStorage.write(key: _groupDataKey, value: group.toJsonString());
+    } catch (e) {
+      print('Failed to cache group data: $e');
+    }
+  }
+
+  /// Get cached group data
+  Future<FamilyGroupModel?> _getCachedGroupData() async {
+    try {
+      final data = await _secureStorage.read(key: _groupDataKey);
+      if (data != null) {
+        return FamilyGroupModel.fromJsonString(data);
+      }
+    } catch (e) {
+      return null;
+    }
+    return null;
   }
 
   @override
@@ -82,6 +132,9 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
         return null;
       }
 
+      // Cache the group ID for offline use
+      await _cacheGroupId(groupId);
+
       // Get the group
       final groupResponse = await supabaseClient
           .from('family_groups')
@@ -97,15 +150,46 @@ class GroupRemoteDataSourceImpl implements GroupRemoteDataSource {
           .count(CountOption.exact);
 
       final group = FamilyGroupModel.fromJson(groupResponse);
-      return group.copyWith(memberCount: memberCount.count);
+      final groupWithCount = group.copyWith(memberCount: memberCount.count);
+
+      // Cache the group data for offline use
+      await _cacheGroupData(groupWithCount);
+
+      return groupWithCount;
+    } on SocketException catch (_) {
+      // Network error - try to load from cache
+      final cachedGroup = await _getCachedGroupData();
+      if (cachedGroup != null) {
+        return cachedGroup;
+      }
+      throw const ServerException('Offline: nessun gruppo in cache');
     } on PostgrestException catch (e) {
       if (e.code == 'PGRST116') {
         // No rows returned
         return null;
       }
+      // Try cache on network errors
+      if (e.message.contains('Failed host lookup') ||
+          e.message.contains('SocketException')) {
+        final cachedGroup = await _getCachedGroupData();
+        if (cachedGroup != null) {
+          return cachedGroup;
+        }
+      }
       throw ServerException(e.message, e.code);
     } catch (e) {
       if (e is AppAuthException) rethrow;
+
+      // Try cache on any network error
+      if (e is SocketException ||
+          e.toString().contains('Failed host lookup') ||
+          e.toString().contains('SocketException') ||
+          e.toString().contains('ClientException')) {
+        final cachedGroup = await _getCachedGroupData();
+        if (cachedGroup != null) {
+          return cachedGroup;
+        }
+      }
       throw ServerException(e.toString());
     }
   }

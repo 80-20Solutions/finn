@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import '../../domain/entities/family_group_entity.dart';
 
 /// Family group model for JSON serialization/deserialization.
@@ -37,7 +39,18 @@ class FamilyGroupModel extends FamilyGroupEntity {
       'created_by': createdBy,
       'created_at': createdAt?.toIso8601String(),
       'updated_at': updatedAt?.toIso8601String(),
+      'member_count': memberCount,
     };
+  }
+
+  /// Convert to JSON string for caching
+  String toJsonString() {
+    return jsonEncode(toJson());
+  }
+
+  /// Create from JSON string for caching
+  factory FamilyGroupModel.fromJsonString(String jsonString) {
+    return FamilyGroupModel.fromJson(jsonDecode(jsonString) as Map<String, dynamic>);
   }
 
   /// Create a FamilyGroupModel from a FamilyGroupEntity.
