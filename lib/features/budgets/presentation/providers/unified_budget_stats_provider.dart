@@ -210,9 +210,9 @@ final unifiedBudgetStatsProvider = FutureProvider.family<
           ? CurrencyUtils.calculatePercentageUsed(totalBudgeted, totalSpent)
           : 0.0;
 
-      // Get group and personal budgets
-      final groupBudget = budgetState.groupBudget?.amount;
-      final personalBudget = budgetState.personalBudget?.amount;
+      // Get group and personal budgets from computed totals
+      final groupBudget = budgetState.computedTotals.totalGroupBudget;
+      final personalBudget = budgetState.computedTotals.totalPersonalBudget;
 
       // Create unified entity
       return UnifiedBudgetStatsEntity(

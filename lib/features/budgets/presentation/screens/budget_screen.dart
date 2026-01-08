@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../app/app_theme.dart';
+import '../../../../core/utils/currency_utils.dart';
 import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
@@ -107,20 +108,62 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               const SizedBox(height: 24),
 
               // Group budget section
-              _buildSectionHeader('Budget Gruppo'),
+              _buildSectionHeader('Budget Gruppo (Calcolato)'),
               const SizedBox(height: 12),
-              EditableSection(
-                label: 'Budget Mensile Gruppo',
-                value: composition.groupBudget?.amount,
-                icon: Icons.groups,
-                color: AppColors.terracotta,
-                placeholder: 'Imposta budget gruppo',
-                helperText: 'Budget totale mensile per la famiglia',
-                onSave: (amount) async {
-                  await ref
-                      .read(budgetCompositionProvider(params).notifier)
-                      .setGroupBudget(amount);
-                },
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: AppColors.parchment.withValues(alpha: 0.3),
+                  borderRadius: BorderRadius.circular(4),
+                  border: Border.all(
+                    color: AppColors.parchmentDark,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Label
+                    Row(
+                      children: [
+                        Icon(Icons.groups, size: 16, color: AppColors.terracotta),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Budget Mensile Gruppo',
+                          style: GoogleFonts.dmSans(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.8,
+                            color: AppColors.inkLight,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    // Value display
+                    Text(
+                      composition.calculatedGroupBudget > 0
+                          ? CurrencyUtils.formatCents(composition.calculatedGroupBudget)
+                          : 'Calcolato dalle categorie',
+                      style: GoogleFonts.jetBrainsMono(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w700,
+                        color: composition.calculatedGroupBudget > 0
+                            ? AppColors.terracotta
+                            : AppColors.inkFaded,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    // Helper text
+                    Text(
+                      'Budget totale calcolato automaticamente dalla somma dei budget di categoria',
+                      style: GoogleFonts.dmSans(
+                        fontSize: 11,
+                        color: AppColors.inkFaded,
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               const SizedBox(height: 24),

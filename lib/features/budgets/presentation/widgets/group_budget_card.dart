@@ -33,8 +33,8 @@ class GroupBudgetCard extends ConsumerWidget {
       );
     }
 
-    // No budget set
-    if (budgetState.groupBudget == null) {
+    // No budget set (check computed totals)
+    if (budgetState.computedTotals.totalGroupBudget <= 0) {
       return NoBudgetSetCard(
         budgetType: 'group',
         onSetBudget: onNavigateToSettings ?? () {},

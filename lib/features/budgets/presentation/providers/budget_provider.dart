@@ -321,23 +321,23 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
       0,
       (sum, euroAmount) => sum + (euroAmount * 100).round(),
     );
-    final groupBudgetAmount = state.groupBudget?.amount ?? 0;
+    final groupBudgetAmount = state.computedTotals.totalGroupBudget;
 
     final groupStats = BudgetStatsEntity(
-      budgetId: state.groupBudget?.id,
-      budgetAmount: state.groupBudget?.amount,
+      budgetId: null, // Deprecated: no single budget ID for calculated totals
+      budgetAmount: groupBudgetAmount > 0 ? groupBudgetAmount : null,
       spentAmount: groupSpentCents,
-      remainingAmount: state.groupBudget != null
+      remainingAmount: groupBudgetAmount > 0
           ? groupBudgetAmount - groupSpentCents
           : null,
-      percentageUsed: state.groupBudget != null
-          ? (groupBudgetAmount > 0 ? (groupSpentCents / groupBudgetAmount * 100) : 0.0)
+      percentageUsed: groupBudgetAmount > 0
+          ? (groupSpentCents / groupBudgetAmount * 100)
           : null,
-      isOverBudget: state.groupBudget != null
+      isOverBudget: groupBudgetAmount > 0
           ? groupSpentCents >= groupBudgetAmount
           : false,
-      isNearLimit: state.groupBudget != null
-          ? (groupBudgetAmount > 0 && (groupSpentCents / groupBudgetAmount) >= 0.8)
+      isNearLimit: groupBudgetAmount > 0
+          ? (groupSpentCents / groupBudgetAmount) >= 0.8
           : false,
       expenseCount: groupExpenses.length,
     );
@@ -353,23 +353,23 @@ class BudgetNotifier extends StateNotifier<BudgetState> {
       0,
       (sum, euroAmount) => sum + (euroAmount * 100).round(),
     );
-    final personalBudgetAmount = state.personalBudget?.amount ?? 0;
+    final personalBudgetAmount = state.computedTotals.totalPersonalBudget;
 
     final personalStats = BudgetStatsEntity(
-      budgetId: state.personalBudget?.id,
-      budgetAmount: state.personalBudget?.amount,
+      budgetId: null, // Deprecated: no single budget ID for calculated totals
+      budgetAmount: personalBudgetAmount > 0 ? personalBudgetAmount : null,
       spentAmount: personalSpentCents,
-      remainingAmount: state.personalBudget != null
+      remainingAmount: personalBudgetAmount > 0
           ? personalBudgetAmount - personalSpentCents
           : null,
-      percentageUsed: state.personalBudget != null
-          ? (personalBudgetAmount > 0 ? (personalSpentCents / personalBudgetAmount * 100) : 0.0)
+      percentageUsed: personalBudgetAmount > 0
+          ? (personalSpentCents / personalBudgetAmount * 100)
           : null,
-      isOverBudget: state.personalBudget != null
+      isOverBudget: personalBudgetAmount > 0
           ? personalSpentCents >= personalBudgetAmount
           : false,
-      isNearLimit: state.personalBudget != null
-          ? (personalBudgetAmount > 0 && (personalSpentCents / personalBudgetAmount) >= 0.8)
+      isNearLimit: personalBudgetAmount > 0
+          ? (personalSpentCents / personalBudgetAmount) >= 0.8
           : false,
       expenseCount: personalExpenses.length,
     );

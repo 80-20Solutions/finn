@@ -153,7 +153,7 @@ class _CategoryBudgetTileState extends ConsumerState<CategoryBudgetTile> {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary,
+                    color: AppColors.copper,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
