@@ -29,7 +29,7 @@ class NoBudgetSetCard extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              isGroup ? 'No Group Budget Set' : 'No Personal Budget Set',
+              'Nessun Budget Impostato',
               style: theme.textTheme.titleMedium?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -38,8 +38,8 @@ class NoBudgetSetCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               isGroup
-                  ? 'Set a monthly budget to track your family\'s spending and get alerts when approaching the limit.'
-                  : 'Set a personal budget to track your individual spending including your share of group expenses.',
+                  ? 'Imposta budget per categoria per monitorare le spese della famiglia. Il budget totale sarà calcolato automaticamente.'
+                  : 'Imposta contributi nelle categorie di gruppo per tracciare la tua quota di spese condivise.',
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: theme.colorScheme.onSurfaceVariant,
               ),
@@ -48,8 +48,8 @@ class NoBudgetSetCard extends StatelessWidget {
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: onSetBudget,
-              icon: const Icon(Icons.add),
-              label: Text(isGroup ? 'Set Group Budget' : 'Set Personal Budget'),
+              icon: const Icon(Icons.category),
+              label: Text(isGroup ? 'Imposta Budget per Categoria' : 'Imposta Contributi'),
             ),
           ],
         ),
