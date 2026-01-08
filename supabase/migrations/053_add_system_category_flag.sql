@@ -19,13 +19,9 @@ UPDATE expense_categories
 SET is_system_category = true
 WHERE name = 'Varie' AND is_default = true;
 
--- If "Varie" doesn't exist, create it as a system category
-INSERT INTO expense_categories (name, icon, color, is_default, is_system_category)
-SELECT 'Varie', 'category', '#9E9E9E', true, true
-WHERE NOT EXISTS (
-    SELECT 1 FROM expense_categories
-    WHERE name = 'Varie' AND is_default = true
-);
+-- Note: If "Varie" doesn't exist in any group, it should be created by the app
+-- We don't create it here because expense_categories requires group_id
+-- The ensure_altro_category_budget function in migration 054 will handle creation per group
 
 -- Add table comment
 COMMENT ON COLUMN expense_categories.is_system_category IS

@@ -49,9 +49,24 @@ BEGIN
     AND ec.is_default = true
     LIMIT 1;
 
-    -- If no system category exists, raise exception
+    -- If no system category exists, create it
     IF v_system_category_id IS NULL THEN
-        RAISE EXCEPTION 'System category "Varie" not found for group %', p_group_id;
+        INSERT INTO expense_categories (
+            name,
+            group_id,
+            is_default,
+            is_system_category,
+            created_by
+        ) VALUES (
+            'Varie',
+            p_group_id,
+            true,
+            true,
+            v_current_user_id
+        )
+        RETURNING id INTO v_system_category_id;
+
+        RAISE NOTICE 'Created system category "Varie" for group %', p_group_id;
     END IF;
 
     -- Check if budget already exists
