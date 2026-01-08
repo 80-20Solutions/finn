@@ -37,20 +37,21 @@ WHERE is_system_category = true;
 DO $$
 BEGIN
     -- Drop existing delete policy if it exists
-    DROP POLICY IF EXISTS "Users can delete their group's categories" ON expense_categories;
+    DROP POLICY IF EXISTS "Group admins can delete non-default categories" ON expense_categories;
 
     -- Create new delete policy that prevents deletion of system categories
-    CREATE POLICY "Users can delete non-system categories"
+    CREATE POLICY "Group admins can delete non-system categories"
     ON expense_categories
     FOR DELETE
     TO authenticated
     USING (
         is_system_category = false
-        AND group_id IN (
-            SELECT group_id
-            FROM group_members
-            WHERE user_id = auth.uid()
-            AND role = 'admin'
+        AND is_default = false
+        AND EXISTS (
+            SELECT 1 FROM profiles
+            WHERE id = auth.uid()
+            AND group_id = expense_categories.group_id
+            AND is_group_admin = true
         )
     );
 END $$;
