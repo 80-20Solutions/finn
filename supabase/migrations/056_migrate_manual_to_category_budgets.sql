@@ -92,7 +92,7 @@ BEGIN
 END;
 $$;
 
--- Function to migrate a single personal budget to member contribution
+-- Function to migrate a single personal budget to personal category budget
 CREATE OR REPLACE FUNCTION migrate_personal_budget_to_contribution(
     p_personal_budget_id UUID
 )
@@ -103,8 +103,7 @@ AS $$
 DECLARE
     v_personal_budget RECORD;
     v_system_category_id UUID;
-    v_category_budget_id UUID;
-    v_existing_contribution_id UUID;
+    v_existing_budget_id UUID;
 BEGIN
     -- Get the personal budget to migrate
     SELECT * INTO v_personal_budget
@@ -129,16 +128,18 @@ BEGIN
         RETURN;
     END IF;
 
-    -- Get or create "Altro" category budget
-    SELECT id INTO v_category_budget_id
+    -- Check if personal "Altro" budget already exists for this user/month/year
+    SELECT id INTO v_existing_budget_id
     FROM category_budgets
     WHERE category_id = v_system_category_id
     AND group_id = v_personal_budget.group_id
     AND year = v_personal_budget.year
-    AND month = v_personal_budget.month;
+    AND month = v_personal_budget.month
+    AND created_by = v_personal_budget.user_id
+    AND is_group_budget = false;  -- Personal budget
 
-    IF v_category_budget_id IS NULL THEN
-        -- Create category budget if it doesn't exist
+    IF v_existing_budget_id IS NULL THEN
+        -- Create personal category budget for this user
         INSERT INTO category_budgets (
             category_id,
             group_id,
@@ -147,43 +148,27 @@ BEGIN
             year,
             created_by,
             is_group_budget,
-            budget_type
-        ) VALUES (
-            v_system_category_id,
-            v_personal_budget.group_id,
-            v_personal_budget.amount, -- Initialize with this user's budget
-            v_personal_budget.month,
-            v_personal_budget.year,
-            v_personal_budget.user_id,
-            true,
-            'FIXED'
-        )
-        RETURNING id INTO v_category_budget_id;
-    END IF;
-
-    -- Check if contribution already exists
-    SELECT id INTO v_existing_contribution_id
-    FROM member_budget_contributions
-    WHERE category_budget_id = v_category_budget_id
-    AND user_id = v_personal_budget.user_id;
-
-    IF v_existing_contribution_id IS NULL THEN
-        -- Create member contribution
-        INSERT INTO member_budget_contributions (
-            category_budget_id,
-            user_id,
-            type,
-            fixed_amount,
+            budget_type,
             created_at,
             updated_at
         ) VALUES (
-            v_category_budget_id,
-            v_personal_budget.user_id,
-            'FIXED',
+            v_system_category_id,
+            v_personal_budget.group_id,
             v_personal_budget.amount,
+            v_personal_budget.month,
+            v_personal_budget.year,
+            v_personal_budget.user_id,
+            false,  -- Personal budget, not group
+            'FIXED',
             v_personal_budget.created_at,
             NOW()
         );
+    ELSE
+        -- Update existing budget amount
+        UPDATE category_budgets
+        SET amount = v_personal_budget.amount,
+            updated_at = NOW()
+        WHERE id = v_existing_budget_id;
     END IF;
 
     RAISE NOTICE 'Migrated personal budget % for user % (€%)',

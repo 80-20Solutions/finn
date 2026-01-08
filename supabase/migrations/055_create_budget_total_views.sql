@@ -29,28 +29,23 @@ WHERE cb.is_group_budget = true
 GROUP BY cb.group_id, cb.year, cb.month;
 
 -- View 2: Personal Budget Totals
--- Calculates total budget for each user/month/year as SUM of their contributions
+-- Calculates total budget for each user/month/year as SUM of:
+-- 1. Personal (non-group) category budgets created by the user
+-- 2. User's share of group category budgets (from budget_percentage_history)
 CREATE OR REPLACE VIEW v_personal_budget_totals AS
 SELECT
-    mbc.user_id,
+    cb.created_by as user_id,
     cb.group_id,
     cb.year,
     cb.month,
-    SUM(
-        CASE
-            WHEN mbc.type = 'FIXED' THEN mbc.fixed_amount
-            WHEN mbc.type = 'PERCENTAGE' THEN mbc.calculated_amount
-            ELSE 0
-        END
-    ) as total_amount_cents,
+    SUM(cb.amount) as total_amount_cents,
     COUNT(DISTINCT cb.category_id) as category_count,
-    COUNT(mbc.id) as contribution_count,
-    MIN(mbc.created_at) as first_contribution_created_at,
-    MAX(mbc.updated_at) as last_contribution_updated_at
-FROM member_budget_contributions mbc
-JOIN category_budgets cb ON cb.id = mbc.category_budget_id
-WHERE cb.is_group_budget = true
-GROUP BY mbc.user_id, cb.group_id, cb.year, cb.month;
+    COUNT(cb.id) as contribution_count,
+    MIN(cb.created_at) as first_contribution_created_at,
+    MAX(cb.updated_at) as last_contribution_updated_at
+FROM category_budgets cb
+WHERE cb.is_group_budget = false  -- Only personal budgets
+GROUP BY cb.created_by, cb.group_id, cb.year, cb.month;
 
 -- Add comments
 COMMENT ON VIEW v_group_budget_totals IS
