@@ -981,11 +981,11 @@ class BudgetRemoteDataSourceImpl implements BudgetRemoteDataSource {
         if (userIds.isNotEmpty) {
           final profilesResponse = await supabaseClient
               .from('profiles')
-              .select('id, full_name')
+              .select('id, display_name')
               .inFilter('id', userIds.toList());
 
           for (final profile in profilesResponse) {
-            profilesMap[profile['id'] as String] = profile['full_name'] as String? ?? 'Unknown';
+            profilesMap[profile['id'] as String] = profile['display_name'] as String? ?? 'Unknown';
           }
         }
 
