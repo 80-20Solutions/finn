@@ -4,8 +4,11 @@ import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/budget_composition_entity.dart';
 import '../../domain/entities/budget_stats_entity.dart';
+import '../../domain/entities/category_budget_entity.dart';
+import '../../domain/entities/computed_budget_totals_entity.dart';
 import '../../domain/entities/group_budget_entity.dart';
 import '../../domain/entities/personal_budget_entity.dart';
+import '../../domain/entities/virtual_group_expenses_category_entity.dart';
 import '../../domain/repositories/budget_repository.dart';
 import '../datasources/budget_remote_datasource.dart';
 
@@ -508,6 +511,104 @@ class BudgetRepositoryImpl implements BudgetRepository {
       return Left(ServerFailure(e.message));
     } catch (e) {
       return Left(ServerFailure('Errore nel caricamento budget: ${e.toString()}'));
+    }
+  }
+
+  // ========== Computed Budget Totals (Category-Only System) ==========
+
+  @override
+  Future<Either<Failure, ComputedBudgetTotals>> getComputedBudgetTotals({
+    required String groupId,
+    required String userId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final totals = await remoteDataSource.getComputedBudgetTotals(
+        groupId: groupId,
+        userId: userId,
+        year: year,
+        month: month,
+      );
+      return Right(totals);
+    } on AppAuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Errore nel calcolo totali budget: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CategoryBudgetEntity>> ensureAltroCategory({
+    required String groupId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final altroCategory = await remoteDataSource.ensureAltroCategory(
+        groupId: groupId,
+        year: year,
+        month: month,
+      );
+      return Right(altroCategory);
+    } on AppAuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Errore nella creazione categoria Altro: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, CategoryBudgetEntity>> distributeToAltroCategory({
+    required String groupId,
+    required int amount,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final altroCategory = await remoteDataSource.distributeToAltroCategory(
+        groupId: groupId,
+        amount: amount,
+        year: year,
+        month: month,
+      );
+      return Right(altroCategory);
+    } on AppAuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on PermissionException catch (e) {
+      return Left(PermissionFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Errore nell\'assegnazione budget ad Altro: ${e.toString()}'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, VirtualGroupExpensesCategory>> calculateVirtualGroupCategory({
+    required String groupId,
+    required String userId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      final virtualCategory = await remoteDataSource.calculateVirtualGroupCategory(
+        groupId: groupId,
+        userId: userId,
+        year: year,
+        month: month,
+      );
+      return Right(virtualCategory);
+    } on AppAuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure('Errore nel calcolo categoria virtuale: ${e.toString()}'));
     }
   }
 }
