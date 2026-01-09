@@ -131,13 +131,43 @@ class _CategoryBudgetTileState extends ConsumerState<CategoryBudgetTile> {
         const SizedBox(width: 12),
         // Category name
         Expanded(
-          child: Text(
-            widget.categoryBudget.categoryName,
-            style: GoogleFonts.dmSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: AppColors.ink,
-            ),
+          child: Row(
+            children: [
+              Flexible(
+                child: Text(
+                  widget.categoryBudget.categoryName,
+                  style: GoogleFonts.dmSans(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.ink,
+                  ),
+                ),
+              ),
+              // System category badge for "Varie"/"Altro"
+              if (widget.categoryBudget.categoryName.toLowerCase() == 'varie' ||
+                  widget.categoryBudget.categoryName.toLowerCase() == 'altro') ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.copper,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    'SISTEMA',
+                    style: GoogleFonts.dmSans(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
         ),
       ],

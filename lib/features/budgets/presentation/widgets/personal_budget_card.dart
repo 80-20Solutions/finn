@@ -33,8 +33,8 @@ class PersonalBudgetCard extends ConsumerWidget {
       );
     }
 
-    // No budget set
-    if (budgetState.personalBudget == null) {
+    // No budget set (check computed totals)
+    if (budgetState.computedTotals.totalPersonalBudget <= 0) {
       return NoBudgetSetCard(
         budgetType: 'personal',
         onSetBudget: onNavigateToSettings ?? () {},

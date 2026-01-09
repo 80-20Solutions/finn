@@ -32,21 +32,34 @@ final budgetRepositoryProvider = Provider<BudgetRepository>((ref) {
 class CategoryBudgetState {
   const CategoryBudgetState({
     this.budgets = const [],
+    this.totalGroupBudget = 0,
+    this.totalPersonalBudget = 0,
+    this.altroCategory,
     this.isLoading = false,
     this.errorMessage,
   });
 
   final List<dynamic> budgets; // Using dynamic until we have proper models
+  final int totalGroupBudget; // Calculated: SUM of category budgets
+  final int totalPersonalBudget; // Calculated: SUM of user contributions
+  final dynamic altroCategory; // "Altro" system category budget
   final bool isLoading;
   final String? errorMessage;
 
   CategoryBudgetState copyWith({
     List<dynamic>? budgets,
+    int? totalGroupBudget,
+    int? totalPersonalBudget,
+    dynamic altroCategory,
     bool? isLoading,
     String? errorMessage,
+    bool clearAltroCategory = false,
   }) {
     return CategoryBudgetState(
       budgets: budgets ?? this.budgets,
+      totalGroupBudget: totalGroupBudget ?? this.totalGroupBudget,
+      totalPersonalBudget: totalPersonalBudget ?? this.totalPersonalBudget,
+      altroCategory: clearAltroCategory ? null : (altroCategory ?? this.altroCategory),
       isLoading: isLoading ?? this.isLoading,
       errorMessage: errorMessage,
     );
@@ -200,6 +213,65 @@ class CategoryBudgetNotifier extends StateNotifier<CategoryBudgetState> {
         return null;
       },
       (percentage) => percentage,
+    );
+  }
+
+  /// Ensure "Altro" system category budget exists
+  Future<void> ensureAltroCategory() async {
+    final result = await _repository.ensureAltroCategory(
+      groupId: _groupId,
+      year: _year,
+      month: _month,
+    );
+
+    result.fold(
+      (failure) => state = state.copyWith(errorMessage: failure.message),
+      (altroCategory) {
+        state = state.copyWith(altroCategory: altroCategory);
+        loadBudgets(); // Reload to include Altro
+      },
+    );
+  }
+
+  /// Recalculate budget totals from categories
+  void recalculateTotals() {
+    int groupTotal = 0;
+    int personalTotal = 0;
+
+    for (final budget in state.budgets) {
+      if (budget is Map<String, dynamic>) {
+        final amount = budget['amount'] as int? ?? 0;
+        final isGroupBudget = budget['is_group_budget'] as bool? ?? true;
+
+        if (isGroupBudget) {
+          groupTotal += amount;
+        } else {
+          personalTotal += amount;
+        }
+      }
+    }
+
+    state = state.copyWith(
+      totalGroupBudget: groupTotal,
+      totalPersonalBudget: personalTotal,
+    );
+  }
+
+  /// Calculate virtual "Spese di Gruppo" category for user
+  Future<dynamic> calculateVirtualGroupCategory(String userId) async {
+    final result = await _repository.calculateVirtualGroupCategory(
+      groupId: _groupId,
+      userId: userId,
+      year: _year,
+      month: _month,
+    );
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(errorMessage: failure.message);
+        return null;
+      },
+      (virtualCategory) => virtualCategory,
     );
   }
 }

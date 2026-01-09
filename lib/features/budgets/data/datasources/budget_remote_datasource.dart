@@ -190,6 +190,39 @@ abstract class BudgetRemoteDataSource {
     required int year,
     required int month,
   });
+
+  // ========== Computed Budget Totals (Category-Only System) ==========
+
+  /// Get computed budget totals from database views
+  Future<dynamic> getComputedBudgetTotals({
+    required String groupId,
+    required String userId,
+    required int year,
+    required int month,
+  });
+
+  /// Ensure "Altro" system category budget exists (via RPC)
+  Future<dynamic> ensureAltroCategory({
+    required String groupId,
+    required int year,
+    required int month,
+  });
+
+  /// Distribute amount to "Altro" system category
+  Future<dynamic> distributeToAltroCategory({
+    required String groupId,
+    required int amount,
+    required int year,
+    required int month,
+  });
+
+  /// Calculate virtual "Spese di Gruppo" category
+  Future<dynamic> calculateVirtualGroupCategory({
+    required String groupId,
+    required String userId,
+    required int year,
+    required int month,
+  });
 }
 
 /// Implementation of [BudgetRemoteDataSource] using Supabase.
@@ -858,6 +891,14 @@ class BudgetRemoteDataSourceImpl implements BudgetRemoteDataSource {
     required int month,
   }) async {
     try {
+      // Step 0: Ensure "Altro" system category exists
+      // This ensures there's always a catch-all category for uncategorized expenses
+      await ensureAltroCategory(
+        groupId: groupId,
+        year: year,
+        month: month,
+      );
+
       // Step 1: Get group budget (if set)
       GroupBudgetEntity? groupBudget;
       try {
@@ -940,11 +981,11 @@ class BudgetRemoteDataSourceImpl implements BudgetRemoteDataSource {
         if (userIds.isNotEmpty) {
           final profilesResponse = await supabaseClient
               .from('profiles')
-              .select('id, full_name')
+              .select('id, display_name')
               .inFilter('id', userIds.toList());
 
           for (final profile in profilesResponse) {
-            profilesMap[profile['id'] as String] = profile['full_name'] as String? ?? 'Unknown';
+            profilesMap[profile['id'] as String] = profile['display_name'] as String? ?? 'Unknown';
           }
         }
 
@@ -1064,7 +1105,8 @@ class BudgetRemoteDataSourceImpl implements BudgetRemoteDataSource {
 
       // Step 6: Create composition
       final composition = BudgetComposition(
-        groupBudget: groupBudget,
+        calculatedGroupBudget: totalCategoryBudgets, // Calculated as SUM of category budgets
+        hasManualGroupBudget: groupBudget != null && groupBudget.isNotEmpty, // For transition period
         categoryBudgets: categoryBudgetsList,
         stats: stats,
         issues: const [], // Will be filled by validation
@@ -1082,6 +1124,239 @@ class BudgetRemoteDataSourceImpl implements BudgetRemoteDataSource {
       throw ServerException(e.message, e.code);
     } catch (e) {
       throw ServerException('Failed to get budget composition: $e');
+    }
+  }
+
+  // ========== Computed Budget Totals (Category-Only System) ==========
+
+  @override
+  Future<dynamic> getComputedBudgetTotals({
+    required String groupId,
+    required String userId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      // Query v_group_budget_totals view for group totals
+      final groupTotalsResponse = await supabaseClient
+          .from('v_group_budget_totals')
+          .select()
+          .eq('group_id', groupId)
+          .eq('year', year)
+          .eq('month', month)
+          .maybeSingle();
+
+      // Query v_personal_budget_totals view for personal totals
+      final personalTotalsResponse = await supabaseClient
+          .from('v_personal_budget_totals')
+          .select()
+          .eq('group_id', groupId)
+          .eq('user_id', userId)
+          .eq('year', year)
+          .eq('month', month)
+          .maybeSingle();
+
+      // Get category breakdowns
+      final categoryBudgets = await supabaseClient
+          .from('category_budgets')
+          .select('category_id, amount')
+          .eq('group_id', groupId)
+          .eq('year', year)
+          .eq('month', month)
+          .eq('is_group_budget', true);
+
+      // Get member contribution breakdowns
+      final memberContributions = await supabaseClient
+          .from('category_member_contributions')
+          .select('user_id, contribution_amount_cents')
+          .eq('group_id', groupId)
+          .eq('year', year)
+          .eq('month', month);
+
+      // Build category breakdown map
+      final categoryBreakdown = <String, int>{};
+      for (final budget in categoryBudgets) {
+        categoryBreakdown[budget['category_id'] as String] = budget['amount'] as int;
+      }
+
+      // Build member breakdown map
+      final memberBreakdown = <String, int>{};
+      for (final contribution in memberContributions) {
+        final uid = contribution['user_id'] as String;
+        final amount = contribution['contribution_amount_cents'] as int;
+        memberBreakdown[uid] = (memberBreakdown[uid] ?? 0) + amount;
+      }
+
+      return {
+        'total_group_budget': groupTotalsResponse?['total_amount_cents'] ?? 0,
+        'total_personal_budget': personalTotalsResponse?['total_contribution_cents'] ?? 0,
+        'category_breakdown': categoryBreakdown,
+        'member_breakdown': memberBreakdown,
+        'group_id': groupId,
+        'user_id': userId,
+        'month': month,
+        'year': year,
+        'category_count': categoryBudgets.length,
+        'contribution_count': memberBreakdown.length,
+      };
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to get computed budget totals: $e');
+    }
+  }
+
+  @override
+  Future<dynamic> ensureAltroCategory({
+    required String groupId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      // Call RPC function ensure_altro_category_budget
+      final result = await supabaseClient.rpc(
+        'ensure_altro_category_budget',
+        params: {
+          'p_group_id': groupId,
+          'p_year': year,
+          'p_month': month,
+        },
+      ).single();
+
+      return result;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to ensure Altro category: $e');
+    }
+  }
+
+  @override
+  Future<dynamic> distributeToAltroCategory({
+    required String groupId,
+    required int amount,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      // First, ensure Altro category exists
+      final altroCategory = await ensureAltroCategory(
+        groupId: groupId,
+        year: year,
+        month: month,
+      );
+
+      final budgetId = altroCategory['id'] as String;
+
+      // Update the Altro category budget with the new amount
+      final updated = await supabaseClient
+          .from('category_budgets')
+          .update({'amount': amount})
+          .eq('id', budgetId)
+          .select()
+          .single();
+
+      return updated;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to distribute to Altro category: $e');
+    }
+  }
+
+  @override
+  Future<dynamic> calculateVirtualGroupCategory({
+    required String groupId,
+    required String userId,
+    required int year,
+    required int month,
+  }) async {
+    try {
+      // Get all category budgets for this group/month
+      final categoryBudgets = await supabaseClient
+          .from('category_budgets')
+          .select('id, category_id, amount')
+          .eq('group_id', groupId)
+          .eq('year', year)
+          .eq('month', month)
+          .eq('is_group_budget', true);
+
+      int totalBudget = 0;
+      int totalSpent = 0;
+      final categoryBreakdown = <String, Map<String, dynamic>>{};
+
+      // For each category, get user's contribution and spending
+      for (final categoryBudget in categoryBudgets) {
+        final categoryId = categoryBudget['category_id'] as String;
+        final budgetId = categoryBudget['id'] as String;
+
+        // Get user's contribution for this category
+        final contributionResponse = await supabaseClient
+            .from('category_member_contributions')
+            .select('contribution_amount_cents')
+            .eq('budget_id', budgetId)
+            .eq('user_id', userId)
+            .maybeSingle();
+
+        final userContribution = contributionResponse?['contribution_amount_cents'] as int? ?? 0;
+        totalBudget += userContribution;
+
+        // Get user's spending in this category (group expenses only)
+        final spentResponse = await supabaseClient
+            .from('expenses')
+            .select('amount')
+            .eq('category_id', categoryId)
+            .eq('group_id', groupId)
+            .eq('created_by', userId)
+            .eq('is_group_expense', true)
+            .gte('expense_date', '$year-${month.toString().padLeft(2, '0')}-01')
+            .lt('expense_date', year == 12 ? '${year + 1}-01-01' : '$year-${(month + 1).toString().padLeft(2, '0')}-01');
+
+        int categorySpent = 0;
+        for (final expense in spentResponse) {
+          categorySpent += expense['amount'] as int;
+        }
+        totalSpent += categorySpent;
+
+        // Get category details
+        final categoryDetails = await supabaseClient
+            .from('expense_categories')
+            .select('name, icon, color')
+            .eq('id', categoryId)
+            .single();
+
+        if (userContribution > 0 || categorySpent > 0) {
+          categoryBreakdown[categoryId] = {
+            'category_id': categoryId,
+            'category_name': categoryDetails['name'],
+            'category_icon': categoryDetails['icon'],
+            'category_color': categoryDetails['color'],
+            'budget_contribution': userContribution,
+            'spent_amount': categorySpent,
+            'remaining_amount': userContribution - categorySpent,
+            'percentage_used': userContribution > 0 ? (categorySpent / userContribution) * 100.0 : 0.0,
+          };
+        }
+      }
+
+      final remaining = totalBudget - totalSpent;
+      final percentageUsed = totalBudget > 0 ? (totalSpent / totalBudget) * 100.0 : 0.0;
+
+      return {
+        'budget_amount': totalBudget,
+        'spent_amount': totalSpent,
+        'remaining_amount': remaining,
+        'percentage_used': percentageUsed,
+        'category_breakdown': categoryBreakdown,
+        'user_id': userId,
+        'group_id': groupId,
+        'month': month,
+        'year': year,
+      };
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to calculate virtual group category: $e');
     }
   }
 }

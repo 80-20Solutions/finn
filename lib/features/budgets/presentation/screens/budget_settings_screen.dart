@@ -163,11 +163,13 @@ class _BudgetSettingsScreenState extends ConsumerState<BudgetSettingsScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Group Budget Section
+                // Group Budget Section (DEPRECATED - Use category budgets instead)
                 _BudgetSection(
-                  title: 'Budget Gruppo',
+                  title: 'Budget Gruppo (Calcolato)',
                   icon: Icons.group,
-                  currentAmount: budgetState.groupBudget?.amount,
+                  currentAmount: budgetState.computedTotals.totalGroupBudget > 0
+                      ? budgetState.computedTotals.totalGroupBudget
+                      : null,
                   controller: _groupBudgetController,
                   isSubmitting: _isSubmittingGroup,
                   onSubmit: _submitGroupBudget,
@@ -176,11 +178,13 @@ class _BudgetSettingsScreenState extends ConsumerState<BudgetSettingsScreen> {
 
                 const SizedBox(height: 32),
 
-                // Personal Budget Section
+                // Personal Budget Section (DEPRECATED - Use category contributions instead)
                 _BudgetSection(
-                  title: 'Budget Personale',
+                  title: 'Budget Personale (Calcolato)',
                   icon: Icons.person,
-                  currentAmount: budgetState.personalBudget?.amount,
+                  currentAmount: budgetState.computedTotals.totalPersonalBudget > 0
+                      ? budgetState.computedTotals.totalPersonalBudget
+                      : null,
                   controller: _personalBudgetController,
                   isSubmitting: _isSubmittingPersonal,
                   onSubmit: _submitPersonalBudget,

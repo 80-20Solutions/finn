@@ -3,8 +3,11 @@ import 'package:dartz/dartz.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/budget_composition_entity.dart';
 import '../entities/budget_stats_entity.dart';
+import '../entities/category_budget_entity.dart';
+import '../entities/computed_budget_totals_entity.dart';
 import '../entities/group_budget_entity.dart';
 import '../entities/personal_budget_entity.dart';
+import '../entities/virtual_group_expenses_category_entity.dart';
 
 /// Abstract budget repository interface.
 ///
@@ -15,8 +18,15 @@ abstract class BudgetRepository {
 
   /// Set or update a group budget for a specific month/year.
   ///
+  /// **DEPRECATED**: Use category budgets instead. Group budget is now calculated as SUM of category budgets.
+  /// To set a total budget, distribute it across categories or assign to "Altro" system category.
+  ///
   /// Only group administrators can perform this operation.
   /// Returns the created/updated group budget.
+  @Deprecated(
+    'Use category budgets instead. Group budget = SUM(category budgets). '
+    'Use distributeToAltroCategory() to set a catch-all budget.',
+  )
   Future<Either<Failure, GroupBudgetEntity>> setGroupBudget({
     required String groupId,
     required int amount,
@@ -56,7 +66,15 @@ abstract class BudgetRepository {
 
   /// Set or update a personal budget for a specific month/year.
   ///
+  /// **DEPRECATED**: Use category budgets with member contributions instead.
+  /// Personal budget is now calculated as SUM of user's category contributions.
+  ///
   /// Returns the created/updated personal budget.
+  @Deprecated(
+    'Use category budgets with member contributions instead. '
+    'Personal budget = SUM(user contributions). '
+    'Use setPersonalPercentageBudget() or createCategoryBudget() with member contributions.',
+  )
   Future<Either<Failure, PersonalBudgetEntity>> setPersonalBudget({
     required String userId,
     required int amount,
@@ -220,6 +238,65 @@ abstract class BudgetRepository {
   /// ```
   Future<Either<Failure, BudgetComposition>> getBudgetComposition({
     required String groupId,
+    required int year,
+    required int month,
+  });
+
+  // ========== Computed Budget Totals (Category-Only System) ==========
+
+  /// Get computed budget totals calculated from category budgets
+  ///
+  /// Returns:
+  /// - Total group budget (SUM of all category budgets)
+  /// - Total personal budget (SUM of user's contributions)
+  /// - Category and member breakdowns
+  ///
+  /// This replaces manual GroupBudgetEntity and PersonalBudgetEntity
+  /// with calculated values from the category budget system.
+  Future<Either<Failure, ComputedBudgetTotals>> getComputedBudgetTotals({
+    required String groupId,
+    required String userId,
+    required int year,
+    required int month,
+  });
+
+  /// Ensure "Altro" system category budget exists for the group/month
+  ///
+  /// Auto-creates the "Altro" category budget if it doesn't exist.
+  /// "Altro" is the catch-all category for uncategorized expenses.
+  ///
+  /// Returns the existing or newly created "Altro" category budget.
+  Future<Either<Failure, CategoryBudgetEntity>> ensureAltroCategory({
+    required String groupId,
+    required int year,
+    required int month,
+  });
+
+  /// Distribute an amount to "Altro" system category
+  ///
+  /// This is the replacement for setGroupBudget() - instead of setting
+  /// a manual group budget total, assign the amount to the "Altro" category.
+  ///
+  /// Only group administrators can perform this operation.
+  Future<Either<Failure, CategoryBudgetEntity>> distributeToAltroCategory({
+    required String groupId,
+    required int amount,
+    required int year,
+    required int month,
+  });
+
+  /// Calculate virtual "Spese di Gruppo" category for personal budget view
+  ///
+  /// Returns a virtual category showing:
+  /// - Budget = SUM of user's contributions in group categories
+  /// - Spent = SUM of group expenses created by user
+  /// - Category breakdown
+  ///
+  /// This category is NOT stored in database, computed on-demand.
+  /// It appears ONLY in personal budget view, not in group budget view.
+  Future<Either<Failure, VirtualGroupExpensesCategory>> calculateVirtualGroupCategory({
+    required String groupId,
+    required String userId,
     required int year,
     required int month,
   });

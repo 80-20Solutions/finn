@@ -72,11 +72,6 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
           ),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => context.go('/scan-receipt'),
-        icon: const Icon(Icons.add),
-        label: const Text('Aggiungi'),
-      ),
       body: _buildBody(theme, listState),
     );
   }

@@ -212,48 +212,101 @@ class _DashboardContent extends ConsumerWidget {
 
             // Budget cards
             if (!isPersonalView) ...[
-              // Group budget card (group view only)
+              // Group view - show all group-related budget widgets
               Consumer(
                 builder: (context, ref, child) {
-                  final groupId = ref.watch(currentGroupIdProvider);
+                  final group = ref.watch(currentGroupProvider);
                   final userId = ref.watch(currentUserIdProvider);
 
-                  return GroupBudgetCard(
-                    groupId: groupId,
-                    userId: userId,
-                    onNavigateToSettings: () {
-                      context.push('/budget'); // Updated to new unified dashboard
-                    },
+                  if (group == null) {
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Icon(Icons.group_off, size: 48, color: Colors.grey),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Nessun gruppo disponibile',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Crea o unisciti a un gruppo per visualizzare il budget',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: [
+                      // Group budget card
+                      GroupBudgetCard(
+                        groupId: group.id,
+                        userId: userId,
+                        onNavigateToSettings: () {
+                          context.push('/budget');
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Category budget summary (Feature 004)
+                      BudgetSummaryCard(
+                        onTap: () {
+                          context.push('/budget');
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Category budget list (Feature 004)
+                      CategoryBudgetList(
+                        maxItems: 5,
+                        onViewAll: () {
+                          context.push('/budget');
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   );
                 },
               ),
-              const SizedBox(height: 16),
-
-              // Category budget summary (Feature 004)
-              BudgetSummaryCard(
-                onTap: () {
-                  context.push('/budget'); // Updated to new unified dashboard
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Category budget list (Feature 004)
-              CategoryBudgetList(
-                maxItems: 5,
-                onViewAll: () {
-                  context.push('/budget'); // Updated to new unified dashboard
-                },
-              ),
-              const SizedBox(height: 16),
             ] else ...[
               // Personal budget card (personal view only)
               Consumer(
                 builder: (context, ref, child) {
-                  final groupId = ref.watch(currentGroupIdProvider);
+                  final group = ref.watch(currentGroupProvider);
                   final userId = ref.watch(currentUserIdProvider);
 
+                  if (group == null) {
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          children: [
+                            Icon(Icons.group_off, size: 48, color: Colors.grey),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Nessun gruppo disponibile',
+                              style: Theme.of(context).textTheme.titleMedium,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Crea o unisciti a un gruppo per visualizzare il tuo budget',
+                              style: Theme.of(context).textTheme.bodySmall,
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+
                   return PersonalBudgetCard(
-                    groupId: groupId,
+                    groupId: group.id,
                     userId: userId,
                     onNavigateToSettings: () {
                       context.push('/budget'); // Updated to new unified dashboard
