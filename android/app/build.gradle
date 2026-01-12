@@ -27,6 +27,23 @@ android {
         versionName = flutter.versionName
     }
 
+    flavorDimensions = ["environment"]
+
+    productFlavors {
+        production {
+            dimension = "environment"
+            applicationId = "com.ecologicaleaving.fin"
+            manifestPlaceholders = [appName: "Fin"]
+        }
+
+        dev {
+            dimension = "environment"
+            applicationId = "com.ecologicaleaving.fin.dev"
+            manifestPlaceholders = [appName: "Fin Dev"]
+            versionNameSuffix = "-dev"
+        }
+    }
+
     buildTypes {
         release {
             // TODO: Add your own signing config for the release build.

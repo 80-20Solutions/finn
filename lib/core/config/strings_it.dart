@@ -183,4 +183,91 @@ class StringsIt {
   static const today = 'Oggi';
   static const yesterday = 'Ieri';
   static String daysAgo(int days) => '$days giorni fa';
+
+  // Budget Wizard (Feature: 001-group-budget-wizard, Task: T002)
+  static const budgetWizardTitle = 'Configurazione Budget Gruppo';
+  static const wizardStep = 'Passo';
+  static const wizardOf = 'di';
+
+  // Step 1: Category Selection
+  static const selectCategories = 'Seleziona Categorie';
+  static const selectCategoriesDescription =
+      'Scegli le categorie di spesa per il tuo gruppo';
+  static const selectAtLeastOneCategory =
+      'Seleziona almeno una categoria';
+  static const categoriesSelected = 'categorie selezionate';
+
+  // Step 2: Budget Amounts
+  static const setBudgetAmounts = 'Imposta Budget';
+  static const setBudgetAmountsDescription =
+      'Definisci l\'importo mensile per ogni categoria';
+  static const monthlyBudget = 'Budget mensile';
+  static const budgetAmountRequired = 'Inserisci un importo';
+  static const budgetAmountInvalid = 'L\'importo deve essere maggiore di zero';
+  static String budgetAmountMax(double max) =>
+      'L\'importo massimo è \u20ac${max.toStringAsFixed(2)}';
+  static const allBudgetsRequired = 'Imposta tutti i budget';
+
+  // Step 3: Member Allocation
+  static const distributeBudget = 'Ripartizione Percentuale';
+  static const distributeBudgetDescription =
+      'Distribuisci il budget tra i membri del gruppo';
+  static const memberPercentage = 'Percentuale';
+  static const splitEqually = 'Dividi Equamente';
+  static const percentageTotal = 'Totale';
+  static const percentageMustBe100 = 'Il totale deve essere 100%';
+  static String percentageMissing(double missing) =>
+      'Mancano ${missing.toStringAsFixed(2)}%';
+  static String percentageExcess(double excess) =>
+      'In eccesso di ${excess.toStringAsFixed(2)}%';
+  static const percentageInvalid = 'Inserisci una percentuale valida (0-100)';
+  static const allPercentagesRequired = 'Imposta tutte le percentuali';
+
+  // Step 4: Summary
+  static const reviewConfiguration = 'Riepilogo';
+  static const reviewConfigurationDescription =
+      'Verifica la configurazione prima di salvare';
+  static const selectedCategoriesLabel = 'Categorie selezionate';
+  static const totalMonthlyBudget = 'Budget mensile totale';
+  static const memberAllocations = 'Ripartizione membri';
+  static const completeSetup = 'Completa Configurazione';
+
+  // Wizard Actions
+  static const previous = 'Indietro';
+  static const continue_ = 'Continua';
+  static const finish = 'Termina';
+  static const saveDraft = 'Salva Bozza';
+  static const draftSaved = 'Bozza salvata';
+  static const draftRestored = 'Bozza ripristinata';
+
+  // Wizard Validation
+  static const wizardIncomplete = 'Configurazione incompleta';
+  static const wizardSaving = 'Salvataggio in corso...';
+  static const wizardSaveSuccess = 'Configurazione salvata con successo!';
+  static const wizardSaveError = 'Errore durante il salvataggio';
+  static const wizardRequired =
+      'Devi completare la configurazione del budget prima di continuare';
+
+  // User Story 2: Group Budget View (Feature: 001-group-budget-wizard, Task: T051-T052)
+  static const groupSpending = 'Spesa Gruppo';
+  static const remaining = 'Restante';
+  static const noCategories = 'Nessuna categoria configurata';
+  static const total = 'Totale';
+
+  // Group Spending (Member View - Features US2 & US3)
+  static const yourShare = 'La Tua Quota';
+  static const groupTotal = 'Totale Gruppo';
+  static const groupStatus = 'Stato Gruppo (Sola Lettura)';
+  static const groupBudgetAllocated = 'Budget allocato';
+  static const groupBudgetSpent = 'Speso';
+  static const groupBudgetRemaining = 'Rimanente';
+  static const expandDetails = 'Espandi dettagli';
+  static const collapseDetails = 'Riduci dettagli';
+  static const readOnly = 'Sola lettura';
+  static const personalAndGroup = 'Personale + Gruppo';
+
+  // Monthly Reset
+  static const monthlyReset = 'Budget mensile reimpostato';
+  static const newMonthStarted = 'Nuovo mese iniziato';
+  static const budgetHistorySaved = 'Storico budget salvato';
 }

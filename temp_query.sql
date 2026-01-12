@@ -1,0 +1,5 @@
+-- Query 1: Struttura tabella profiles
+SELECT column_name, data_type, column_default
+FROM information_schema.columns
+WHERE table_name = 'profiles'
+ORDER BY ordinal_position;

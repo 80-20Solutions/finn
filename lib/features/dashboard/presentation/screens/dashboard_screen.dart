@@ -6,7 +6,6 @@ import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../budgets/presentation/providers/budget_actions_provider.dart';
-import '../../../budgets/presentation/widgets/group_budget_card.dart';
 import '../../../budgets/presentation/widgets/personal_budget_card.dart';
 import '../../../expenses/presentation/providers/expense_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
@@ -244,16 +243,6 @@ class _DashboardContent extends ConsumerWidget {
 
                   return Column(
                     children: [
-                      // Group budget card
-                      GroupBudgetCard(
-                        groupId: group.id,
-                        userId: userId,
-                        onNavigateToSettings: () {
-                          context.push('/budget');
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
                       // Category budget summary (Feature 004)
                       BudgetSummaryCard(
                         onTap: () {

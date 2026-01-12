@@ -1,0 +1,514 @@
+openapi: 3.0.3
+info:
+  title: Budget Calculation Service API
+  description: |
+    API contract for personal budget calculation and group spending breakdown.
+    Handles member-specific budget views with percentage-based allocations.
+  version: 1.0.0
+  contact:
+    name: Family Expense Tracker Team
+
+servers:
+  - url: https://your-project.supabase.co/rest/v1
+    description: Supabase REST API
+
+tags:
+  - name: Personal Budget
+    description: Calculate member's personal budget including group allocation
+  - name: Group Spending
+    description: Hierarchical view of group spending with member breakdowns
+
+paths:
+  /rpc/get_personal_budget:
+    post:
+      tags:
+        - Personal Budget
+      summary: Get personal budget for current month
+      description: |
+        Calculates member's complete personal budget including:
+        - Personal fixed budgets (user-specific category budgets)
+        - Group budget allocation (member's percentage × total group budget)
+        - Spent amounts for current month
+
+        **Calculation Logic**:
+        ```
+        personal_total = sum(personal_fixed_budgets) + (member_percentage × total_group_budget)
+        ```
+
+        **Example**:
+        - Group budget: €1000/month across all categories
+        - Member percentage: 40%
+        - Member's group allocation: €400
+        - Member's personal fixed budgets: €200
+        - **Total personal budget: €600**
+
+        **Business Rules**:
+        - Only returns budgets for authenticated user's group
+        - Month defaults to current month if not specified
+        - Returns 0 amounts if no budgets configured (wizard not completed)
+      operationId: getPersonalBudget
+      parameters:
+        - name: apikey
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                  description: User ID (must match authenticated user via RLS)
+                  example: "user-uuid-1"
+                month:
+                  type: string
+                  format: date
+                  description: Target month (YYYY-MM format, defaults to current month)
+                  example: "2026-01"
+      responses:
+        '200':
+          description: Personal budget calculated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - user_id
+                  - group_id
+                  - month
+                  - year
+                  - personal_fixed_total
+                  - group_allocation_total
+                  - total_budget
+                  - total_spent
+                  - categories
+                properties:
+                  user_id:
+                    type: string
+                    format: uuid
+                  group_id:
+                    type: string
+                    format: uuid
+                  month:
+                    type: integer
+                    minimum: 1
+                    maximum: 12
+                    example: 1
+                  year:
+                    type: integer
+                    minimum: 2000
+                    example: 2026
+                  personal_fixed_total:
+                    type: integer
+                    description: Total personal fixed budgets in cents
+                    example: 20000
+                  group_allocation_total:
+                    type: integer
+                    description: Member's share of total group budget in cents
+                    example: 40000
+                  total_budget:
+                    type: integer
+                    description: Combined total (personal + group allocation) in cents
+                    example: 60000
+                  total_spent:
+                    type: integer
+                    description: Total spent across all categories in cents
+                    example: 35000
+                  member_percentage:
+                    type: number
+                    format: double
+                    description: Member's allocation percentage
+                    example: 40.00
+                  categories:
+                    type: array
+                    description: Per-category budget details
+                    items:
+                      type: object
+                      required:
+                        - category_id
+                        - category_name
+                        - budget_type
+                        - allocated
+                        - spent
+                      properties:
+                        category_id:
+                          type: string
+                          format: uuid
+                        category_name:
+                          type: string
+                          example: "Cibo e Spesa"
+                        budget_type:
+                          type: string
+                          enum: [FIXED, PERCENTAGE]
+                          description: Personal fixed budget or group percentage budget
+                        allocated:
+                          type: integer
+                          description: Allocated budget in cents
+                          example: 15000
+                        spent:
+                          type: integer
+                          description: Spent amount in cents
+                          example: 8000
+                        icon:
+                          type: string
+                          nullable: true
+                          example: "restaurant"
+                        color:
+                          type: string
+                          nullable: true
+                          example: "#FF5722"
+              examples:
+                mixed-budget:
+                  summary: Member with both personal and group budgets
+                  value:
+                    user_id: "user-uuid-1"
+                    group_id: "group-uuid"
+                    month: 1
+                    year: 2026
+                    personal_fixed_total: 20000
+                    group_allocation_total: 40000
+                    total_budget: 60000
+                    total_spent: 35000
+                    member_percentage: 40.00
+                    categories:
+                      - category_id: "cat-cibo-uuid"
+                        category_name: "Cibo e Spesa"
+                        budget_type: "PERCENTAGE"
+                        allocated: 20000
+                        spent: 15000
+                        icon: "restaurant"
+                        color: "#FF5722"
+                      - category_id: "cat-trasporti-uuid"
+                        category_name: "Trasporti"
+                        budget_type: "PERCENTAGE"
+                        allocated: 12000
+                        spent: 8000
+                        icon: "directions_car"
+                        color: "#2196F3"
+                      - category_id: "cat-personal-uuid"
+                        category_name: "Intrattenimento"
+                        budget_type: "FIXED"
+                        allocated: 10000
+                        spent: 7000
+                        icon: "movie"
+                        color: "#9C27B0"
+
+                no-wizard:
+                  summary: User in group where wizard not completed
+                  value:
+                    user_id: "user-uuid-1"
+                    group_id: "group-uuid"
+                    month: 1
+                    year: 2026
+                    personal_fixed_total: 0
+                    group_allocation_total: 0
+                    total_budget: 0
+                    total_spent: 0
+                    member_percentage: 0.00
+                    categories: []
+
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: User or group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rpc/get_group_spending_breakdown:
+    post:
+      tags:
+        - Group Spending
+      summary: Get hierarchical group spending breakdown
+      description: |
+        Returns hierarchical structure of group spending for member's budget view.
+        **Structure**: Parent "Spesa Gruppo" category with expandable sub-categories.
+
+        **Parent Category**:
+        - Name: "Spesa Gruppo" (Italian for "Group Spending")
+        - Badge: "G" icon (distinguishes from personal categories)
+        - Allocated: Member's percentage × total group budget
+        - Spent: Member's percentage × total group spent
+
+        **Sub-categories**:
+        - Each configured group budget category (from wizard)
+        - Shows member's proportional share and group totals
+        - Read-only (cannot edit, per FR-012)
+
+        **Example UI**:
+        ```
+        ▼ Spesa Gruppo (G)                    €400 / €500
+          ├─ Cibo e Spesa                     €200 / €250 (50% di €500)
+          ├─ Trasporti                        €120 / €150 (40% di €300)
+          └─ Casa                             €80 / €100 (40% di €200)
+        ```
+      operationId: getGroupSpendingBreakdown
+      parameters:
+        - name: apikey
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - user_id
+              properties:
+                user_id:
+                  type: string
+                  format: uuid
+                  example: "user-uuid-1"
+                month:
+                  type: string
+                  format: date
+                  description: Target month (YYYY-MM, defaults to current)
+                  example: "2026-01"
+      responses:
+        '200':
+          description: Group spending breakdown retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - parent
+                  - subcategories
+                properties:
+                  parent:
+                    type: object
+                    description: Parent "Spesa Gruppo" category
+                    required:
+                      - name
+                      - badge
+                      - member_allocated
+                      - member_spent
+                      - group_total_budget
+                      - group_total_spent
+                      - member_percentage
+                    properties:
+                      name:
+                        type: string
+                        enum: ["Spesa Gruppo"]
+                        description: Italian localized name
+                        example: "Spesa Gruppo"
+                      badge:
+                        type: string
+                        enum: ["G"]
+                        description: Badge icon identifier
+                        example: "G"
+                      member_allocated:
+                        type: integer
+                        description: Member's share of total group budget (cents)
+                        example: 40000
+                      member_spent:
+                        type: integer
+                        description: Member's share of total group spent (cents)
+                        example: 32000
+                      group_total_budget:
+                        type: integer
+                        description: Total group budget across all categories (cents)
+                        example: 100000
+                      group_total_spent:
+                        type: integer
+                        description: Total group spent across all categories (cents)
+                        example: 80000
+                      member_percentage:
+                        type: number
+                        format: double
+                        description: Member's allocation percentage
+                        example: 40.00
+
+                  subcategories:
+                    type: array
+                    description: Expandable sub-categories (group budget categories)
+                    items:
+                      type: object
+                      required:
+                        - category_id
+                        - category_name
+                        - member_allocated
+                        - member_spent
+                        - group_total_budget
+                        - group_total_spent
+                        - member_percentage
+                      properties:
+                        category_id:
+                          type: string
+                          format: uuid
+                        category_name:
+                          type: string
+                          description: Italian category name
+                          example: "Cibo e Spesa"
+                        member_allocated:
+                          type: integer
+                          description: Member's proportional share (cents)
+                          example: 20000
+                        member_spent:
+                          type: integer
+                          description: Member's proportional spent (cents)
+                          example: 15000
+                        group_total_budget:
+                          type: integer
+                          description: Total group budget for this category (cents)
+                          example: 50000
+                        group_total_spent:
+                          type: integer
+                          description: Total group spent for this category (cents)
+                          example: 37500
+                        member_percentage:
+                          type: number
+                          format: double
+                          description: Member's percentage (for display "X% di €Y")
+                          example: 40.00
+                        icon:
+                          type: string
+                          nullable: true
+                          description: Material icon name
+                          example: "restaurant"
+                        color:
+                          type: string
+                          nullable: true
+                          description: Hex color code
+                          example: "#FF5722"
+              examples:
+                typical-breakdown:
+                  summary: Member with 40% allocation across 3 categories
+                  value:
+                    parent:
+                      name: "Spesa Gruppo"
+                      badge: "G"
+                      member_allocated: 40000
+                      member_spent: 32000
+                      group_total_budget: 100000
+                      group_total_spent: 80000
+                      member_percentage: 40.00
+                    subcategories:
+                      - category_id: "cat-cibo-uuid"
+                        category_name: "Cibo e Spesa"
+                        member_allocated: 20000
+                        member_spent: 15000
+                        group_total_budget: 50000
+                        group_total_spent: 37500
+                        member_percentage: 40.00
+                        icon: "restaurant"
+                        color: "#FF5722"
+                      - category_id: "cat-trasporti-uuid"
+                        category_name: "Trasporti"
+                        member_allocated: 12000
+                        member_spent: 10000
+                        group_total_budget: 30000
+                        group_total_spent: 25000
+                        member_percentage: 40.00
+                        icon: "directions_car"
+                        color: "#2196F3"
+                      - category_id: "cat-casa-uuid"
+                        category_name: "Casa e Bollette"
+                        member_allocated: 8000
+                        member_spent: 7000
+                        group_total_budget: 20000
+                        group_total_spent: 17500
+                        member_percentage: 40.00
+                        icon: "home"
+                        color: "#4CAF50"
+
+                no-group-budget:
+                  summary: Group without configured budget (wizard not completed)
+                  value:
+                    parent:
+                      name: "Spesa Gruppo"
+                      badge: "G"
+                      member_allocated: 0
+                      member_spent: 0
+                      group_total_budget: 0
+                      group_total_spent: 0
+                      member_percentage: 0.00
+                    subcategories: []
+
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: User or group not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "Internal Server Error"
+        message:
+          type: string
+          example: "Si è verificato un errore. Riprova più tardi."
+        code:
+          type: string
+          example: "INTERNAL_ERROR"
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+            message: "Token di autenticazione mancante o non valido"
+            code: "AUTH_REQUIRED"
+
+    InternalServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Internal Server Error"
+            message: "Si è verificato un errore. Riprova più tardi."
+            code: "INTERNAL_ERROR"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase JWT token from auth.users
+
+security:
+  - bearerAuth: []

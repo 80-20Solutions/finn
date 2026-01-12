@@ -155,7 +155,7 @@ class _BudgetSettingsScreenState extends ConsumerState<BudgetSettingsScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Imposta i budget totali per il mese corrente',
+                  'Visualizza la composizione del tuo budget mensile',
                   style: GoogleFonts.dmSans(
                     fontSize: 14,
                     color: AppColors.inkLight,
@@ -163,32 +163,146 @@ class _BudgetSettingsScreenState extends ConsumerState<BudgetSettingsScreen> {
                 ),
                 const SizedBox(height: 32),
 
-                // Group Budget Section (DEPRECATED - Use category budgets instead)
-                _BudgetSection(
-                  title: 'Budget Gruppo (Calcolato)',
-                  icon: Icons.group,
-                  currentAmount: budgetState.computedTotals.totalGroupBudget > 0
-                      ? budgetState.computedTotals.totalGroupBudget
-                      : null,
-                  controller: _groupBudgetController,
-                  isSubmitting: _isSubmittingGroup,
-                  onSubmit: _submitGroupBudget,
-                  accentColor: AppColors.terracotta,
-                ),
+                // Budget Summary Card
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: AppColors.cream,
+                    borderRadius: BorderRadius.circular(4),
+                    border: Border(
+                      left: BorderSide(
+                        color: AppColors.terracotta,
+                        width: 4,
+                      ),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Total Budget
+                      Row(
+                        children: [
+                          Icon(Icons.account_balance_wallet, color: AppColors.terracotta, size: 24),
+                          const SizedBox(width: 12),
+                          Text(
+                            'Budget Totale',
+                            style: GoogleFonts.dmSans(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.ink,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        '€ ${(budgetState.computedTotals.totalPersonalBudget + budgetState.computedTotals.totalGroupBudget) ~/ 100}',
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.terracotta,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Divider(),
+                      const SizedBox(height: 20),
 
-                const SizedBox(height: 32),
+                      // Personal Budget
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.blue.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.person, color: Colors.blue, size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              'PERSONALE',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.blue,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '€ ${budgetState.computedTotals.totalPersonalBudget ~/ 100}',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.blue,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
 
-                // Personal Budget Section (DEPRECATED - Use category contributions instead)
-                _BudgetSection(
-                  title: 'Budget Personale (Calcolato)',
-                  icon: Icons.person,
-                  currentAmount: budgetState.computedTotals.totalPersonalBudget > 0
-                      ? budgetState.computedTotals.totalPersonalBudget
-                      : null,
-                  controller: _personalBudgetController,
-                  isSubmitting: _isSubmittingPersonal,
-                  onSubmit: _submitPersonalBudget,
-                  accentColor: AppColors.copper,
+                      const SizedBox(height: 12),
+
+                      // Group Budget
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.green.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: Colors.green.withOpacity(0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.group, color: Colors.green, size: 20),
+                            const SizedBox(width: 12),
+                            Text(
+                              'GRUPPO',
+                              style: GoogleFonts.dmSans(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.green,
+                              ),
+                            ),
+                            const Spacer(),
+                            Text(
+                              '€ ${budgetState.computedTotals.totalGroupBudget ~/ 100}',
+                              style: GoogleFonts.jetBrainsMono(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.green,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      // Help text
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppColors.inkLight.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(Icons.info_outline, size: 16, color: AppColors.inkLight),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'Il budget personale è la parte che puoi spendere liberamente. Il budget di gruppo è condiviso con gli altri membri.',
+                                style: GoogleFonts.dmSans(
+                                  fontSize: 12,
+                                  color: AppColors.inkLight,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
 
                 const SizedBox(height: 32),

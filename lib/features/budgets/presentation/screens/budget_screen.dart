@@ -6,12 +6,15 @@ import '../../../../app/app_theme.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
 import '../providers/budget_composition_provider.dart';
 import '../widgets/budget_overview_card.dart';
 import '../widgets/category_budget_tile.dart';
 import '../widgets/editable_section.dart';
 import '../widgets/validation_alert_banner.dart';
+import 'group_budget_detail_screen.dart';
+import 'personal_budget_detail_screen.dart';
 
 /// Unified budget management screen
 ///
@@ -40,6 +43,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   @override
   Widget build(BuildContext context) {
     final groupId = ref.watch(currentGroupIdProvider);
+    final userId = ref.watch(currentUserIdProvider);
 
     final params = BudgetCompositionParams(
       groupId: groupId,
@@ -103,173 +107,35 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                 ValidationAlertBanner(issues: composition.issues),
 
               // Overview card
-              BudgetOverviewCard(composition: composition),
-
-              const SizedBox(height: 24),
-
-              // Group budget section
-              _buildSectionHeader('Budget Gruppo (Calcolato)'),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.parchment.withValues(alpha: 0.3),
-                  borderRadius: BorderRadius.circular(4),
-                  border: Border.all(
-                    color: AppColors.parchmentDark,
-                    width: 1,
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Label
-                    Row(
-                      children: [
-                        Icon(Icons.groups, size: 16, color: AppColors.terracotta),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Budget Mensile Gruppo',
-                          style: GoogleFonts.dmSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.8,
-                            color: AppColors.inkLight,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    // Value display
-                    Text(
-                      composition.calculatedGroupBudget > 0
-                          ? CurrencyUtils.formatCents(composition.calculatedGroupBudget)
-                          : 'Calcolato dalle categorie',
-                      style: GoogleFonts.jetBrainsMono(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                        color: composition.calculatedGroupBudget > 0
-                            ? AppColors.terracotta
-                            : AppColors.inkFaded,
+              BudgetOverviewCard(
+                composition: composition,
+                currentUserId: userId,
+                onPersonalTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => PersonalBudgetDetailScreen(
+                        composition: composition,
+                        currentUserId: userId,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    // Helper text
-                    Text(
-                      'Budget totale calcolato automaticamente dalla somma dei budget di categoria',
-                      style: GoogleFonts.dmSans(
-                        fontSize: 11,
-                        color: AppColors.inkFaded,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 24),
-
-              // Category budgets section
-              _buildSectionHeader(
-                'Budget per Categoria',
-                subtitle:
-                    '${composition.categoryBudgets.length} ${composition.categoryBudgets.length == 1 ? "categoria" : "categorie"}',
-              ),
-              const SizedBox(height: 12),
-
-              // Categories list
-              if (composition.categoryBudgets.isEmpty)
-                _buildEmptyState()
-              else
-                ...composition.categoryBudgets.map((categoryBudget) {
-                  // Expand alert categories by default
-                  final shouldExpand = categoryBudget.stats.isOverBudget ||
-                      categoryBudget.stats.isNearLimit;
-
-                  return CategoryBudgetTile(
-                    key: ValueKey(categoryBudget.categoryId),
-                    categoryBudget: categoryBudget,
-                    params: params,
-                    initiallyExpanded: shouldExpand,
                   );
-                }),
-
-              const SizedBox(height: 80), // Space for FAB
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionHeader(String title, {String? subtitle}) {
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: GoogleFonts.playfairDisplay(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.ink,
-                ),
+                },
+                onGroupTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => GroupBudgetDetailScreen(
+                        composition: composition,
+                        currentUserId: userId,
+                      ),
+                    ),
+                  );
+                },
               ),
-              if (subtitle != null) ...[
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: GoogleFonts.dmSans(
-                    fontSize: 12,
-                    color: AppColors.inkLight,
-                  ),
-                ),
-              ],
             ],
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Container(
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: AppColors.cream,
-        borderRadius: BorderRadius.circular(4),
-        border: Border.all(
-          color: AppColors.parchmentDark,
-          width: 1,
-        ),
-      ),
-      child: Column(
-        children: [
-          Icon(
-            Icons.category_outlined,
-            size: 48,
-            color: AppColors.inkFaded,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Nessun budget per categoria',
-            style: GoogleFonts.dmSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: AppColors.inkLight,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Inizia aggiungendo un budget per le tue categorie',
-            style: GoogleFonts.dmSans(
-              fontSize: 13,
-              color: AppColors.inkFaded,
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
       ),
     );
   }

@@ -1,0 +1,553 @@
+openapi: 3.0.3
+info:
+  title: Budget Wizard Service API
+  description: |
+    API contract for Group Budget Setup Wizard feature.
+    Handles wizard initialization, configuration submission, and completion tracking.
+  version: 1.0.0
+  contact:
+    name: Family Expense Tracker Team
+
+servers:
+  - url: https://your-project.supabase.co/rest/v1
+    description: Supabase REST API
+
+tags:
+  - name: Wizard Initialization
+    description: Fetch initial data for wizard setup
+  - name: Wizard Submission
+    description: Save wizard configuration to database
+  - name: Wizard Completion
+    description: Track wizard completion status
+
+paths:
+  /rpc/get_wizard_initial_data:
+    post:
+      tags:
+        - Wizard Initialization
+      summary: Get initial wizard data
+      description: |
+        Fetches all data required for wizard initialization:
+        - Available expense categories (Italian names)
+        - All group members (for percentage allocation)
+        - Existing group budget configuration (if admin is reconfiguring)
+
+        **Business Rules**:
+        - Only group admins can access this endpoint (RLS enforced)
+        - Returns empty categoryBudgets array if wizard not previously completed
+        - Member list excludes soft-deleted users
+      operationId: getWizardInitialData
+      parameters:
+        - name: apikey
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Supabase API key
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Bearer token from auth.users
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - group_id
+              properties:
+                group_id:
+                  type: string
+                  format: uuid
+                  description: Family group ID
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+      responses:
+        '200':
+          description: Successful response with wizard initialization data
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - categories
+                  - members
+                  - existingConfig
+                properties:
+                  categories:
+                    type: array
+                    description: Available expense categories
+                    items:
+                      $ref: '#/components/schemas/ExpenseCategory'
+                  members:
+                    type: array
+                    description: Group members for percentage allocation
+                    items:
+                      $ref: '#/components/schemas/GroupMember'
+                  existingConfig:
+                    type: object
+                    nullable: true
+                    description: Existing budget config (null if first-time setup)
+                    properties:
+                      categoryBudgets:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CategoryBudget'
+                      memberAllocations:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/MemberAllocation'
+              examples:
+                first-time-setup:
+                  summary: First-time wizard (no existing config)
+                  value:
+                    categories:
+                      - id: "cat-uuid-1"
+                        name_it: "Cibo e Spesa"
+                        icon: "restaurant"
+                        color: "#FF5722"
+                        is_system: true
+                      - id: "cat-uuid-2"
+                        name_it: "Trasporti"
+                        icon: "directions_car"
+                        color: "#2196F3"
+                        is_system: true
+                    members:
+                      - user_id: "user-uuid-1"
+                        display_name: "Mario Rossi"
+                        email: "mario@example.com"
+                        is_admin: true
+                      - user_id: "user-uuid-2"
+                        display_name: "Anna Bianchi"
+                        email: "anna@example.com"
+                        is_admin: false
+                    existingConfig: null
+
+                reconfiguration:
+                  summary: Admin reconfiguring existing budget
+                  value:
+                    categories:
+                      - id: "cat-uuid-1"
+                        name_it: "Cibo e Spesa"
+                        icon: "restaurant"
+                        color: "#FF5722"
+                        is_system: true
+                    members:
+                      - user_id: "user-uuid-1"
+                        display_name: "Mario Rossi"
+                        email: "mario@example.com"
+                        is_admin: true
+                    existingConfig:
+                      categoryBudgets:
+                        - category_id: "cat-uuid-1"
+                          amount: 50000
+                          year: 2026
+                          month: 1
+                      memberAllocations:
+                        - user_id: "user-uuid-1"
+                          percentage: 100.00
+
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /rpc/save_wizard_configuration:
+    post:
+      tags:
+        - Wizard Submission
+      summary: Save wizard configuration
+      description: |
+        Saves complete wizard configuration to database in a single transaction:
+        1. Inserts/updates category_budgets records (group budgets)
+        2. Creates percentage-based personal budgets for each member
+        3. Updates profiles.budget_wizard_completed = true
+
+        **Validation Rules** (enforced before RPC call):
+        - All budget amounts must be positive integers (cents)
+        - Member percentages must sum to exactly 100.00%
+        - At least 1 category must be configured
+        - All selected categories must have budget amounts
+
+        **Transaction Behavior**:
+        - Atomic operation (all-or-nothing)
+        - On conflict (existing budget): UPDATE amounts
+        - Sets year/month to current month (Europe/Rome timezone)
+      operationId: saveWizardConfiguration
+      parameters:
+        - name: apikey
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - group_id
+                - admin_user_id
+                - category_budgets
+                - member_allocations
+              properties:
+                group_id:
+                  type: string
+                  format: uuid
+                  example: "550e8400-e29b-41d4-a716-446655440000"
+                admin_user_id:
+                  type: string
+                  format: uuid
+                  description: Admin completing wizard (for created_by field)
+                  example: "user-uuid-1"
+                category_budgets:
+                  type: array
+                  minItems: 1
+                  maxItems: 20
+                  description: Category budget configurations
+                  items:
+                    type: object
+                    required:
+                      - category_id
+                      - amount
+                    properties:
+                      category_id:
+                        type: string
+                        format: uuid
+                      amount:
+                        type: integer
+                        minimum: 1
+                        maximum: 99999999
+                        description: Budget amount in cents (e.g., 50000 = €500.00)
+                        example: 50000
+                member_allocations:
+                  type: array
+                  minItems: 1
+                  description: Member percentage allocations (must sum to 100.00)
+                  items:
+                    type: object
+                    required:
+                      - user_id
+                      - percentage
+                    properties:
+                      user_id:
+                        type: string
+                        format: uuid
+                      percentage:
+                        type: number
+                        format: double
+                        minimum: 0
+                        maximum: 100
+                        description: Allocation percentage (e.g., 33.33)
+                        example: 50.00
+            examples:
+              basic-configuration:
+                summary: Basic 2-category, 2-member configuration
+                value:
+                  group_id: "550e8400-e29b-41d4-a716-446655440000"
+                  admin_user_id: "user-uuid-1"
+                  category_budgets:
+                    - category_id: "cat-cibo-uuid"
+                      amount: 50000
+                    - category_id: "cat-trasporti-uuid"
+                      amount: 30000
+                  member_allocations:
+                    - user_id: "user-uuid-1"
+                      percentage: 60.00
+                    - user_id: "user-uuid-2"
+                      percentage: 40.00
+
+      responses:
+        '200':
+          description: Configuration saved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - success
+                  - created_budgets_count
+                  - updated_profile
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  created_budgets_count:
+                    type: integer
+                    description: Number of category_budgets records created
+                    example: 4
+                  updated_profile:
+                    type: boolean
+                    description: Profile.budget_wizard_completed updated
+                    example: true
+                  message:
+                    type: string
+                    example: "Configurazione budget salvata con successo"
+
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid-percentage-sum:
+                  summary: Percentages don't sum to 100%
+                  value:
+                    error: "Validation Error"
+                    message: "Le percentuali dei membri devono sommare a 100% (attuale: 95.00%)"
+                    code: "INVALID_PERCENTAGE_SUM"
+
+                negative-amount:
+                  summary: Negative budget amount
+                  value:
+                    error: "Validation Error"
+                    message: "Gli importi di budget devono essere positivi"
+                    code: "INVALID_BUDGET_AMOUNT"
+
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /profiles/{user_id}:
+    patch:
+      tags:
+        - Wizard Completion
+      summary: Mark wizard as completed
+      description: |
+        Updates profiles.budget_wizard_completed to true.
+        Called after successful wizard submission to lift hard block.
+
+        **Side Effects**:
+        - Enables navigation to home screen (router guard check)
+        - Clears wizard draft from Hive cache (client-side)
+      operationId: markWizardCompleted
+      parameters:
+        - name: user_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Admin user ID
+        - name: apikey
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: Authorization
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - budget_wizard_completed
+              properties:
+                budget_wizard_completed:
+                  type: boolean
+                  enum: [true]
+                  description: Must be true (cannot revert completion)
+                  example: true
+      responses:
+        '200':
+          description: Profile updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    format: uuid
+                  budget_wizard_completed:
+                    type: boolean
+                    example: true
+                  updated_at:
+                    type: string
+                    format: date-time
+                    example: "2026-01-09T10:30:00.000Z"
+
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    ExpenseCategory:
+      type: object
+      required:
+        - id
+        - name_it
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Category UUID
+        name_it:
+          type: string
+          description: Italian category name
+          example: "Cibo e Spesa"
+        icon:
+          type: string
+          nullable: true
+          description: Material icon name
+          example: "restaurant"
+        color:
+          type: string
+          nullable: true
+          description: Hex color code
+          example: "#FF5722"
+        is_system:
+          type: boolean
+          description: System-defined category (cannot be deleted)
+          example: true
+
+    GroupMember:
+      type: object
+      required:
+        - user_id
+        - display_name
+        - email
+        - is_admin
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        display_name:
+          type: string
+          example: "Mario Rossi"
+        email:
+          type: string
+          format: email
+          example: "mario@example.com"
+        is_admin:
+          type: boolean
+          example: true
+
+    CategoryBudget:
+      type: object
+      required:
+        - category_id
+        - amount
+        - year
+        - month
+      properties:
+        category_id:
+          type: string
+          format: uuid
+        amount:
+          type: integer
+          description: Budget amount in cents
+          example: 50000
+        year:
+          type: integer
+          minimum: 2000
+          example: 2026
+        month:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 1
+
+    MemberAllocation:
+      type: object
+      required:
+        - user_id
+        - percentage
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        percentage:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+          example: 50.00
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: "Validation Error"
+        message:
+          type: string
+          example: "Invalid request parameters"
+        code:
+          type: string
+          example: "INVALID_INPUT"
+        details:
+          type: object
+          additionalProperties: true
+
+  responses:
+    UnauthorizedError:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Unauthorized"
+            message: "Token di autenticazione mancante o non valido"
+            code: "AUTH_REQUIRED"
+
+    ForbiddenError:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Forbidden"
+            message: "Solo gli amministratori possono configurare il budget"
+            code: "ADMIN_ONLY"
+
+    InternalServerError:
+      description: Server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+          example:
+            error: "Internal Server Error"
+            message: "Si è verificato un errore. Riprova più tardi."
+            code: "INTERNAL_ERROR"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase JWT token from auth.users
+
+security:
+  - bearerAuth: []

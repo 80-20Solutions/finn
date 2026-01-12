@@ -10,6 +10,7 @@ import 'package:timezone/timezone.dart' as tz;
 
 import 'app/app.dart';
 import 'core/config/env.dart';
+import 'core/services/monthly_budget_reset_service.dart';
 import 'features/widget/presentation/providers/widget_provider.dart';
 import 'shared/services/share_intent_service.dart';
 
@@ -39,6 +40,10 @@ Future<void> main() async {
   await Hive.initFlutter();
   await Hive.openBox<String>('dashboard_cache');
 
+  // Initialize wizard state cache box (Feature: 001-group-budget-wizard, Task: T004)
+  // Used for temporary wizard draft storage with 24h expiry
+  await Hive.openBox<String>('wizard_cache');
+
   // Initialize SharedPreferences for widget data persistence
   final sharedPreferences = await SharedPreferences.getInstance();
 
@@ -56,6 +61,25 @@ Future<void> main() async {
       url: Env.supabaseUrl,
       anonKey: Env.supabaseAnonKey,
     );
+
+    // Monthly budget reset check (Feature: 001-group-budget-wizard, Task: T066)
+    // Check if a new month has started and budget reset is needed
+    // NOTE: This will be fully implemented when repositories are wired up
+    // For now, service is initialized but not actively checking
+    final monthlyResetService = MonthlyBudgetResetService();
+
+    // TODO: Perform monthly reset check after user authentication
+    // Example implementation:
+    // final isResetNeeded = await monthlyResetService.isResetNeeded(
+    //   userId: currentUserId,
+    //   groupId: currentGroupId,
+    // );
+    // if (isResetNeeded) {
+    //   await monthlyResetService.performReset(
+    //     userId: currentUserId,
+    //     groupId: currentGroupId,
+    //   );
+    // }
   }
 
   runApp(

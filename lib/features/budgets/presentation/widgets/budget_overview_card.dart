@@ -11,25 +11,50 @@ import '../../domain/entities/budget_composition_entity.dart';
 /// - Total budgeted vs total spent
 /// - Overall progress bar
 /// - Quick stats (categories, alerts)
+/// - Personal vs Group budget breakdown
 ///
 /// Example:
 /// ```dart
-/// BudgetOverviewCard(composition: budgetComposition)
+/// BudgetOverviewCard(composition: budgetComposition, currentUserId: userId)
 /// ```
 class BudgetOverviewCard extends StatelessWidget {
   const BudgetOverviewCard({
     super.key,
     required this.composition,
+    required this.currentUserId,
     this.onTap,
+    this.onPersonalTap,
+    this.onGroupTap,
   });
 
   final BudgetComposition composition;
+  final String currentUserId;
   final VoidCallback? onTap;
+  final VoidCallback? onPersonalTap;
+  final VoidCallback? onGroupTap;
+
+  /// Calculate personal budget for current user
+  int _calculatePersonalBudget() {
+    int total = 0;
+    for (final categoryBudget in composition.categoryBudgets) {
+      final userContribution = categoryBudget.memberContributions
+          .where((c) => c.userId == currentUserId)
+          .firstOrNull;
+      if (userContribution != null) {
+        total += userContribution.calculatedAmount;
+      }
+    }
+    return total;
+  }
 
   @override
   Widget build(BuildContext context) {
     final stats = composition.stats;
     final hasGroupBudget = composition.hasGroupBudget;
+
+    // Calculate personal and group budgets
+    final personalBudget = _calculatePersonalBudget();
+    final groupBudget = stats.totalCategoryBudgets - personalBudget;
 
     // Calculate progress
     final progressPercentage = stats.overallPercentageUsed.clamp(0.0, 100.0);
@@ -113,6 +138,93 @@ class BudgetOverviewCard extends StatelessWidget {
             ),
 
             const SizedBox(height: 20),
+
+            // Personal and Group Budget breakdown
+            if (stats.hasBudgets) ...[
+              // Group Budget Box
+              InkWell(
+                onTap: onGroupTap,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.green.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.group, color: Colors.green, size: 20),
+                      const SizedBox(width: 12),
+                      Text(
+                        'GRUPPO',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        CurrencyUtils.formatCentsCompact(groupBudget),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.green,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_ios, size: 14, color: Colors.green),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              // Personal Budget Box
+              InkWell(
+                onTap: onPersonalTap,
+                borderRadius: BorderRadius.circular(8),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.blue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue.withOpacity(0.3)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.person, color: Colors.blue, size: 20),
+                      const SizedBox(width: 12),
+                      Text(
+                        'PERSONALE',
+                        style: GoogleFonts.dmSans(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        CurrencyUtils.formatCentsCompact(personalBudget),
+                        style: GoogleFonts.jetBrainsMono(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(Icons.arrow_forward_ios, size: 14, color: Colors.blue),
+                    ],
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 16),
+              const Divider(height: 1, color: AppColors.parchmentDark),
+              const SizedBox(height: 16),
+            ],
 
             // Amounts
             if (hasGroupBudget) ...[
