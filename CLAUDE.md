@@ -4,7 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a **Specify template** repository - a structured workflow framework for feature specification, planning, and implementation. The project currently contains only the workflow infrastructure (no application code yet).
+**Finn** - AI-powered family budget assistant
+
+This is a Flutter mobile application for family budget management with:
+- Dual-repository workflow (development + production)
+- Build flavors for parallel installation (dev + production apps)
+- Shared budget tracking and expense management
+- AI-powered budgeting assistant (Finn)
 
 ## Workflow Commands
 
@@ -22,11 +28,54 @@ The project uses slash commands in `.claude/commands/speckit.*` for the developm
 | `/speckit.taskstoissues` | Convert tasks to GitHub issues |
 | `/speckit.constitution` | Create/update project principles |
 
+## Custom Workflow Skill
+
+### `/dev-workflow` - Development & Release Management
+
+Custom skill for managing the development lifecycle:
+- **Daily commits**: Commit and push changes to test repository
+- **Production releases**: Version bumping, tagging, and deployment to production
+- **Build flavors**: Managing dev and production app installations
+- **Hotfix workflow**: Emergency production fixes
+- **Semantic versioning**: MAJOR.MINOR.PATCH+BUILD management
+
+**Quick reference**: See `WORKFLOW.md` in project root
+**Full documentation**: `.claude/commands/dev-workflow.md`
+
+Use this skill when you need guidance on Git workflow, versioning, or releases.
+
 ## Workflow Sequence
 
 ```
 /speckit.specify → /speckit.clarify (optional) → /speckit.plan → /speckit.tasks → /speckit.implement
 ```
+
+## Repository Setup
+
+**Development Repository** (origin):
+- Organization: `ecologicaleaving`
+- Repository: `finn`
+- Branch: `test` (main development branch)
+- URL: https://github.com/ecologicaleaving/finn
+
+**Production Repository** (production):
+- Organization: `80-20Solutions`
+- Repository: `finn`
+- Branch: `master` (stable releases only)
+- URL: https://github.com/80-20Solutions/finn
+- Visibility: Public
+
+## Build Flavors
+
+The project uses Android flavors for parallel app installation:
+
+- **Production**: `com.ecologicaleaving.fin` - App name: "Fin"
+- **Dev**: `com.ecologicaleaving.fin.dev` - App name: "Fin Dev"
+
+Configuration files:
+- `android/app/build.gradle` - Flavor definitions
+- `android/app/src/main/AndroidManifest.xml` - App label placeholder
+- `android/app/src/dev/res/values/strings.xml` - Dev flavor strings
 
 ## Directory Structure
 
@@ -34,6 +83,7 @@ The project uses slash commands in `.claude/commands/speckit.*` for the developm
 - `.specify/memory/constitution.md` - Project principles and constraints (customize per project)
 - `.specify/scripts/powershell/` - Helper scripts for workflow commands
 - `.claude/commands/` - Slash command definitions
+- `WORKFLOW.md` - Quick reference for development workflow
 
 ## Key Scripts
 
