@@ -450,3 +450,25 @@ final recentPersonalExpensesProvider = FutureProvider<List<ExpenseEntity>>((ref)
     (expenses) => expenses,
   );
 });
+
+/// Provider per spese filtrate per categoria e utente (tutte le spese della categoria)
+final expensesByCategoryProvider = FutureProvider.autoDispose
+    .family<List<ExpenseEntity>, ({String userId, String categoryId})>((ref, params) async {
+  final repository = ref.watch(expenseRepositoryProvider);
+  final now = DateTime.now();
+  final startOfMonth = DateTime(now.year, now.month, 1);
+  final endOfMonth = DateTime(now.year, now.month + 1, 0);
+
+  final result = await repository.getExpenses(
+    createdBy: params.userId,
+    categoryId: params.categoryId,
+    // Non filtriamo per isGroupExpense - mostriamo tutte le spese della categoria
+    startDate: startOfMonth,
+    endDate: endOfMonth,
+  );
+
+  return result.fold(
+    (_) => [],
+    (expenses) => expenses,
+  );
+});

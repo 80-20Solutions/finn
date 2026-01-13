@@ -18,66 +18,23 @@ import '../widgets/category_pie_chart.dart';
 import '../widgets/member_breakdown_list.dart';
 import '../widgets/member_filter.dart';
 import '../widgets/period_selector.dart';
+import '../widgets/personal_dashboard_view.dart';
 import '../widgets/recent_expenses_list.dart';
 import '../widgets/total_summary_card.dart';
 import '../widgets/trend_bar_chart.dart';
 
-/// Main dashboard screen with tabs for personal and group views.
-class DashboardScreen extends ConsumerStatefulWidget {
+/// Main dashboard screen showing personal view only.
+class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
   @override
-  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
-}
-
-class _DashboardScreenState extends ConsumerState<DashboardScreen>
-    with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-
-  @override
-  void initState() {
-    super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(_onTabChanged);
-  }
-
-  @override
-  void dispose() {
-    _tabController.removeListener(_onTabChanged);
-    _tabController.dispose();
-    super.dispose();
-  }
-
-  void _onTabChanged() {
-    if (!_tabController.indexIsChanging) {
-      final mode = _tabController.index == 0
-          ? DashboardViewMode.personal
-          : DashboardViewMode.group;
-      ref.read(dashboardProvider.notifier).setViewMode(mode);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final dashboardState = ref.watch(dashboardProvider);
     final groupState = ref.watch(groupProvider);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Dashboard'),
-        bottom: TabBar(
-          controller: _tabController,
-          tabs: const [
-            Tab(
-              icon: Icon(Icons.person),
-              text: 'Personale',
-            ),
-            Tab(
-              icon: Icon(Icons.group),
-              text: 'Gruppo',
-            ),
-          ],
-        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.refresh),
@@ -88,30 +45,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen>
           ),
         ],
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: [
-          // Personal view
-          _DashboardContent(
-            dashboardState: dashboardState,
-            members: groupState.members,
-            isPersonalView: true,
-            onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
-            onPeriodChanged: (period) =>
-                ref.read(dashboardProvider.notifier).setPeriod(period),
-          ),
-          // Group view
-          _DashboardContent(
-            dashboardState: dashboardState,
-            members: groupState.members,
-            isPersonalView: false,
-            onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
-            onPeriodChanged: (period) =>
-                ref.read(dashboardProvider.notifier).setPeriod(period),
-            onMemberFilterChanged: (memberId) =>
-                ref.read(dashboardProvider.notifier).setMemberFilter(memberId),
-          ),
-        ],
+      body: _DashboardContent(
+        dashboardState: dashboardState,
+        members: groupState.members,
+        isPersonalView: true,
+        onRefresh: () => ref.read(dashboardProvider.notifier).refresh(),
+        onPeriodChanged: (period) =>
+            ref.read(dashboardProvider.notifier).setPeriod(period),
+        groupId: groupState.group?.id ?? '',
       ),
     );
   }
@@ -125,6 +66,7 @@ class _DashboardContent extends ConsumerWidget {
     required this.onRefresh,
     required this.onPeriodChanged,
     this.onMemberFilterChanged,
+    required this.groupId,
   });
 
   final DashboardState dashboardState;
@@ -133,6 +75,7 @@ class _DashboardContent extends ConsumerWidget {
   final VoidCallback onRefresh;
   final ValueChanged<DashboardPeriod> onPeriodChanged;
   final ValueChanged<String?>? onMemberFilterChanged;
+  final String groupId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -264,74 +207,13 @@ class _DashboardContent extends ConsumerWidget {
                 },
               ),
             ] else ...[
-              // Personal budget card (personal view only)
-              Consumer(
-                builder: (context, ref, child) {
-                  final group = ref.watch(currentGroupProvider);
-                  final userId = ref.watch(currentUserIdProvider);
-
-                  if (group == null) {
-                    return Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: Column(
-                          children: [
-                            Icon(Icons.group_off, size: 48, color: Colors.grey),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Nessun gruppo disponibile',
-                              style: Theme.of(context).textTheme.titleMedium,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Crea o unisciti a un gruppo per visualizzare il tuo budget',
-                              style: Theme.of(context).textTheme.bodySmall,
-                              textAlign: TextAlign.center,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-
-                  return PersonalBudgetCard(
-                    groupId: group.id,
-                    userId: userId,
-                    onNavigateToSettings: () {
-                      context.push('/budget'); // Updated to new unified dashboard
-                    },
-                  );
-                },
-              ),
+              // Personal dashboard view with unified card
+              const PersonalDashboardView(),
               const SizedBox(height: 16),
             ],
 
-            // Recent expenses list
-            Consumer(
-              builder: (context, ref, child) {
-                final recentExpensesAsync = isPersonalView
-                    ? ref.watch(recentPersonalExpensesProvider)
-                    : ref.watch(recentGroupExpensesProvider);
-
-                return recentExpensesAsync.when(
-                  data: (expenses) => RecentExpensesList(
-                    expenses: expenses,
-                    title: isPersonalView ? 'Le tue spese recenti' : 'Spese recenti del gruppo',
-                    isLoading: false,
-                    onRefresh: onRefresh,
-                  ),
-                  loading: () => RecentExpensesList(
-                    expenses: const [],
-                    title: isPersonalView ? 'Le tue spese recenti' : 'Spese recenti del gruppo',
-                    isLoading: true,
-                  ),
-                  error: (_, __) => const SizedBox.shrink(),
-                );
-              },
-            ),
-
-            // Summary card
-            if (stats != null) ...[
+            // Summary card - only for group view
+            if (!isPersonalView && stats != null) ...[
               TotalSummaryCard(
                 stats: stats,
                 isPersonalView: isPersonalView,
@@ -342,12 +224,9 @@ class _DashboardContent extends ConsumerWidget {
               if (stats.isEmpty)
                 EmptyDisplay(
                   icon: Icons.receipt_long,
-                  message: isPersonalView
-                      ? 'Non hai ancora spese in questo periodo'
-                      : 'Nessuna spesa del gruppo in questo periodo',
+                  message: 'Nessuna spesa del gruppo in questo periodo',
                   actionLabel: 'Aggiungi spesa',
                   action: () {
-                    // Navigate to add expense
                     Navigator.of(context).pushNamed('/add-expense');
                   },
                 )
@@ -364,7 +243,7 @@ class _DashboardContent extends ConsumerWidget {
                 const SizedBox(height: 16),
 
                 // Member breakdown (group view only)
-                if (!isPersonalView && stats.byMember.isNotEmpty)
+                if (stats.byMember.isNotEmpty)
                   MemberBreakdownList(
                     members: stats.byMember,
                     onMemberTap: onMemberFilterChanged,
