@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "GroupExpenseAssignment",
+  "description": "Schema for group expense assignment linking users to spending limits",
+  "type": "object",
+  "properties": {
+    "id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "Unique identifier for the assignment"
+    },
+    "group_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID of the family group"
+    },
+    "user_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID of the assigned group member"
+    },
+    "spending_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Monthly spending limit for group expenses in smallest currency unit"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of creation"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO 8601 timestamp of last update"
+    }
+  },
+  "required": ["id", "group_id", "user_id", "spending_limit", "created_at", "updated_at"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "id": "850e8400-e29b-41d4-a716-446655440004",
+      "group_id": "9f0e6679-7425-40de-944b-e07fc1f90ae9",
+      "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "spending_limit": 100000,
+      "created_at": "2026-01-15T14:00:00Z",
+      "updated_at": "2026-01-15T14:00:00Z"
+    }
+  ]
+}

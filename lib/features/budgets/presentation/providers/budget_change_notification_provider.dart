@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../budgets/presentation/providers/category_budget_provider.dart';
+import '../../../budgets/presentation/providers/budget_repository_provider.dart';
 import '../../data/models/budget_change_notification_model.dart';
 
 /// Provider for budget change notifications for current user

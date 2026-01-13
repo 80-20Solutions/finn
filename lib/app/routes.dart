@@ -25,6 +25,8 @@ import '../features/auth/presentation/screens/profile_screen.dart';
 import '../features/budgets/presentation/screens/budget_settings_screen.dart';
 import '../features/budgets/presentation/screens/budget_dashboard_screen.dart';
 import '../features/budgets/presentation/screens/budget_screen.dart';
+import '../features/budgets/presentation/screens/budget_setup_wizard_screen.dart';
+import '../features/budgets/presentation/screens/income_management_screen.dart';
 import '../features/categories/presentation/screens/category_management_screen.dart';
 import '../features/categories/presentation/screens/budget_management_screen.dart';
 import '../features/categories/presentation/screens/orphaned_expenses_screen.dart';
@@ -60,6 +62,8 @@ class AppRoutes {
   static const budgetDashboard = '/budget'; // New unified dashboard
   static const budgetSettings = '/budget-settings'; // Kept for backward compatibility
   static const budgetManagement = '/budget-management'; // Kept for backward compatibility
+  static const budgetSetupWizard = '/budget-setup-wizard'; // Personal budget setup wizard
+  static const incomeManagement = '/income-management'; // Income sources management
 
   // Category routes
   static const categoryManagement = '/category-management';
@@ -221,6 +225,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.budgetManagement,
         redirect: (context, state) => AppRoutes.budgetDashboard,
+      ),
+      GoRoute(
+        path: AppRoutes.budgetSetupWizard,
+        name: 'budgetSetupWizard',
+        builder: (context, state) => const BudgetSetupWizardScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.incomeManagement,
+        name: 'incomeManagement',
+        builder: (context, state) => const IncomeManagementScreen(),
       ),
 
       // Category routes

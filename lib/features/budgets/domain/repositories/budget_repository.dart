@@ -8,6 +8,10 @@ import '../entities/computed_budget_totals_entity.dart';
 import '../entities/group_budget_entity.dart';
 import '../entities/personal_budget_entity.dart';
 import '../entities/virtual_group_expenses_category_entity.dart';
+import '../entities/income_source_entity.dart';
+import '../entities/savings_goal_entity.dart';
+import '../entities/group_expense_assignment_entity.dart';
+import '../entities/budget_summary_entity.dart';
 
 /// Abstract budget repository interface.
 ///
@@ -300,4 +304,105 @@ abstract class BudgetRepository {
     required int year,
     required int month,
   });
+
+  // ========== Personal Income & Savings Operations (Feature 001) ==========
+
+  /// Get all income sources for a user
+  Future<Either<Failure, List<IncomeSourceEntity>>> getIncomeSources(
+      String userId);
+
+  /// Get a specific income source by ID
+  Future<Either<Failure, IncomeSourceEntity>> getIncomeSource(String id);
+
+  /// Add a new income source
+  /// Returns the created entity with server-generated ID
+  Future<Either<Failure, IncomeSourceEntity>> addIncomeSource(
+      IncomeSourceEntity incomeSource);
+
+  /// Update an existing income source
+  Future<Either<Failure, IncomeSourceEntity>> updateIncomeSource(
+      IncomeSourceEntity incomeSource);
+
+  /// Delete an income source
+  Future<Either<Failure, void>> deleteIncomeSource(String id);
+
+  /// Calculate total monthly income from all sources
+  Future<Either<Failure, int>> getTotalIncome(String userId);
+
+  /// Get the user's savings goal (null if not set)
+  Future<Either<Failure, SavingsGoalEntity?>> getSavingsGoal(String userId);
+
+  /// Set or update the user's savings goal
+  /// If a goal already exists, it updates it; otherwise creates a new one
+  Future<Either<Failure, SavingsGoalEntity>> setSavingsGoal(
+      SavingsGoalEntity savingsGoal);
+
+  /// Update savings goal amount (preserves original_amount if already adjusted)
+  Future<Either<Failure, SavingsGoalEntity>> updateSavingsGoalAmount({
+    required String userId,
+    required int newAmount,
+  });
+
+  /// Automatically adjust savings goal due to group expense constraints
+  /// Sets original_amount and adjusted_at timestamp
+  Future<Either<Failure, SavingsGoalEntity>> autoAdjustSavingsGoal({
+    required String userId,
+    required int newAmount,
+  });
+
+  /// Delete the user's savings goal
+  Future<Either<Failure, void>> deleteSavingsGoal(String userId);
+
+  /// Get all group expense assignments for a user
+  Future<Either<Failure, List<GroupExpenseAssignmentEntity>>>
+      getGroupExpenseAssignments(String userId);
+
+  /// Get a specific group expense assignment by ID
+  Future<Either<Failure, GroupExpenseAssignmentEntity>>
+      getGroupExpenseAssignment(String id);
+
+  /// Add a new group expense assignment (typically by group admin)
+  Future<Either<Failure, GroupExpenseAssignmentEntity>>
+      addGroupExpenseAssignment(GroupExpenseAssignmentEntity assignment);
+
+  /// Update an existing group expense assignment
+  Future<Either<Failure, GroupExpenseAssignmentEntity>>
+      updateGroupExpenseAssignment(GroupExpenseAssignmentEntity assignment);
+
+  /// Delete a group expense assignment (when user leaves group)
+  Future<Either<Failure, void>> deleteGroupExpenseAssignment(String id);
+
+  /// Calculate total group expense spending limits
+  Future<Either<Failure, int>> getTotalGroupExpenses(String userId);
+
+  /// Compute a complete budget summary for the user
+  /// Aggregates income, savings goal, and group expenses
+  Future<Either<Failure, BudgetSummaryEntity>> getBudgetSummary(String userId);
+
+  /// Calculate available budget amount
+  /// Formula: totalIncome - savingsGoal - totalGroupExpenses
+  Future<Either<Failure, int>> getAvailableBudget(String userId);
+
+  /// Add multiple income sources at once (used during wizard setup)
+  Future<Either<Failure, List<IncomeSourceEntity>>> addIncomeSources(
+      List<IncomeSourceEntity> incomeSources);
+
+  /// Delete all income sources for a user
+  Future<Either<Failure, void>> deleteAllIncomeSources(String userId);
+
+  /// Delete all group expense assignments for a user (when leaving all groups)
+  Future<Either<Failure, void>> deleteAllGroupExpenseAssignments(String userId);
+
+  /// Stream of income sources for a user (updates when data changes)
+  Stream<List<IncomeSourceEntity>> watchIncomeSources(String userId);
+
+  /// Stream of savings goal for a user
+  Stream<SavingsGoalEntity?> watchSavingsGoal(String userId);
+
+  /// Stream of group expense assignments for a user
+  Stream<List<GroupExpenseAssignmentEntity>> watchGroupExpenseAssignments(
+      String userId);
+
+  /// Stream of budget summary (recomputes on any change)
+  Stream<BudgetSummaryEntity> watchBudgetSummary(String userId);
 }

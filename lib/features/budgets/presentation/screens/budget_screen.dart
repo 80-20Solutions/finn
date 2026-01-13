@@ -2,7 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../../../app/app_theme.dart';
+import '../../../../app/routes.dart';
 import '../../../../core/utils/currency_utils.dart';
 import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
@@ -78,6 +81,14 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             },
             tooltip: 'Aggiorna',
           ),
+          // Income Management
+          IconButton(
+            icon: const Icon(Icons.account_balance_wallet),
+            onPressed: () {
+              context.push(AppRoutes.incomeManagement);
+            },
+            tooltip: 'Gestisci Entrate',
+          ),
         ],
       ),
       backgroundColor: AppColors.parchment,
@@ -136,6 +147,15 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          context.push(AppRoutes.incomeManagement);
+        },
+        icon: const Icon(Icons.account_balance_wallet),
+        label: const Text('Gestisci Entrate'),
+        backgroundColor: AppColors.terracotta,
+        foregroundColor: AppColors.cream,
       ),
     );
   }

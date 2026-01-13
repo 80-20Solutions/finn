@@ -5,6 +5,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../budgets/presentation/providers/category_budget_provider.dart';
+import '../../../budgets/presentation/providers/budget_repository_provider.dart';
 import '../../data/models/member_budget_contribution_model.dart';
 
 /// Provider for group members with percentage contributions for a specific category

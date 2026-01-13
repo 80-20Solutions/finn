@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "BudgetSummary",
+  "description": "Computed view of user's complete budget state (not stored, calculated on-demand)",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "format": "uuid",
+      "description": "ID of the user"
+    },
+    "total_income": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Sum of all income sources in smallest currency unit"
+    },
+    "savings_goal": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Current savings goal amount"
+    },
+    "savings_original": {
+      "type": ["integer", "null"],
+      "minimum": 0,
+      "description": "Original savings goal before adjustments (null if never adjusted)"
+    },
+    "group_expense_limit": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Group-assigned spending limit (0 if no group)"
+    },
+    "available_budget": {
+      "type": "integer",
+      "description": "total_income - savings_goal - group_expense_limit (can be negative)"
+    },
+    "income_sources": {
+      "type": "array",
+      "items": {
+        "$ref": "income_source.json"
+      },
+      "description": "List of all user's income sources"
+    },
+    "has_group_expenses": {
+      "type": "boolean",
+      "description": "Whether user has a group expense assignment"
+    },
+    "savings_was_adjusted": {
+      "type": "boolean",
+      "description": "Whether savings goal was auto-reduced due to group expenses"
+    }
+  },
+  "required": [
+    "user_id",
+    "total_income",
+    "savings_goal",
+    "group_expense_limit",
+    "available_budget",
+    "income_sources",
+    "has_group_expenses",
+    "savings_was_adjusted"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+      "total_income": 300000,
+      "savings_goal": 50000,
+      "savings_original": null,
+      "group_expense_limit": 0,
+      "available_budget": 250000,
+      "income_sources": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440000",
+          "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+          "type": "salary",
+          "custom_type_name": null,
+          "amount": 250000,
+          "created_at": "2026-01-12T10:00:00Z",
+          "updated_at": "2026-01-12T10:00:00Z"
+        },
+        {
+          "id": "650e8400-e29b-41d4-a716-446655440001",
+          "user_id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+          "type": "custom",
+          "custom_type_name": "Consulenza",
+          "amount": 50000,
+          "created_at": "2026-01-12T11:00:00Z",
+          "updated_at": "2026-01-12T11:00:00Z"
+        }
+      ],
+      "has_group_expenses": false,
+      "savings_was_adjusted": false
+    },
+    {
+      "user_id": "8d9e6679-7425-40de-944b-e07fc1f90ae8",
+      "total_income": 200000,
+      "savings_goal": 35000,
+      "savings_original": 50000,
+      "group_expense_limit": 100000,
+      "available_budget": 65000,
+      "income_sources": [
+        {
+          "id": "550e8400-e29b-41d4-a716-446655440010",
+          "user_id": "8d9e6679-7425-40de-944b-e07fc1f90ae8",
+          "type": "salary",
+          "custom_type_name": null,
+          "amount": 200000,
+          "created_at": "2026-01-12T10:00:00Z",
+          "updated_at": "2026-01-12T10:00:00Z"
+        }
+      ],
+      "has_group_expenses": true,
+      "savings_was_adjusted": true
+    }
+  ]
+}

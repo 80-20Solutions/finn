@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../budgets/presentation/providers/category_budget_provider.dart';
+import '../../../budgets/presentation/providers/budget_repository_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
 
 /// Card showing overall budget summary for the current month

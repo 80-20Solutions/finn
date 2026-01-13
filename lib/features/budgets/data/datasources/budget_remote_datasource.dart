@@ -11,6 +11,9 @@ import '../../domain/entities/member_contribution_entity.dart';
 import '../models/budget_stats_model.dart';
 import '../models/group_budget_model.dart';
 import '../models/personal_budget_model.dart';
+import '../models/income_source_model.dart';
+import '../models/savings_goal_model.dart';
+import '../models/group_expense_assignment_model.dart';
 
 /// Remote data source for budget operations using Supabase.
 abstract class BudgetRemoteDataSource {
@@ -223,6 +226,63 @@ abstract class BudgetRemoteDataSource {
     required int year,
     required int month,
   });
+
+  // ========== Personal Income & Savings Operations (Feature 001) ==========
+
+  /// Fetch all income sources for a user from Supabase
+  Future<List<IncomeSourceModel>> fetchIncomeSources(String userId);
+
+  /// Fetch a specific income source by ID from Supabase
+  Future<IncomeSourceModel> fetchIncomeSource(String id);
+
+  /// Create a new income source in Supabase
+  Future<IncomeSourceModel> createIncomeSource(IncomeSourceModel incomeSource);
+
+  /// Update an existing income source in Supabase
+  Future<IncomeSourceModel> updateIncomeSource(IncomeSourceModel incomeSource);
+
+  /// Delete an income source from Supabase
+  Future<void> deleteIncomeSource(String id);
+
+  /// Create multiple income sources in Supabase (batch operation)
+  Future<List<IncomeSourceModel>> createIncomeSources(
+      List<IncomeSourceModel> incomeSources);
+
+  /// Delete all income sources for a user from Supabase
+  Future<void> deleteAllIncomeSources(String userId);
+
+  /// Fetch savings goal for a user from Supabase
+  Future<SavingsGoalModel?> fetchSavingsGoal(String userId);
+
+  /// Create a new savings goal in Supabase
+  Future<SavingsGoalModel> createSavingsGoal(SavingsGoalModel savingsGoal);
+
+  /// Update an existing savings goal in Supabase
+  Future<SavingsGoalModel> updateSavingsGoal(SavingsGoalModel savingsGoal);
+
+  /// Delete a savings goal from Supabase
+  Future<void> deleteSavingsGoal(String userId);
+
+  /// Fetch all group expense assignments for a user from Supabase
+  Future<List<GroupExpenseAssignmentModel>> fetchGroupExpenseAssignments(
+      String userId);
+
+  /// Fetch a specific group expense assignment by ID from Supabase
+  Future<GroupExpenseAssignmentModel> fetchGroupExpenseAssignment(String id);
+
+  /// Create a new group expense assignment in Supabase
+  Future<GroupExpenseAssignmentModel> createGroupExpenseAssignment(
+      GroupExpenseAssignmentModel assignment);
+
+  /// Update an existing group expense assignment in Supabase
+  Future<GroupExpenseAssignmentModel> updateGroupExpenseAssignment(
+      GroupExpenseAssignmentModel assignment);
+
+  /// Delete a group expense assignment from Supabase
+  Future<void> deleteGroupExpenseAssignment(String id);
+
+  /// Delete all group expense assignments for a user from Supabase
+  Future<void> deleteAllGroupExpenseAssignments(String userId);
 }
 
 /// Implementation of [BudgetRemoteDataSource] using Supabase.
@@ -1357,6 +1417,306 @@ class BudgetRemoteDataSourceImpl implements BudgetRemoteDataSource {
       throw ServerException(e.message, e.code);
     } catch (e) {
       throw ServerException('Failed to calculate virtual group category: $e');
+    }
+  }
+
+  // ========== Personal Income & Savings Operations (Feature 001) ==========
+
+  @override
+  Future<List<IncomeSourceModel>> fetchIncomeSources(String userId) async {
+    try {
+      final response = await supabaseClient
+          .from('income_sources')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: true);
+
+      return (response as List)
+          .map((json) => IncomeSourceModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to fetch income sources: $e');
+    }
+  }
+
+  @override
+  Future<IncomeSourceModel> fetchIncomeSource(String id) async {
+    try {
+      final response =
+          await supabaseClient.from('income_sources').select().eq('id', id).single();
+
+      return IncomeSourceModel.fromJson(response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to fetch income source: $e');
+    }
+  }
+
+  @override
+  Future<IncomeSourceModel> createIncomeSource(
+      IncomeSourceModel incomeSource) async {
+    try {
+      final json = incomeSource.toJson();
+      json.remove('id'); // Let PostgreSQL generate UUID
+
+      final response =
+          await supabaseClient.from('income_sources').insert(json).select().single();
+
+      return IncomeSourceModel.fromJson(response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to create income source: $e');
+    }
+  }
+
+  @override
+  Future<IncomeSourceModel> updateIncomeSource(
+      IncomeSourceModel incomeSource) async {
+    try {
+      final json = incomeSource.toJson();
+      final id = json.remove('id');
+
+      final response = await supabaseClient
+          .from('income_sources')
+          .update(json)
+          .eq('id', id)
+          .select()
+          .single();
+
+      return IncomeSourceModel.fromJson(response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to update income source: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteIncomeSource(String id) async {
+    try {
+      await supabaseClient.from('income_sources').delete().eq('id', id);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to delete income source: $e');
+    }
+  }
+
+  @override
+  Future<List<IncomeSourceModel>> createIncomeSources(
+      List<IncomeSourceModel> incomeSources) async {
+    try {
+      final jsonList = incomeSources.map((model) {
+        final json = model.toJson();
+        json.remove('id'); // Let PostgreSQL generate UUIDs
+        return json;
+      }).toList();
+
+      final response =
+          await supabaseClient.from('income_sources').insert(jsonList).select();
+
+      return (response as List)
+          .map((json) => IncomeSourceModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to create income sources: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteAllIncomeSources(String userId) async {
+    try {
+      await supabaseClient.from('income_sources').delete().eq('user_id', userId);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to delete all income sources: $e');
+    }
+  }
+
+  @override
+  Future<SavingsGoalModel?> fetchSavingsGoal(String userId) async {
+    try {
+      final response = await supabaseClient
+          .from('savings_goals')
+          .select()
+          .eq('user_id', userId)
+          .maybeSingle();
+
+      if (response == null) return null;
+
+      return SavingsGoalModel.fromJson(response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to fetch savings goal: $e');
+    }
+  }
+
+  @override
+  Future<SavingsGoalModel> createSavingsGoal(
+      SavingsGoalModel savingsGoal) async {
+    try {
+      final json = savingsGoal.toJson();
+      json.remove('id'); // Let PostgreSQL generate UUID
+
+      final response =
+          await supabaseClient.from('savings_goals').insert(json).select().single();
+
+      return SavingsGoalModel.fromJson(response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to create savings goal: $e');
+    }
+  }
+
+  @override
+  Future<SavingsGoalModel> updateSavingsGoal(
+      SavingsGoalModel savingsGoal) async {
+    try {
+      final json = savingsGoal.toJson();
+      final id = json.remove('id');
+
+      final response = await supabaseClient
+          .from('savings_goals')
+          .update(json)
+          .eq('id', id)
+          .select()
+          .single();
+
+      return SavingsGoalModel.fromJson(response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to update savings goal: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteSavingsGoal(String userId) async {
+    try {
+      await supabaseClient.from('savings_goals').delete().eq('user_id', userId);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to delete savings goal: $e');
+    }
+  }
+
+  @override
+  Future<List<GroupExpenseAssignmentModel>> fetchGroupExpenseAssignments(
+      String userId) async {
+    try {
+      final response = await supabaseClient
+          .from('group_expense_assignments')
+          .select()
+          .eq('user_id', userId)
+          .order('created_at', ascending: true);
+
+      return (response as List)
+          .map((json) =>
+              GroupExpenseAssignmentModel.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to fetch group expense assignments: $e');
+    }
+  }
+
+  @override
+  Future<GroupExpenseAssignmentModel> fetchGroupExpenseAssignment(
+      String id) async {
+    try {
+      final response = await supabaseClient
+          .from('group_expense_assignments')
+          .select()
+          .eq('id', id)
+          .single();
+
+      return GroupExpenseAssignmentModel.fromJson(
+          response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to fetch group expense assignment: $e');
+    }
+  }
+
+  @override
+  Future<GroupExpenseAssignmentModel> createGroupExpenseAssignment(
+      GroupExpenseAssignmentModel assignment) async {
+    try {
+      final json = assignment.toJson();
+      json.remove('id'); // Let PostgreSQL generate UUID
+
+      final response = await supabaseClient
+          .from('group_expense_assignments')
+          .insert(json)
+          .select()
+          .single();
+
+      return GroupExpenseAssignmentModel.fromJson(
+          response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to create group expense assignment: $e');
+    }
+  }
+
+  @override
+  Future<GroupExpenseAssignmentModel> updateGroupExpenseAssignment(
+      GroupExpenseAssignmentModel assignment) async {
+    try {
+      final json = assignment.toJson();
+      final id = json.remove('id');
+
+      final response = await supabaseClient
+          .from('group_expense_assignments')
+          .update(json)
+          .eq('id', id)
+          .select()
+          .single();
+
+      return GroupExpenseAssignmentModel.fromJson(
+          response as Map<String, dynamic>);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to update group expense assignment: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteGroupExpenseAssignment(String id) async {
+    try {
+      await supabaseClient.from('group_expense_assignments').delete().eq('id', id);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to delete group expense assignment: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteAllGroupExpenseAssignments(String userId) async {
+    try {
+      await supabaseClient
+          .from('group_expense_assignments')
+          .delete()
+          .eq('user_id', userId);
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException('Failed to delete all group expense assignments: $e');
     }
   }
 }

@@ -8,6 +8,12 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
+// Budget management tables
+import '../../../../core/database/drift/tables/income_sources_table.dart';
+import '../../../../core/database/drift/tables/savings_goals_table.dart';
+import '../../../../core/database/drift/tables/group_expense_assignments_table.dart';
+import '../../../budgets/domain/entities/income_source_entity.dart';
+
 part 'offline_database.g.dart';
 
 // Table 1: OfflineExpenses
@@ -161,12 +167,16 @@ class CachedCategories extends Table {
   OfflineExpenseImages,
   SyncConflicts,
   CachedCategories,
+  // Budget management tables
+  IncomeSources,
+  SavingsGoals,
+  GroupExpenseAssignments,
 ])
 class OfflineDatabase extends _$OfflineDatabase {
   OfflineDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -177,6 +187,12 @@ class OfflineDatabase extends _$OfflineDatabase {
       if (from < 2) {
         // Add CachedCategories table for offline category caching
         await m.createTable(cachedCategories);
+      }
+      if (from < 3) {
+        // Add budget management tables
+        await m.createTable(incomeSources);
+        await m.createTable(savingsGoals);
+        await m.createTable(groupExpenseAssignments);
       }
     },
   );
