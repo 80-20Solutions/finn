@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'app_theme.dart';
+import '../core/theme/app_theme.dart';
 import 'routes.dart';
 import '../features/scanner/presentation/providers/scanner_provider.dart';
 import '../features/widget/presentation/services/deep_link_handler.dart';
@@ -78,10 +78,9 @@ class _FamilyExpenseTrackerAppState
         GlobalCupertinoLocalizations.delegate,
       ],
 
-      // Theme - Italian Brutalism
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: ThemeMode.system,
+      // Theme - Flourishing Finances
+      theme: AppTheme.lightTheme,
+      themeMode: ThemeMode.light, // Only light theme for now
 
       // Routing
       routerConfig: router,
