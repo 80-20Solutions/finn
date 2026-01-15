@@ -12,6 +12,8 @@ import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
 import '../providers/budget_composition_provider.dart';
+import '../providers/budget_repository_provider.dart';
+import '../providers/income_sources_provider.dart';
 import '../widgets/budget_overview_card.dart';
 import '../widgets/category_budget_tile.dart';
 import '../widgets/editable_section.dart';
@@ -42,6 +44,34 @@ class BudgetScreen extends ConsumerStatefulWidget {
 class _BudgetScreenState extends ConsumerState<BudgetScreen> {
   int _selectedMonth = DateTime.now().month;
   int _selectedYear = DateTime.now().year;
+  bool _categoriesExpanded = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Force sync income sources on screen load
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final userId = ref.read(currentUserIdProvider);
+      if (userId.isNotEmpty) {
+        print('🔄 [BudgetScreen] Forcing income sync for userId: $userId');
+        ref.read(budgetRepositoryProvider).getIncomeSources(userId).then((result) {
+          result.fold(
+            (failure) => print('❌ [BudgetScreen] Income sync failed: $failure'),
+            (sources) {
+              print('✅ [BudgetScreen] Synced ${sources.length} income sources');
+              // Refresh the budget composition after sync
+              final params = BudgetCompositionParams(
+                groupId: ref.read(currentGroupIdProvider),
+                year: _selectedYear,
+                month: _selectedMonth,
+              );
+              ref.read(budgetCompositionProvider(params).notifier).refresh();
+            },
+          );
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +85,14 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
     );
 
     final compositionAsync = ref.watch(budgetCompositionProvider(params));
+    final incomeSourcesAsync = ref.watch(incomeSourcesProvider);
+
+    // Calculate total income
+    final totalIncome = incomeSourcesAsync.when(
+      data: (sources) => sources.fold<int>(0, (sum, source) => sum + source.amount),
+      loading: () => 0,
+      error: (_, __) => 0,
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -121,6 +159,7 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
               BudgetOverviewCard(
                 composition: composition,
                 currentUserId: userId,
+                totalIncome: totalIncome,
                 onPersonalTap: () {
                   Navigator.push(
                     context,
@@ -143,6 +182,56 @@ class _BudgetScreenState extends ConsumerState<BudgetScreen> {
                     ),
                   );
                 },
+              ),
+
+              const SizedBox(height: 16),
+
+              // Expandable categories section
+              Card(
+                color: AppColors.cream,
+                child: Column(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() {
+                          _categoriesExpanded = !_categoriesExpanded;
+                        });
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Categorie',
+                                style: GoogleFonts.playfairDisplay(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: AppColors.ink,
+                                ),
+                              ),
+                            ),
+                            Icon(
+                              _categoriesExpanded
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                              color: AppColors.ink,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    if (_categoriesExpanded)
+                      ...composition.categoryBudgets.map((category) {
+                        return CategoryBudgetTile(
+                          key: ValueKey(category.categoryId),
+                          categoryBudget: category,
+                          params: params,
+                          initiallyExpanded: false,
+                        );
+                      }).toList(),
+                  ],
+                ),
               ),
             ],
           ),
