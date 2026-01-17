@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
-import '../../enums/recurrence_frequency.dart';
-import '../../../features/expenses/data/models/reimbursement_status.dart';
+import '../../../enums/recurrence_frequency.dart';
+import '../../../enums/reimbursement_status.dart';
 
 /// Drift table definition for recurring_expenses
 ///

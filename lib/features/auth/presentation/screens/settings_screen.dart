@@ -58,6 +58,14 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(AppRoutes.recurringExpenses),
           ),
+          // Feature 013-recurring-expenses T056-T057
+          ListTile(
+            leading: const Icon(Icons.account_balance_wallet_outlined),
+            title: const Text('Rimborsi'),
+            subtitle: const Text('Gestisci spese da rimborsare e rimborsate'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(AppRoutes.reimbursements),
+          ),
         ],
       ),
     );

@@ -255,13 +255,8 @@ class _RecurringExpensesScreenState
         return RecurringExpenseCard(
           template: template,
           onTap: () {
-            // Navigate to expense detail/edit screen
-            // TODO: Implement recurring expense detail screen
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Dettagli spesa ricorrente - In arrivo!'),
-              ),
-            );
+            // Navigate to edit recurring expense screen (T027)
+            context.go('/recurring-expense/${template.id}/edit');
           },
           onPauseResume: () => _handlePauseResume(template.id, template.isPaused),
           onDelete: () => _showDeleteDialog(

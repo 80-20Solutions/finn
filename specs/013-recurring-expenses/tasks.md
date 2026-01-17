@@ -56,20 +56,20 @@
 
 ### Implementation for User Story 1
 
-- [ ] T018 [P] [US1] Create CreateRecurringExpense use case in lib/features/expenses/domain/usecases/create_recurring_expense.dart
-- [ ] T019 [P] [US1] Create UpdateRecurringExpense use case in lib/features/expenses/domain/usecases/update_recurring_expense.dart
-- [ ] T020 [P] [US1] Create PauseRecurringExpense use case in lib/features/expenses/domain/usecases/pause_recurring_expense.dart
-- [ ] T021 [P] [US1] Create ResumeRecurringExpense use case in lib/features/expenses/domain/usecases/resume_recurring_expense.dart
-- [ ] T022 [P] [US1] Create GenerateExpenseInstance use case in lib/features/expenses/domain/usecases/generate_expense_instance.dart
-- [ ] T023 [P] [US1] Create recurringExpenseProvider in lib/features/expenses/presentation/providers/recurring_expense_provider.dart (single expense by ID)
-- [ ] T024 [P] [US1] Create recurringExpenseListProvider in lib/features/expenses/presentation/providers/recurring_expense_provider.dart (all recurring expenses)
-- [ ] T025 [US1] Add recurring expense fields to ExpenseFormScreen in lib/features/expenses/presentation/screens/expense_form_screen.dart (toggle, frequency selector, budget reservation checkbox)
-- [ ] T026 [US1] Implement recurring expense creation logic in ExpenseFormScreen when user marks expense as recurring in lib/features/expenses/presentation/screens/expense_form_screen.dart
-- [ ] T027 [US1] Implement recurring expense editing logic in ExpenseFormScreen for existing recurring expenses in lib/features/expenses/presentation/screens/expense_form_screen.dart
-- [ ] T028 [US1] Add recurring indicator badge to expense list items when expense is a recurring template or instance in lib/features/expenses/presentation/widgets/expense_list_item.dart
-- [ ] T029 [US1] Display recurring expense details (frequency, next due date, budget reservation status) in expense detail view in lib/features/expenses/presentation/screens/expense_detail_screen.dart
-- [ ] T030 [US1] Implement Supabase Realtime subscription for recurring_expenses table in lib/features/expenses/data/datasources/recurring_expense_remote_datasource.dart
-- [ ] T031 [US1] Implement sync queue integration for recurring expense create/update/delete operations in lib/features/expenses/data/repositories/recurring_expense_repository_impl.dart
+- [x] T018 [P] [US1] SKIPPED - Project uses Riverpod providers directly without use case layer
+- [x] T019 [P] [US1] SKIPPED - Project uses Riverpod providers directly without use case layer
+- [x] T020 [P] [US1] SKIPPED - Project uses Riverpod providers directly without use case layer
+- [x] T021 [P] [US1] SKIPPED - Project uses Riverpod providers directly without use case layer
+- [x] T022 [P] [US1] SKIPPED - Project uses Riverpod providers directly without use case layer
+- [x] T023 [P] [US1] Create recurringExpenseProvider in lib/features/expenses/presentation/providers/recurring_expense_provider.dart (single expense by ID)
+- [x] T024 [P] [US1] Create recurringExpenseListProvider in lib/features/expenses/presentation/providers/recurring_expense_provider.dart (all recurring expenses)
+- [x] T025 [US1] Add recurring expense fields to ExpenseFormScreen in lib/features/expenses/presentation/screens/expense_form_screen.dart (toggle, frequency selector, budget reservation checkbox)
+- [x] T026 [US1] Implement recurring expense creation logic in ExpenseFormScreen when user marks expense as recurring in lib/features/expenses/presentation/screens/expense_form_screen.dart
+- [x] T027 [US1] Implement recurring expense editing logic in ExpenseFormScreen for existing recurring expenses in lib/features/expenses/presentation/screens/expense_form_screen.dart
+- [x] T028 [US1] Add recurring indicator badge to expense list items when expense is a recurring template or instance in lib/features/expenses/presentation/widgets/expense_list_item.dart
+- [x] T029 [US1] Display recurring expense details (frequency, next due date, budget reservation status) in expense detail view in lib/features/expenses/presentation/screens/expense_detail_screen.dart
+- [x] T030 [US1] Implement Supabase Realtime subscription for recurring_expenses table in lib/features/expenses/data/datasources/recurring_expense_remote_datasource.dart
+- [x] T031 [US1] Implement sync queue integration for recurring expense create/update/delete operations in lib/features/expenses/data/repositories/recurring_expense_repository_impl.dart
 
 **Checkpoint**: At this point, User Story 1 should be fully functional - users can mark expenses as recurring, set frequency, and background tasks generate instances automatically
 
@@ -83,15 +83,15 @@
 
 ### Implementation for User Story 2
 
-- [ ] T032 [P] [US2] Create BudgetReservationCalculator service in lib/core/services/budget_reservation_calculator.dart with calculateReservedBudget and calculateAvailableBudget methods
-- [ ] T033 [P] [US2] Extend BudgetCalculator utility in lib/core/utils/budget_calculator.dart with calculateReservedBudget, calculateAvailableBudget, and getBudgetBreakdown methods
-- [ ] T034 [P] [US2] Create currentMonthReservedBudgetProvider in lib/features/budgets/presentation/providers/budget_reservation_provider.dart
-- [ ] T035 [US2] Update budget overview widget to display reserved budget amount in lib/features/budgets/presentation/widgets/budget_overview_widget.dart
-- [ ] T036 [US2] Update budget overview widget to display available budget (total - spent - reserved + reimbursed) in lib/features/budgets/presentation/widgets/budget_overview_widget.dart
-- [ ] T037 [US2] Create BudgetReservationDisplay widget in lib/features/expenses/presentation/widgets/budget_reservation_display.dart to show reservation breakdown
-- [ ] T038 [US2] Add budget reservation breakdown section to budget screen in lib/features/budgets/presentation/screens/budget_screen.dart
-- [ ] T039 [US2] Implement budget reservation toggle in expense form for recurring expenses in lib/features/expenses/presentation/screens/expense_form_screen.dart
-- [ ] T040 [US2] Add provider invalidation for budgetReservationProvider when recurring expenses change in lib/features/expenses/presentation/providers/recurring_expense_provider.dart
+- [x] T032 [P] [US2] Create BudgetReservationCalculator service in lib/core/services/budget_reservation_calculator.dart with calculateReservedBudget and calculateAvailableBudget methods
+- [x] T033 [P] [US2] Extend BudgetCalculator utility in lib/core/utils/budget_calculator.dart with calculateReservedBudget, calculateAvailableBudget, and getBudgetBreakdown methods
+- [x] T034 [P] [US2] Create currentMonthReservedBudgetProvider in lib/features/budgets/presentation/providers/budget_reservation_provider.dart
+- [x] T035 [US2] Update budget overview widget to display reserved budget amount in lib/features/budgets/presentation/widgets/budget_overview_card.dart
+- [x] T036 [US2] Update budget overview widget to display available budget (total - spent - reserved + reimbursed) in lib/features/budgets/presentation/widgets/budget_overview_card.dart
+- [x] T037 [US2] Create BudgetReservationDisplay widget in lib/features/expenses/presentation/widgets/budget_reservation_display.dart to show reservation breakdown
+- [x] T038 [US2] Add budget reservation breakdown section to budget screen in lib/features/budgets/presentation/screens/budget_screen.dart
+- [x] T039 [US2] Implement budget reservation toggle in expense form for recurring expenses in lib/features/expenses/presentation/screens/expense_form_screen.dart
+- [x] T040 [US2] Add provider invalidation for budgetReservationProvider when recurring expenses change in lib/features/expenses/presentation/providers/recurring_expense_provider.dart
 
 **Checkpoint**: At this point, User Stories 1 AND 2 should both work independently - budget reservations calculate correctly and display in budget overview
 
@@ -105,15 +105,15 @@
 
 ### Implementation for User Story 3
 
-- [ ] T041 [P] [US3] Create RecurringExpensesScreen in lib/features/expenses/presentation/screens/recurring_expenses_screen.dart with list of all recurring expenses
-- [ ] T042 [P] [US3] Create RecurringExpenseCard widget in lib/features/expenses/presentation/widgets/recurring_expense_card.dart to display individual recurring expense with frequency, amount, category, and status
-- [ ] T043 [US3] Implement pause/resume actions in RecurringExpenseCard widget in lib/features/expenses/presentation/widgets/recurring_expense_card.dart
-- [ ] T044 [US3] Implement delete action with confirmation dialog (future only vs all occurrences) in RecurringExpenseCard widget in lib/features/expenses/presentation/widgets/recurring_expense_card.dart
-- [ ] T045 [US3] Add filtering options (active/paused, with/without budget reservation) to RecurringExpensesScreen in lib/features/expenses/presentation/screens/recurring_expenses_screen.dart
-- [ ] T046 [US3] Add "Recurring Expenses" menu item to Settings screen in lib/features/settings/presentation/screens/settings_screen.dart
-- [ ] T047 [US3] Implement navigation from Settings to RecurringExpensesScreen in lib/features/settings/presentation/screens/settings_screen.dart
-- [ ] T048 [US3] Add empty state UI when no recurring expenses exist in lib/features/expenses/presentation/screens/recurring_expenses_screen.dart
-- [ ] T049 [US3] Implement pull-to-refresh for recurring expenses list in lib/features/expenses/presentation/screens/recurring_expenses_screen.dart
+- [x] T041 [P] [US3] Create RecurringExpensesScreen in lib/features/expenses/presentation/screens/recurring_expenses_screen.dart with list of all recurring expenses
+- [x] T042 [P] [US3] Create RecurringExpenseCard widget in lib/features/expenses/presentation/widgets/recurring_expense_card.dart to display individual recurring expense with frequency, amount, category, and status
+- [x] T043 [US3] Implement pause/resume actions in RecurringExpenseCard widget in lib/features/expenses/presentation/widgets/recurring_expense_card.dart
+- [x] T044 [US3] Implement delete action with confirmation dialog (future only vs all occurrences) in RecurringExpenseCard widget in lib/features/expenses/presentation/widgets/recurring_expense_card.dart
+- [x] T045 [US3] Add filtering options (active/paused, with/without budget reservation) to RecurringExpensesScreen in lib/features/expenses/presentation/screens/recurring_expenses_screen.dart
+- [x] T046 [US3] Add "Recurring Expenses" menu item to Settings screen in lib/features/settings/presentation/screens/settings_screen.dart
+- [x] T047 [US3] Implement navigation from Settings to RecurringExpensesScreen in lib/features/settings/presentation/screens/settings_screen.dart
+- [x] T048 [US3] Add empty state UI when no recurring expenses exist in lib/features/expenses/presentation/screens/recurring_expenses_screen.dart
+- [x] T049 [US3] Implement pull-to-refresh for recurring expenses list in lib/features/expenses/presentation/screens/recurring_expenses_screen.dart
 
 **Checkpoint**: All user stories 1, 2, and 3 should now be independently functional - users can manage all recurring expenses from Settings
 
@@ -127,16 +127,16 @@
 
 ### Implementation for User Story 4
 
-- [ ] T050 [P] [US4] Create ReimbursementsScreen in lib/features/expenses/presentation/screens/reimbursements_screen.dart with list of all reimbursable/reimbursed expenses
-- [ ] T051 [P] [US4] Create reimbursementsListProvider in lib/features/expenses/presentation/providers/reimbursements_provider.dart to fetch expenses with reimbursement status
-- [ ] T052 [US4] Implement filtering/grouping by reimbursement status (reimbursable vs reimbursed) in lib/features/expenses/presentation/screens/reimbursements_screen.dart
-- [ ] T053 [US4] Add summary section showing total pending reimbursements and total reimbursed amounts in lib/features/expenses/presentation/screens/reimbursements_screen.dart
-- [ ] T054 [US4] Implement quick action to mark reimbursable expense as reimbursed from list in lib/features/expenses/presentation/screens/reimbursements_screen.dart
-- [ ] T055 [US4] Add search and filter capabilities to find specific reimbursements in lib/features/expenses/presentation/screens/reimbursements_screen.dart
-- [ ] T056 [US4] Add "Reimbursements" menu item to Settings screen in lib/features/settings/presentation/screens/settings_screen.dart
-- [ ] T057 [US4] Implement navigation from Settings to ReimbursementsScreen in lib/features/settings/presentation/screens/settings_screen.dart
-- [ ] T058 [US4] Add empty state UI when no reimbursements exist in lib/features/expenses/presentation/screens/reimbursements_screen.dart
-- [ ] T059 [US4] Implement pull-to-refresh for reimbursements list in lib/features/expenses/presentation/screens/reimbursements_screen.dart
+- [x] T050 [P] [US4] Create ReimbursementsScreen in lib/features/expenses/presentation/screens/reimbursements_screen.dart with list of all reimbursable/reimbursed expenses
+- [x] T051 [P] [US4] Create reimbursementsListProvider in lib/features/expenses/presentation/providers/reimbursements_provider.dart to fetch expenses with reimbursement status
+- [x] T052 [US4] Implement filtering/grouping by reimbursement status (reimbursable vs reimbursed) in lib/features/expenses/presentation/screens/reimbursements_screen.dart
+- [x] T053 [US4] Add summary section showing total pending reimbursements and total reimbursed amounts in lib/features/expenses/presentation/screens/reimbursements_screen.dart
+- [x] T054 [US4] Implement quick action to mark reimbursable expense as reimbursed from list in lib/features/expenses/presentation/screens/reimbursements_screen.dart
+- [x] T055 [US4] Add search and filter capabilities to find specific reimbursements in lib/features/expenses/presentation/screens/reimbursements_screen.dart
+- [x] T056 [US4] Add "Reimbursements" menu item to Settings screen in lib/features/settings/presentation/screens/settings_screen.dart
+- [x] T057 [US4] Implement navigation from Settings to ReimbursementsScreen in lib/features/settings/presentation/screens/settings_screen.dart
+- [x] T058 [US4] Add empty state UI when no reimbursements exist in lib/features/expenses/presentation/screens/reimbursements_screen.dart
+- [x] T059 [US4] Implement pull-to-refresh for reimbursements list in lib/features/expenses/presentation/screens/reimbursements_screen.dart
 
 **Checkpoint**: All user stories should now be independently functional - complete recurring expenses and reimbursements management
 
@@ -146,26 +146,26 @@
 
 **Purpose**: Improvements that affect multiple user stories and final validation
 
-- [ ] T060 [P] Add error handling and user feedback (snackbars/dialogs) for recurring expense operations across all screens
-- [ ] T061 [P] Add loading states and shimmer effects for async operations in recurring expense screens
-- [ ] T062 [P] Implement optimistic UI updates for recurring expense create/update/delete operations
-- [ ] T063 [P] Add analytics tracking for recurring expense feature usage (create, pause, resume, delete, budget reservation toggle)
-- [ ] T064 Add timezone handling validation for recurring expense calculations in lib/features/expenses/domain/services/recurrence_calculator.dart
-- [ ] T065 Implement edge case handling for month-end recurring expenses (31st → Feb 28/29) in lib/features/expenses/domain/services/recurrence_calculator.dart
-- [ ] T066 Add validation to prevent category deletion if used by recurring expenses in lib/features/expenses/data/repositories/expense_category_repository_impl.dart
-- [ ] T067 [P] Add unit tests for RecurrenceCalculator in test/features/expenses/domain/services/recurrence_calculator_test.dart
-- [ ] T068 [P] Add unit tests for BudgetReservationCalculator in test/core/services/budget_reservation_calculator_test.dart
-- [ ] T069 [P] Add unit tests for RecurringExpenseRepository in test/features/expenses/data/repositories/recurring_expense_repository_test.dart
-- [ ] T070 [P] Add widget tests for RecurringExpensesScreen in test/features/expenses/presentation/screens/recurring_expenses_screen_test.dart
-- [ ] T071 [P] Add widget tests for ReimbursementsScreen in test/features/expenses/presentation/screens/reimbursements_screen_test.dart
-- [ ] T072 Add integration test for complete recurring expense lifecycle (create → pause → resume → delete) in test/integration/recurring_expense_flow_test.dart
-- [ ] T073 Add integration test for background task expense instance generation in test/integration/recurring_expense_scheduler_test.dart
-- [ ] T074 Verify Supabase migration runs successfully on staging environment
-- [ ] T075 Run data integrity checks on recurring_expenses and recurring_expense_instances tables
-- [ ] T076 Performance test: Verify background task executes within 100ms for 50 active templates
-- [ ] T077 Performance test: Verify budget reservation calculation completes within 50ms for 20 active reservations
-- [ ] T078 Test offline functionality: Verify recurring expense instances are created locally when offline and synced when online
-- [ ] T079 Update feature documentation in docs/features/recurring-expenses.md (if docs folder exists)
+- [x] T060 [P] Add error handling and user feedback (snackbars/dialogs) for recurring expense operations across all screens (already implemented in provider)
+- [x] T061 [P] Add loading states and shimmer effects for async operations in recurring expense screens (already implemented with LoadingIndicator)
+- [x] T062 [P] Implement optimistic UI updates for recurring expense create/update/delete operations (already implemented in provider)
+- [ ] T063 [P] Add analytics tracking for recurring expense feature usage (create, pause, resume, delete, budget reservation toggle) - SKIPPED (requires analytics service setup)
+- [x] T064 Add timezone handling validation for recurring expense calculations in lib/features/expenses/domain/services/recurrence_calculator.dart (already implemented with timezone package)
+- [x] T065 Implement edge case handling for month-end recurring expenses (31st → Feb 28/29) in lib/features/expenses/domain/services/recurrence_calculator.dart (already implemented with _addMonths/_addYears helpers)
+- [x] T066 Add validation to prevent category deletion if used by recurring expenses in lib/features/categories/data/repositories/category_repository_impl.dart
+- [ ] T067 [P] Add unit tests for RecurrenceCalculator in test/features/expenses/domain/services/recurrence_calculator_test.dart - DEFERRED (testing infrastructure)
+- [ ] T068 [P] Add unit tests for BudgetReservationCalculator in test/core/services/budget_reservation_calculator_test.dart - DEFERRED (testing infrastructure)
+- [ ] T069 [P] Add unit tests for RecurringExpenseRepository in test/features/expenses/data/repositories/recurring_expense_repository_test.dart - DEFERRED (testing infrastructure)
+- [ ] T070 [P] Add widget tests for RecurringExpensesScreen in test/features/expenses/presentation/screens/recurring_expenses_screen_test.dart - DEFERRED (testing infrastructure)
+- [ ] T071 [P] Add widget tests for ReimbursementsScreen in test/features/expenses/presentation/screens/reimbursements_screen_test.dart - DEFERRED (testing infrastructure)
+- [ ] T072 Add integration test for complete recurring expense lifecycle (create → pause → resume → delete) in test/integration/recurring_expense_flow_test.dart - DEFERRED (testing infrastructure)
+- [ ] T073 Add integration test for background task expense instance generation in test/integration/recurring_expense_scheduler_test.dart - DEFERRED (testing infrastructure)
+- [ ] T074 Verify Supabase migration runs successfully on staging environment - DEFERRED (requires deployment)
+- [ ] T075 Run data integrity checks on recurring_expenses and recurring_expense_instances tables - DEFERRED (requires deployment)
+- [ ] T076 Performance test: Verify background task executes within 100ms for 50 active templates - DEFERRED (requires deployment)
+- [ ] T077 Performance test: Verify budget reservation calculation completes within 50ms for 20 active reservations - DEFERRED (requires deployment)
+- [ ] T078 Test offline functionality: Verify recurring expense instances are created locally when offline and synced when online - DEFERRED (requires deployment)
+- [x] T079 Update feature documentation in docs/features/recurring-expenses.md (if docs folder exists) - SKIPPED (no docs folder)
 
 ---
 

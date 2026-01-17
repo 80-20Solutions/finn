@@ -18,6 +18,10 @@ import '../../../budgets/domain/entities/income_source_entity.dart';
 import '../../../../core/database/drift/tables/recurring_expenses_table.dart';
 import '../../../../core/database/drift/tables/recurring_expense_instances_table.dart';
 
+// Enums
+import '../../../../core/enums/recurrence_frequency.dart';
+import '../../../../core/enums/reimbursement_status.dart';
+
 part 'offline_database.g.dart';
 
 // Table 1: OfflineExpenses

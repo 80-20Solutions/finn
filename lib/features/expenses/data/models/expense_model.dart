@@ -24,6 +24,8 @@ class ExpenseModel extends ExpenseEntity {
     super.updatedAt,
     super.reimbursementStatus = ReimbursementStatus.none,
     super.reimbursedAt,
+    super.recurringExpenseId,
+    super.isRecurringInstance = false,
   });
 
   /// Create an ExpenseModel from a JSON map (expenses table row).
@@ -56,6 +58,8 @@ class ExpenseModel extends ExpenseEntity {
       reimbursedAt: json['reimbursed_at'] != null
           ? DateTime.parse(json['reimbursed_at'] as String)
           : null,
+      recurringExpenseId: json['recurring_expense_id'] as String?,
+      isRecurringInstance: json['is_recurring_instance'] as bool? ?? false,
     );
   }
 
@@ -153,6 +157,8 @@ class ExpenseModel extends ExpenseEntity {
     DateTime? updatedAt,
     ReimbursementStatus? reimbursementStatus,
     DateTime? reimbursedAt,
+    String? recurringExpenseId,
+    bool? isRecurringInstance,
   }) {
     return ExpenseModel(
       id: id ?? this.id,
@@ -173,6 +179,8 @@ class ExpenseModel extends ExpenseEntity {
       updatedAt: updatedAt ?? this.updatedAt,
       reimbursementStatus: reimbursementStatus ?? this.reimbursementStatus,
       reimbursedAt: reimbursedAt ?? this.reimbursedAt,
+      recurringExpenseId: recurringExpenseId ?? this.recurringExpenseId,
+      isRecurringInstance: isRecurringInstance ?? this.isRecurringInstance,
     );
   }
 }

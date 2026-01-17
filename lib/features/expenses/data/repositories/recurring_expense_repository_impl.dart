@@ -62,17 +62,17 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
     try {
       // Validate amount
       if (amount <= 0) {
-        return const Left(ValidationFailure(message: 'Amount must be greater than 0'));
+        return Left(ValidationFailure('Amount must be greater than 0'));
       }
 
       // Validate merchant length
       if (merchant != null && merchant.length > 100) {
-        return const Left(ValidationFailure(message: 'Merchant name too long (max 100 characters)'));
+        return Left(ValidationFailure('Merchant name too long (max 100 characters)'));
       }
 
       // Validate notes length
       if (notes != null && notes.length > 500) {
-        return const Left(ValidationFailure(message: 'Notes too long (max 500 characters)'));
+        return Left(ValidationFailure('Notes too long (max 500 characters)'));
       }
 
       final userId = _currentUserId;
@@ -96,14 +96,33 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
         paymentMethodName: paymentMethodName,
       );
 
-      // TODO: Queue sync operation to upload to Supabase
-      // await syncQueue.enqueue(...)
+      // T031: Queue sync operation to upload to Supabase when online
+      await localDataSource.addToSyncQueue(
+        userId: userId,
+        operation: 'create',
+        entityId: entity.id,
+        payload: {
+          'id': entity.id,
+          'user_id': userId,
+          'group_id': groupId,
+          'amount': amount,
+          'category_id': categoryId,
+          'frequency': frequency.name,
+          'anchor_date': anchorDate.toIso8601String(),
+          'merchant': merchant,
+          'notes': notes,
+          'is_group_expense': isGroupExpense,
+          'budget_reservation_enabled': budgetReservationEnabled,
+          'default_reimbursement_status': defaultReimbursementStatus.name,
+          'payment_method_id': paymentMethodId,
+        },
+      );
 
       return Right(entity);
     } on AppAuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } on AppDatabaseException catch (e) {
-      return Left(DatabaseFailure(e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -126,17 +145,17 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
     try {
       // Validate amount if provided
       if (amount != null && amount <= 0) {
-        return const Left(ValidationFailure(message: 'Amount must be greater than 0'));
+        return Left(ValidationFailure('Amount must be greater than 0'));
       }
 
       // Validate merchant length if provided
       if (merchant != null && merchant.length > 100) {
-        return const Left(ValidationFailure(message: 'Merchant name too long (max 100 characters)'));
+        return Left(ValidationFailure('Merchant name too long (max 100 characters)'));
       }
 
       // Validate notes length if provided
       if (notes != null && notes.length > 500) {
-        return const Left(ValidationFailure(message: 'Notes too long (max 500 characters)'));
+        return Left(ValidationFailure('Notes too long (max 500 characters)'));
       }
 
       final entity = await localDataSource.updateRecurringExpense(
@@ -170,17 +189,38 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
         }
       }
 
-      // TODO: Queue sync operation
-      // await syncQueue.enqueue(...)
+      // T031: Queue sync operation
+      final updatePayload = <String, dynamic>{};
+      if (amount != null) updatePayload['amount'] = amount;
+      if (categoryId != null) updatePayload['category_id'] = categoryId;
+      if (frequency != null) updatePayload['frequency'] = frequency.name;
+      if (merchant != null) updatePayload['merchant'] = merchant;
+      if (notes != null) updatePayload['notes'] = notes;
+      if (budgetReservationEnabled != null) {
+        updatePayload['budget_reservation_enabled'] = budgetReservationEnabled;
+      }
+      if (defaultReimbursementStatus != null) {
+        updatePayload['default_reimbursement_status'] = defaultReimbursementStatus.name;
+      }
+      if (paymentMethodId != null) {
+        updatePayload['payment_method_id'] = paymentMethodId;
+      }
+
+      await localDataSource.addToSyncQueue(
+        userId: _currentUserId,
+        operation: 'update',
+        entityId: id,
+        payload: updatePayload,
+      );
 
       return Right(entity);
     } on AppAuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } on AppDatabaseException catch (e) {
+    } on CacheException catch (e) {
       if (e.code == 'not_found') {
-        return const Left(NotFoundFailure(message: 'Recurring expense not found'));
+        return Left(CacheFailure('Recurring expense not found'));
       }
-      return Left(DatabaseFailure(e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -193,15 +233,20 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
     try {
       final entity = await localDataSource.pauseRecurringExpense(id: id);
 
-      // TODO: Queue sync operation
-      // await syncQueue.enqueue(...)
+      // T031: Queue sync operation
+      await localDataSource.addToSyncQueue(
+        userId: _currentUserId,
+        operation: 'update',
+        entityId: id,
+        payload: {'is_paused': true},
+      );
 
       return Right(entity);
-    } on AppDatabaseException catch (e) {
+    } on CacheException catch (e) {
       if (e.code == 'not_found') {
-        return const Left(NotFoundFailure(message: 'Recurring expense not found'));
+        return Left(CacheFailure('Recurring expense not found'));
       }
-      return Left(DatabaseFailure(e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -223,8 +268,8 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
       );
 
       if (nextDueDate == null) {
-        return const Left(ValidationFailure(
-          message: 'Failed to calculate next due date',
+        return Left(ValidationFailure(
+          'Failed to calculate next due date',
         ));
       }
 
@@ -233,15 +278,23 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
         nextDueDate: nextDueDate,
       );
 
-      // TODO: Queue sync operation
-      // await syncQueue.enqueue(...)
+      // T031: Queue sync operation
+      await localDataSource.addToSyncQueue(
+        userId: _currentUserId,
+        operation: 'update',
+        entityId: id,
+        payload: {
+          'is_paused': false,
+          'next_due_date': nextDueDate.toIso8601String(),
+        },
+      );
 
       return Right(entity);
-    } on AppDatabaseException catch (e) {
+    } on CacheException catch (e) {
       if (e.code == 'not_found') {
-        return const Left(NotFoundFailure(message: 'Recurring expense not found'));
+        return Left(CacheFailure('Recurring expense not found'));
       }
-      return Left(DatabaseFailure(e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -274,15 +327,20 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
       // Delete template (cascade deletes mappings automatically)
       await localDataSource.deleteRecurringExpense(id: id);
 
-      // TODO: Queue sync operation
-      // await syncQueue.enqueue(...)
+      // T031: Queue sync operation
+      await localDataSource.addToSyncQueue(
+        userId: _currentUserId,
+        operation: 'delete',
+        entityId: id,
+        payload: {'id': id},
+      );
 
       return const Right(unit);
-    } on AppDatabaseException catch (e) {
+    } on CacheException catch (e) {
       if (e.code == 'not_found') {
-        return const Left(NotFoundFailure(message: 'Recurring expense not found'));
+        return Left(CacheFailure('Recurring expense not found'));
       }
-      return Left(DatabaseFailure(e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -305,8 +363,8 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
       return Right(entities);
     } on AppAuthException catch (e) {
       return Left(AuthFailure(e.message));
-    } on AppDatabaseException catch (e) {
-      return Left(DatabaseFailure(e.message));
+    } on CacheException catch (e) {
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -319,11 +377,11 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
     try {
       final entity = await localDataSource.getRecurringExpense(id: id);
       return Right(entity);
-    } on AppDatabaseException catch (e) {
+    } on CacheException catch (e) {
       if (e.code == 'not_found') {
-        return const Left(NotFoundFailure(message: 'Recurring expense not found'));
+        return Left(CacheFailure('Recurring expense not found'));
       }
-      return Left(DatabaseFailure(e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -342,8 +400,8 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
 
       // Validate template is not paused
       if (template.isPaused) {
-        return const Left(ValidationFailure(
-          message: 'Cannot generate instance from paused template',
+        return Left(ValidationFailure(
+          'Cannot generate instance from paused template',
         ));
       }
 
@@ -355,13 +413,13 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
       throw UnimplementedError(
         'generateExpenseInstance will be implemented when expense repository is wired up',
       );
-    } on AppDatabaseException catch (e) {
+    } on CacheException catch (e) {
       if (e.code == 'not_found') {
-        return const Left(NotFoundFailure(
-          message: 'Recurring expense template not found',
+        return Left(CacheFailure(
+          'Recurring expense template not found',
         ));
       }
-      return Left(DatabaseFailure(e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }
@@ -382,13 +440,13 @@ class RecurringExpenseRepositoryImpl implements RecurringExpenseRepository {
       // For now, return empty list as placeholder
 
       return const Right([]);
-    } on AppDatabaseException catch (e) {
+    } on CacheException catch (e) {
       if (e.code == 'not_found') {
-        return const Left(NotFoundFailure(
-          message: 'Recurring expense template not found',
+        return Left(CacheFailure(
+          'Recurring expense template not found',
         ));
       }
-      return Left(DatabaseFailure(e.message));
+      return Left(CacheFailure(e.message));
     } catch (e) {
       return Left(ServerFailure(e.toString()));
     }

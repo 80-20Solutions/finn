@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../../../core/enums/recurrence_frequency.dart';
-import '../../../expenses/data/models/reimbursement_status.dart';
+import '../../../../core/enums/reimbursement_status.dart';
 
 /// Domain entity representing a recurring expense template.
 ///

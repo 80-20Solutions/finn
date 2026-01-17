@@ -39,6 +39,9 @@ abstract class CategoryRemoteDataSource {
   /// Get expense count for a category (using RPC function).
   Future<int> getCategoryExpenseCount({required String categoryId});
 
+  /// Feature 013 T066: Get recurring expense count for a category.
+  Future<int> getCategoryRecurringExpenseCount({required String categoryId});
+
   /// Check if category name exists in group.
   Future<bool> categoryNameExists({
     required String groupId,
@@ -256,6 +259,28 @@ class CategoryRemoteDataSourceImpl implements CategoryRemoteDataSource {
       throw ServerException(e.message, e.code);
     } catch (e) {
       throw ServerException('Failed to get category expense count: $e');
+    }
+  }
+
+  /// Feature 013 T066: Get count of recurring expenses using this category
+  Future<int> getCategoryRecurringExpenseCount({
+    required String categoryId,
+  }) async {
+    try {
+      // Query recurring_expenses table directly
+      final response = await supabaseClient
+          .from('recurring_expenses')
+          .select('id')
+          .eq('category_id', categoryId)
+          .count(CountOption.exact);
+
+      return response.count;
+    } on PostgrestException catch (e) {
+      throw ServerException(e.message, e.code);
+    } catch (e) {
+      throw ServerException(
+        'Failed to get category recurring expense count: $e',
+      );
     }
   }
 

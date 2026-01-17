@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/database/daos/recurring_expenses_dao.dart';
@@ -90,6 +93,18 @@ abstract class RecurringExpenseLocalDataSource {
   Future<void> deleteInstanceMappingsForTemplate({
     required String recurringExpenseId,
   });
+
+  /// Add operation to sync queue (T031)
+  ///
+  /// Queues recurring expense operations for upload to Supabase when online.
+  /// Operations: 'create', 'update', 'delete'
+  Future<void> addToSyncQueue({
+    required String userId,
+    required String operation,
+    required String entityId,
+    required Map<String, dynamic> payload,
+    int priority = 0,
+  });
 }
 
 /// Implementation of [RecurringExpenseLocalDataSource] using Drift DAO.
@@ -138,14 +153,14 @@ class RecurringExpenseLocalDataSourceImpl
         categoryName: categoryName,
         merchant: Value(merchant),
         notes: Value(notes),
-        isGroupExpense: isGroupExpense,
+        isGroupExpense: Value(isGroupExpense),
         frequency: frequency,
         anchorDate: anchorDate,
         isPaused: const Value(false),
         lastInstanceCreatedAt: const Value(null),
         nextDueDate: Value(nextDueDate),
-        budgetReservationEnabled: budgetReservationEnabled,
-        defaultReimbursementStatus: defaultReimbursementStatus,
+        budgetReservationEnabled: Value(budgetReservationEnabled),
+        defaultReimbursementStatus: Value(defaultReimbursementStatus),
         paymentMethodId: Value(paymentMethodId),
         paymentMethodName: Value(paymentMethodName),
         createdAt: now,
@@ -157,7 +172,7 @@ class RecurringExpenseLocalDataSourceImpl
       // Retrieve the created entity
       final created = await dao.getRecurringExpenseById(id);
       if (created == null) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Failed to retrieve created recurring expense',
           'creation_failed',
         );
@@ -165,7 +180,7 @@ class RecurringExpenseLocalDataSourceImpl
 
       return RecurringExpenseEntity.fromDrift(created);
     } catch (e) {
-      throw AppDatabaseException(
+      throw CacheException(
         'Failed to create recurring expense: $e',
         'creation_error',
       );
@@ -212,7 +227,7 @@ class RecurringExpenseLocalDataSourceImpl
 
       final success = await dao.updateRecurringExpense(id, companion);
       if (!success) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Recurring expense not found',
           'not_found',
         );
@@ -221,7 +236,7 @@ class RecurringExpenseLocalDataSourceImpl
       // Retrieve updated entity
       final updated = await dao.getRecurringExpenseById(id);
       if (updated == null) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Failed to retrieve updated recurring expense',
           'update_failed',
         );
@@ -229,8 +244,8 @@ class RecurringExpenseLocalDataSourceImpl
 
       return RecurringExpenseEntity.fromDrift(updated);
     } catch (e) {
-      if (e is AppDatabaseException) rethrow;
-      throw AppDatabaseException(
+      if (e is CacheException) rethrow;
+      throw CacheException(
         'Failed to update recurring expense: $e',
         'update_error',
       );
@@ -244,7 +259,7 @@ class RecurringExpenseLocalDataSourceImpl
     try {
       final success = await dao.pauseRecurringExpense(id);
       if (!success) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Recurring expense not found',
           'not_found',
         );
@@ -252,7 +267,7 @@ class RecurringExpenseLocalDataSourceImpl
 
       final paused = await dao.getRecurringExpenseById(id);
       if (paused == null) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Failed to retrieve paused recurring expense',
           'pause_failed',
         );
@@ -260,8 +275,8 @@ class RecurringExpenseLocalDataSourceImpl
 
       return RecurringExpenseEntity.fromDrift(paused);
     } catch (e) {
-      if (e is AppDatabaseException) rethrow;
-      throw AppDatabaseException(
+      if (e is CacheException) rethrow;
+      throw CacheException(
         'Failed to pause recurring expense: $e',
         'pause_error',
       );
@@ -276,7 +291,7 @@ class RecurringExpenseLocalDataSourceImpl
     try {
       final success = await dao.resumeRecurringExpense(id, nextDueDate);
       if (!success) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Recurring expense not found',
           'not_found',
         );
@@ -284,7 +299,7 @@ class RecurringExpenseLocalDataSourceImpl
 
       final resumed = await dao.getRecurringExpenseById(id);
       if (resumed == null) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Failed to retrieve resumed recurring expense',
           'resume_failed',
         );
@@ -292,8 +307,8 @@ class RecurringExpenseLocalDataSourceImpl
 
       return RecurringExpenseEntity.fromDrift(resumed);
     } catch (e) {
-      if (e is AppDatabaseException) rethrow;
-      throw AppDatabaseException(
+      if (e is CacheException) rethrow;
+      throw CacheException(
         'Failed to resume recurring expense: $e',
         'resume_error',
       );
@@ -305,14 +320,14 @@ class RecurringExpenseLocalDataSourceImpl
     try {
       final deleted = await dao.deleteRecurringExpense(id);
       if (deleted == 0) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Recurring expense not found',
           'not_found',
         );
       }
     } catch (e) {
-      if (e is AppDatabaseException) rethrow;
-      throw AppDatabaseException(
+      if (e is CacheException) rethrow;
+      throw CacheException(
         'Failed to delete recurring expense: $e',
         'delete_error',
       );
@@ -340,7 +355,7 @@ class RecurringExpenseLocalDataSourceImpl
 
       return results.map((data) => RecurringExpenseEntity.fromDrift(data)).toList();
     } catch (e) {
-      throw AppDatabaseException(
+      throw CacheException(
         'Failed to get recurring expenses: $e',
         'query_error',
       );
@@ -354,7 +369,7 @@ class RecurringExpenseLocalDataSourceImpl
     try {
       final result = await dao.getRecurringExpenseById(id);
       if (result == null) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Recurring expense not found',
           'not_found',
         );
@@ -362,8 +377,8 @@ class RecurringExpenseLocalDataSourceImpl
 
       return RecurringExpenseEntity.fromDrift(result);
     } catch (e) {
-      if (e is AppDatabaseException) rethrow;
-      throw AppDatabaseException(
+      if (e is CacheException) rethrow;
+      throw CacheException(
         'Failed to get recurring expense: $e',
         'query_error',
       );
@@ -383,14 +398,14 @@ class RecurringExpenseLocalDataSourceImpl
         nextDueDate,
       );
       if (!success) {
-        throw const AppDatabaseException(
+        throw const CacheException(
           'Recurring expense not found',
           'not_found',
         );
       }
     } catch (e) {
-      if (e is AppDatabaseException) rethrow;
-      throw AppDatabaseException(
+      if (e is CacheException) rethrow;
+      throw CacheException(
         'Failed to update after instance creation: $e',
         'update_error',
       );
@@ -413,7 +428,7 @@ class RecurringExpenseLocalDataSourceImpl
 
       await dao.insertRecurringExpenseInstance(companion);
     } catch (e) {
-      throw AppDatabaseException(
+      throw CacheException(
         'Failed to create instance mapping: $e',
         'mapping_error',
       );
@@ -428,7 +443,7 @@ class RecurringExpenseLocalDataSourceImpl
       final instances = await dao.getInstancesForTemplate(recurringExpenseId);
       return instances.map((instance) => instance.expenseId).toList();
     } catch (e) {
-      throw AppDatabaseException(
+      throw CacheException(
         'Failed to get instance IDs: $e',
         'query_error',
       );
@@ -442,9 +457,39 @@ class RecurringExpenseLocalDataSourceImpl
     try {
       await dao.deleteInstanceMappingsForTemplate(recurringExpenseId);
     } catch (e) {
-      throw AppDatabaseException(
+      throw CacheException(
         'Failed to delete instance mappings: $e',
         'delete_error',
+      );
+    }
+  }
+
+  @override
+  Future<void> addToSyncQueue({
+    required String userId,
+    required String operation,
+    required String entityId,
+    required Map<String, dynamic> payload,
+    int priority = 0,
+  }) async {
+    try {
+      // T031: Queue sync operation for upload to Supabase
+      final companion = SyncQueueItemsCompanion.insert(
+        userId: userId,
+        operation: operation,
+        entityType: 'recurring_expense',
+        entityId: entityId,
+        payload: jsonEncode(payload),
+        syncStatus: 'pending',
+        priority: Value(priority),
+        createdAt: DateTime.now(),
+      );
+
+      await database.into(database.syncQueueItems).insert(companion);
+    } catch (e) {
+      throw CacheException(
+        'Failed to add to sync queue: $e',
+        'sync_queue_error',
       );
     }
   }
