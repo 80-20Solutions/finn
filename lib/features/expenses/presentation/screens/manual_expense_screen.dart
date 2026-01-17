@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/enums/recurrence_frequency.dart';
 import '../../../../core/enums/reimbursement_status.dart';
 import '../../../../core/utils/date_formatter.dart';
 import '../../../../core/utils/validators.dart';
@@ -19,9 +20,11 @@ import '../../../dashboard/presentation/widgets/expenses_chart_widget.dart';
 import '../../../dashboard/presentation/widgets/personal_dashboard_view.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
 import '../providers/expense_provider.dart';
+import '../providers/recurring_expense_provider.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/expense_type_toggle.dart';
 import '../widgets/payment_method_selector.dart';
+import '../widgets/recurring_expense_config_widget.dart';
 import '../widgets/reimbursement_toggle.dart';
 
 /// Screen for manual expense entry.
@@ -44,6 +47,11 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   bool _isGroupExpense = true; // Default to group expense
   ReimbursementStatus _selectedReimbursementStatus = ReimbursementStatus.none; // T035
 
+  // Recurring expense configuration (T025)
+  bool _isRecurring = false;
+  RecurrenceFrequency _recurrenceFrequency = RecurrenceFrequency.monthly;
+  bool _budgetReservationEnabled = false;
+
   // Track initial values for unsaved changes detection
   late final String _initialAmount;
   late final String _initialMerchant;
@@ -53,6 +61,9 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   late final String? _initialPaymentMethodId;
   late final bool _initialIsGroupExpense;
   late final ReimbursementStatus _initialReimbursementStatus; // T035
+  late final bool _initialIsRecurring; // T025
+  late final RecurrenceFrequency _initialRecurrenceFrequency; // T025
+  late final bool _initialBudgetReservationEnabled; // T025
 
   @override
   void initState() {
@@ -66,6 +77,9 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
     _initialPaymentMethodId = _selectedPaymentMethodId;
     _initialIsGroupExpense = _isGroupExpense;
     _initialReimbursementStatus = _selectedReimbursementStatus; // T035
+    _initialIsRecurring = _isRecurring; // T025
+    _initialRecurrenceFrequency = _recurrenceFrequency; // T025
+    _initialBudgetReservationEnabled = _budgetReservationEnabled; // T025
   }
 
   @override
@@ -85,7 +99,10 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
         _selectedCategoryId != _initialCategoryId ||
         _selectedPaymentMethodId != _initialPaymentMethodId ||
         _isGroupExpense != _initialIsGroupExpense ||
-        _selectedReimbursementStatus != _initialReimbursementStatus; // T035
+        _selectedReimbursementStatus != _initialReimbursementStatus || // T035
+        _isRecurring != _initialIsRecurring || // T025
+        _recurrenceFrequency != _initialRecurrenceFrequency || // T025
+        _budgetReservationEnabled != _initialBudgetReservationEnabled; // T025
   }
 
   Future<void> _handleSave() async {
@@ -114,6 +131,16 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       return;
     }
 
+    // Branch based on whether expense is recurring (T026)
+    if (_isRecurring) {
+      await _saveRecurringExpense(amount);
+    } else {
+      await _saveRegularExpense(amount);
+    }
+  }
+
+  /// Save a regular (non-recurring) expense
+  Future<void> _saveRegularExpense(double amount) async {
     final formNotifier = ref.read(expenseFormProvider.notifier);
     final listNotifier = ref.read(expenseListProvider.notifier);
 
@@ -147,7 +174,74 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       ref.invalidate(recentPersonalExpensesProvider);
 
       if (mounted) {
-        context.pop(); // Return to previous screen (MainNavigationScreen with Spese tab)
+        context.pop(); // Return to previous screen
+      }
+    }
+  }
+
+  /// Save a recurring expense template (T026)
+  Future<void> _saveRecurringExpense(double amount) async {
+    final recurringFormNotifier = ref.read(recurringExpenseFormProvider.notifier);
+    final recurringListNotifier = ref.read(recurringExpenseListProvider.notifier);
+
+    // Get category name for recurring expense
+    final groupId = ref.read(currentGroupIdProvider);
+    final categoriesState = ref.read(categoryProvider(groupId));
+    String? categoryName;
+    try {
+      final category = categoriesState.categories.firstWhere(
+        (cat) => cat.id == _selectedCategoryId,
+      );
+      categoryName = category.name;
+    } catch (_) {
+      categoryName = 'Unknown';
+    }
+
+    // Get payment method name if available
+    String? paymentMethodName;
+    // TODO: Get payment method name from payment method repository
+
+    final template = await recurringFormNotifier.createRecurringExpense(
+      amount: amount,
+      categoryId: _selectedCategoryId!,
+      categoryName: categoryName,
+      frequency: _recurrenceFrequency,
+      anchorDate: _selectedDate, // Use selected date as anchor
+      merchant: _merchantController.text.trim().isNotEmpty
+          ? _merchantController.text.trim()
+          : null,
+      notes: _notesController.text.trim().isNotEmpty
+          ? _notesController.text.trim()
+          : null,
+      isGroupExpense: _isGroupExpense,
+      budgetReservationEnabled: _budgetReservationEnabled,
+      defaultReimbursementStatus: _selectedReimbursementStatus,
+      paymentMethodId: _selectedPaymentMethodId,
+      paymentMethodName: paymentMethodName,
+    );
+
+    if (template != null && mounted) {
+      recurringListNotifier.addTemplate(template);
+
+      // Check for virgin category and show budget prompt
+      await _checkAndPromptForVirginCategory();
+
+      // Refresh dashboard
+      ref.read(dashboardProvider.notifier).refresh();
+      ref.invalidate(personalExpensesByCategoryProvider);
+      ref.invalidate(expensesByPeriodProvider);
+      ref.invalidate(recentPersonalExpensesProvider);
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Spesa ricorrente creata (${_recurrenceFrequency.displayString.toLowerCase()})',
+            ),
+          ),
+        );
+        context.pop(); // Return to previous screen
       }
     }
   }
@@ -358,6 +452,30 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
                 onChanged: (status) {
                   setState(() {
                     _selectedReimbursementStatus = status;
+                  });
+                },
+                enabled: !formState.isSubmitting,
+              ),
+              const SizedBox(height: 16),
+
+              // Recurring expense configuration (T025)
+              RecurringExpenseConfigWidget(
+                isRecurring: _isRecurring,
+                onRecurringChanged: (value) {
+                  setState(() {
+                    _isRecurring = value;
+                  });
+                },
+                frequency: _recurrenceFrequency,
+                onFrequencyChanged: (freq) {
+                  setState(() {
+                    _recurrenceFrequency = freq;
+                  });
+                },
+                budgetReservationEnabled: _budgetReservationEnabled,
+                onBudgetReservationChanged: (value) {
+                  setState(() {
+                    _budgetReservationEnabled = value;
                   });
                 },
                 enabled: !formState.isSubmitting,
