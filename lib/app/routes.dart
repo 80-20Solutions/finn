@@ -19,6 +19,7 @@ import '../features/expenses/presentation/screens/manual_expense_screen.dart';
 import '../features/expenses/presentation/screens/expense_list_screen.dart';
 import '../features/expenses/presentation/screens/expense_detail_screen.dart';
 import '../features/expenses/presentation/screens/edit_expense_screen.dart';
+import '../features/expenses/presentation/screens/recurring_expenses_screen.dart';
 import '../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../features/auth/presentation/screens/main_navigation_screen.dart';
 import '../features/auth/presentation/screens/profile_screen.dart';
@@ -57,6 +58,7 @@ class AppRoutes {
   static const uploadFile = '/upload-file';
   static const expenseDetail = '/expense/:id';
   static const editExpense = '/expense/:id/edit';
+  static const recurringExpenses = '/recurring-expenses'; // Feature 013
 
   // Budget routes
   static const budgetDashboard = '/budget'; // New unified dashboard
@@ -190,6 +192,12 @@ final routerProvider = Provider<GoRouter>((ref) {
           final expenseId = state.pathParameters['id']!;
           return EditExpenseScreen(expenseId: expenseId);
         },
+      ),
+      // Feature 013: Recurring expenses management
+      GoRoute(
+        path: AppRoutes.recurringExpenses,
+        name: 'recurringExpenses',
+        builder: (context, state) => const RecurringExpensesScreen(),
       ),
 
       // Scanner routes

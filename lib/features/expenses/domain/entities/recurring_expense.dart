@@ -98,6 +98,9 @@ class RecurringExpense extends Equatable {
   /// Returns true if this recurring expense is active (not paused)
   bool get isActive => !isPaused;
 
+  /// Get formatted amount string
+  String get formattedAmount => '€${amount.toStringAsFixed(2)}';
+
   /// Returns true if budget reservation is enabled and active
   bool get hasActiveBudgetReservation =>
       budgetReservationEnabled && !isPaused;

@@ -50,6 +50,14 @@ class SettingsScreen extends StatelessWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push(AppRoutes.budgetDashboard),
           ),
+          // Feature 013-recurring-expenses T046-T047
+          ListTile(
+            leading: const Icon(Icons.loop),
+            title: const Text('Spese ricorrenti'),
+            subtitle: const Text('Gestisci spese ripetitive automatiche'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(AppRoutes.recurringExpenses),
+          ),
         ],
       ),
     );
