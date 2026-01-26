@@ -124,12 +124,8 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
           });
         }
 
-        // T014: Set selected member to current user (default for admin creating expenses)
-        if (_selectedMemberIdForExpense == null) {
-          setState(() {
-            _selectedMemberIdForExpense = userId;
-          });
-        }
+        // T014: Keep _selectedMemberIdForExpense as null when user creates expense for themselves
+        // Only set it when admin explicitly selects another member
       }
     });
   }
