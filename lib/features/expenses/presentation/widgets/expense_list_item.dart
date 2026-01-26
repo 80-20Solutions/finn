@@ -92,13 +92,13 @@ class ExpenseListItem extends StatelessWidget {
                   value: expense.paymentMethodName!,
                 ),
 
-              // Autore (Creator) - Only for group expenses
-              if (expense.isGroupExpense && expense.createdByName != null)
+              // Pagato da (Paid by) - Only for group expenses
+              if (expense.isGroupExpense && expense.paidByName != null)
                 _buildDetailRow(
                   context,
                   icon: Icons.person,
-                  label: 'Autore',
-                  value: expense.createdByName!,
+                  label: 'Pagato da',
+                  value: expense.paidByName!,
                   highlight: true,
                 ),
 

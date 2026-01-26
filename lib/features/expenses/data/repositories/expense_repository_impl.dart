@@ -272,14 +272,18 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         final categoryKey = expense.categoryName ?? 'N/A';
         byCategory[categoryKey] = (byCategory[categoryKey] ?? 0) + expense.amount;
 
-        // By member
-        if (!byMember.containsKey(expense.createdBy)) {
-          byMember[expense.createdBy] = _MemberAccumulator(
-            displayName: expense.createdByName ?? 'Utente',
+        // By member - use paidBy to attribute expense to correct member
+        // This ensures expenses created by admin for other members are counted correctly
+        final memberKey = expense.paidBy ?? expense.createdBy;
+        final memberName = expense.paidByName ?? expense.createdByName ?? 'Utente';
+
+        if (!byMember.containsKey(memberKey)) {
+          byMember[memberKey] = _MemberAccumulator(
+            displayName: memberName,
           );
         }
-        byMember[expense.createdBy]!.totalAmount += expense.amount;
-        byMember[expense.createdBy]!.expenseCount++;
+        byMember[memberKey]!.totalAmount += expense.amount;
+        byMember[memberKey]!.expenseCount++;
       }
 
       return Right(ExpensesSummary(
