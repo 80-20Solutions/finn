@@ -332,7 +332,8 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       // Always set created_by to current user (admin), even when creating for others
       // This ensures the expense appears in admin's "Le mie spese" list
       createdBy: currentUserId,
-      paidBy: _selectedMemberIdForExpense, // Set paid_by to selected member (or null = current user)
+      // If admin selected "Me stesso" (null), use current user ID; otherwise use selected member ID
+      paidBy: _selectedMemberIdForExpense ?? currentUserId,
       lastModifiedBy: currentUserId,
     );
 
