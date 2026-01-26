@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
 
+import '../../../../core/enums/reimbursement_status.dart';
 import '../../../../core/errors/exceptions.dart';
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/expense_entity.dart';
@@ -21,6 +22,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     String? categoryId,
     String? createdBy,
     bool? isGroupExpense,
+    ReimbursementStatus? reimbursementStatus, // T048
     int? limit,
     int? offset,
   }) async {
@@ -31,6 +33,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         categoryId: categoryId,
         createdBy: createdBy,
         isGroupExpense: isGroupExpense,
+        reimbursementStatus: reimbursementStatus, // T048
         limit: limit,
         offset: offset,
       );
@@ -70,6 +73,10 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     String? notes,
     Uint8List? receiptImage,
     bool isGroupExpense = true,
+    ReimbursementStatus reimbursementStatus = ReimbursementStatus.none, // T048
+    String? createdBy, // T014
+    String? paidBy, // For admin creating expense for specific member
+    String? lastModifiedBy, // T014
   }) async {
     try {
       // Create the expense first
@@ -81,6 +88,9 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         merchant: merchant,
         notes: notes,
         isGroupExpense: isGroupExpense,
+        reimbursementStatus: reimbursementStatus, // T048
+        createdBy: createdBy, // T014
+        lastModifiedBy: lastModifiedBy, // T014
       );
 
       // Upload receipt if provided
@@ -113,6 +123,7 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
     String? paymentMethodId,
     String? merchant,
     String? notes,
+    ReimbursementStatus? reimbursementStatus, // T048
   }) async {
     try {
       final expense = await remoteDataSource.updateExpense(
@@ -123,8 +134,45 @@ class ExpenseRepositoryImpl implements ExpenseRepository {
         paymentMethodId: paymentMethodId,
         merchant: merchant,
         notes: notes,
+        reimbursementStatus: reimbursementStatus, // T048
       );
       return Right(expense.toEntity());
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, ExpenseEntity>> updateExpenseWithTimestamp({
+    required String expenseId,
+    required DateTime originalUpdatedAt,
+    required String lastModifiedBy,
+    double? amount,
+    DateTime? date,
+    String? categoryId,
+    String? paymentMethodId,
+    String? merchant,
+    String? notes,
+    ReimbursementStatus? reimbursementStatus,
+  }) async {
+    try {
+      final expense = await remoteDataSource.updateExpenseWithTimestamp(
+        expenseId: expenseId,
+        originalUpdatedAt: originalUpdatedAt,
+        lastModifiedBy: lastModifiedBy,
+        amount: amount,
+        date: date,
+        categoryId: categoryId,
+        paymentMethodId: paymentMethodId,
+        merchant: merchant,
+        notes: notes,
+        reimbursementStatus: reimbursementStatus,
+      );
+      return Right(expense.toEntity());
+    } on ConflictException catch (e) {
+      return Left(ConflictFailure(e.message));
     } on ServerException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {

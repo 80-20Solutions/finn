@@ -69,7 +69,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
       );
 
       if (exists) {
-        return const Left(
+        return Left(
           ValidationFailure('A category with this name already exists'),
         );
       }
@@ -118,14 +118,14 @@ class CategoryRepositoryImpl implements CategoryRepository {
           );
 
           if (exists) {
-            return const Left(
+            return Left(
               ValidationFailure('A category with this name already exists'),
             );
           }
 
           // Check if it's a default category
           if (category.isDefault) {
-            return const Left(
+            return Left(
               PermissionFailure('Default categories cannot be renamed'),
             );
           }
@@ -161,7 +161,7 @@ class CategoryRepositoryImpl implements CategoryRepository {
         (category) async {
           // Check if it's a default category
           if (category.isDefault) {
-            return const Left(
+            return Left(
               PermissionFailure('Default categories cannot be deleted'),
             );
           }
@@ -172,10 +172,25 @@ class CategoryRepositoryImpl implements CategoryRepository {
           );
 
           if (expenseCount > 0) {
-            return const Left(
+            return Left(
               ValidationFailure(
                 'Cannot delete category with existing expenses. '
                 'Please reassign all expenses to another category first.',
+              ),
+            );
+          }
+
+          // Feature 013 T066: Check if it has recurring expenses
+          final recurringExpenseCount =
+              await remoteDataSource.getCategoryRecurringExpenseCount(
+            categoryId: categoryId,
+          );
+
+          if (recurringExpenseCount > 0) {
+            return Left(
+              ValidationFailure(
+                'Cannot delete category with $recurringExpenseCount active recurring expense(s). '
+                'Please delete or reassign the recurring expenses first.',
               ),
             );
           }
@@ -282,6 +297,46 @@ class CategoryRepositoryImpl implements CategoryRepository {
   }) async {
     try {
       await remoteDataSource.markCategoryAsUsed(
+        userId: userId,
+        categoryId: categoryId,
+      );
+      return const Right(unit);
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  // ========== MRU (Most Recently Used) Tracking (Feature 001) ==========
+
+  @override
+  Future<Either<Failure, List<ExpenseCategoryEntity>>> getCategoriesByMRU({
+    required String groupId,
+    required String userId,
+  }) async {
+    try {
+      final categories = await remoteDataSource.getCategoriesByMRU(
+        groupId: groupId,
+        userId: userId,
+      );
+      return Right(categories.map((c) => c.toEntity()).toList());
+    } on AppAuthException catch (e) {
+      return Left(AuthFailure(e.message));
+    } on ServerException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Unit>> updateCategoryUsage({
+    required String userId,
+    required String categoryId,
+  }) async {
+    try {
+      await remoteDataSource.updateCategoryUsage(
         userId: userId,
         categoryId: categoryId,
       );

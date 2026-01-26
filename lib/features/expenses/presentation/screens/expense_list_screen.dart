@@ -7,14 +7,22 @@ import '../../domain/entities/expense_entity.dart';
 import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../categories/presentation/providers/category_provider.dart';
+import '../../../categories/presentation/widgets/category_dropdown.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
 import '../providers/expense_provider.dart';
 import '../widgets/expense_list_item.dart';
+import '../widgets/delete_confirmation_dialog.dart';
 
 /// Screen showing list of expenses with filtering options.
 class ExpenseListScreen extends ConsumerStatefulWidget {
-  const ExpenseListScreen({super.key});
+  const ExpenseListScreen({
+    super.key,
+    this.showGroupExpensesOnly = false,
+  });
+
+  final bool showGroupExpensesOnly;
 
   @override
   ConsumerState<ExpenseListScreen> createState() => _ExpenseListScreenState();
@@ -29,7 +37,14 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
     _scrollController.addListener(_onScroll);
     // Load expenses on init
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(expenseListProvider.notifier).loadExpenses(refresh: true);
+      if (widget.showGroupExpensesOnly) {
+        // Show all group expenses visible to all members
+        ref.read(expenseListProvider.notifier).setFilterIsGroupExpense(true);
+      } else {
+        // Show only personal expenses (is_group_expense = false)
+        // These are expenses that only the user can see
+        ref.read(expenseListProvider.notifier).setFilterIsGroupExpense(false);
+      }
     });
   }
 
@@ -51,29 +66,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
     final listState = ref.watch(expenseListProvider);
     final theme = Theme.of(context);
 
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/'),
-        ),
-        title: const Text('Le mie spese'),
-        actions: [
-          if (listState.hasFilters)
-            IconButton(
-              icon: const Icon(Icons.filter_alt_off),
-              onPressed: () => ref.read(expenseListProvider.notifier).clearFilters(),
-              tooltip: 'Rimuovi filtri',
-            ),
-          IconButton(
-            icon: const Icon(Icons.filter_alt_outlined),
-            onPressed: () => _showFilterDialog(context),
-            tooltip: 'Filtra',
-          ),
-        ],
-      ),
-      body: _buildBody(theme, listState),
-    );
+    return _buildBody(theme, listState);
   }
 
   Widget _buildBody(ThemeData theme, ExpenseListState listState) {
@@ -121,7 +114,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
           return Dismissible(
             key: Key(expense.id),
             direction: canDelete ? DismissDirection.endToStart : DismissDirection.none,
-            // confirmDismiss: (direction) => _showDeleteConfirmDialog(context),
+            confirmDismiss: (direction) => _showDeleteConfirmDialog(context, expense),
             onDismissed: (direction) => _handleSwipeDelete(expense),
             background: Container(
               alignment: Alignment.centerRight,
@@ -143,28 +136,11 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
     );
   }
 
-  Future<bool?> _showDeleteConfirmDialog(BuildContext context) {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Elimina spesa'),
-        content: const Text(
-          'Sei sicuro di voler eliminare questa spesa? L\'azione non può essere annullata.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Annulla'),
-          ),
-          TextButton(
-            style: TextButton.styleFrom(
-              foregroundColor: Theme.of(context).colorScheme.error,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Elimina'),
-          ),
-        ],
-      ),
+  Future<bool?> _showDeleteConfirmDialog(BuildContext context, ExpenseEntity expense) {
+    return DeleteConfirmationDialog.show(
+      context,
+      expenseName: expense.merchant ?? expense.formattedAmount,
+      isReimbursable: expense.isPendingReimbursement,
     );
   }
 
@@ -216,23 +192,29 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
   }
 
   void _showFilterDialog(BuildContext context) {
+    ExpenseFilterBottomSheet.show(context);
+  }
+}
+
+class ExpenseFilterBottomSheet extends ConsumerStatefulWidget {
+  const ExpenseFilterBottomSheet({super.key});
+
+  @override
+  ConsumerState<ExpenseFilterBottomSheet> createState() => _ExpenseFilterBottomSheetState();
+
+  /// Show the filter bottom sheet
+  static void show(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      builder: (context) => const _FilterBottomSheet(),
+      builder: (context) => const ExpenseFilterBottomSheet(),
     );
   }
 }
 
-class _FilterBottomSheet extends ConsumerStatefulWidget {
-  const _FilterBottomSheet();
-
-  @override
-  ConsumerState<_FilterBottomSheet> createState() => _FilterBottomSheetState();
-}
-
-class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
+class _ExpenseFilterBottomSheetState extends ConsumerState<ExpenseFilterBottomSheet> {
   DateTimeRange? _dateRange;
+  String? _selectedCategoryId;
 
   @override
   void initState() {
@@ -244,11 +226,14 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
         end: state.filterEndDate!,
       );
     }
+    _selectedCategoryId = state.filterCategoryId;
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final authState = ref.watch(authProvider);
+    final groupId = authState.user?.groupId;
 
     return Padding(
       padding: EdgeInsets.only(
@@ -257,57 +242,70 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
         right: 16,
         bottom: MediaQuery.of(context).viewInsets.bottom + 16,
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Filtra spese',
-            style: theme.textTheme.titleLarge,
-          ),
-          const SizedBox(height: 24),
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'Filtra spese',
+              style: theme.textTheme.titleLarge,
+            ),
+            const SizedBox(height: 24),
 
-          // Date range filter
-          ListTile(
-            leading: const Icon(Icons.date_range),
-            title: const Text('Periodo'),
-            subtitle: _dateRange != null
-                ? Text(
-                    '${_formatDate(_dateRange!.start)} - ${_formatDate(_dateRange!.end)}',
-                  )
-                : const Text('Tutte le date'),
-            trailing: _dateRange != null
-                ? IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: () => setState(() => _dateRange = null),
-                  )
-                : null,
-            onTap: _selectDateRange,
-          ),
-
-          const SizedBox(height: 24),
-
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    ref.read(expenseListProvider.notifier).clearFilters();
-                    Navigator.of(context).pop();
-                  },
-                  child: const Text('Cancella filtri'),
-                ),
+            // Category filter
+            if (groupId != null) ...[
+              CategoryDropdownMRU(
+                value: _selectedCategoryId,
+                onChanged: (categoryId) => setState(() => _selectedCategoryId = categoryId),
+                label: 'Categoria',
+                hint: 'Tutte le categorie',
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _applyFilters,
-                  child: const Text('Applica'),
-                ),
-              ),
+              const SizedBox(height: 16),
             ],
-          ),
-        ],
+
+            // Date range filter
+            ListTile(
+              leading: const Icon(Icons.date_range),
+              title: const Text('Periodo'),
+              subtitle: _dateRange != null
+                  ? Text(
+                      '${_formatDate(_dateRange!.start)} - ${_formatDate(_dateRange!.end)}',
+                    )
+                  : const Text('Tutte le date'),
+              trailing: _dateRange != null
+                  ? IconButton(
+                      icon: const Icon(Icons.clear),
+                      onPressed: () => setState(() => _dateRange = null),
+                    )
+                  : null,
+              onTap: _selectDateRange,
+            ),
+
+            const SizedBox(height: 24),
+
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                      ref.read(expenseListProvider.notifier).clearFilters();
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancella filtri'),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _applyFilters,
+                    child: const Text('Applica'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -330,6 +328,10 @@ class _FilterBottomSheetState extends ConsumerState<_FilterBottomSheet> {
   }
 
   void _applyFilters() {
+    // Apply category filter (null to clear)
+    ref.read(expenseListProvider.notifier).setFilterCategory(_selectedCategoryId);
+
+    // Apply date range filter
     ref.read(expenseListProvider.notifier).setFilterDateRange(
           _dateRange?.start,
           _dateRange?.end,

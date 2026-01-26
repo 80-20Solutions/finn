@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
 
+import '../../../../core/enums/reimbursement_status.dart';
 import '../../../../core/errors/failures.dart';
 import '../entities/expense_entity.dart';
 
@@ -13,13 +14,14 @@ import '../entities/expense_entity.dart';
 abstract class ExpenseRepository {
   /// Get all expenses for the current user's group.
   ///
-  /// Optionally filter by date range, category, and expense type.
+  /// Optionally filter by date range, category, expense type, and reimbursement status.
   Future<Either<Failure, List<ExpenseEntity>>> getExpenses({
     DateTime? startDate,
     DateTime? endDate,
     String? categoryId,
     String? createdBy,
     bool? isGroupExpense,
+    ReimbursementStatus? reimbursementStatus, // T047
     int? limit,
     int? offset,
   });
@@ -33,6 +35,10 @@ abstract class ExpenseRepository {
   ///
   /// Returns the created expense with its generated ID.
   /// If paymentMethodId is null, defaults to "Contanti" (Cash).
+  ///
+  /// T014: For admin creating expenses on behalf of members:
+  /// - createdBy: User ID of who created the expense (defaults to current user)
+  /// - lastModifiedBy: User ID of who last modified (for audit trail when admin creates)
   Future<Either<Failure, ExpenseEntity>> createExpense({
     required double amount,
     required DateTime date,
@@ -42,6 +48,10 @@ abstract class ExpenseRepository {
     String? notes,
     Uint8List? receiptImage,
     bool isGroupExpense = true,
+    ReimbursementStatus reimbursementStatus = ReimbursementStatus.none, // T047
+    String? createdBy, // T014: Override for admin creating on behalf of member
+    String? paidBy, // For admin creating expense for specific member
+    String? lastModifiedBy, // T014: Admin user ID when creating on behalf
   });
 
   /// Update an existing expense.
@@ -53,6 +63,24 @@ abstract class ExpenseRepository {
     String? paymentMethodId,
     String? merchant,
     String? notes,
+    ReimbursementStatus? reimbursementStatus, // T047
+  });
+
+  /// Update an existing expense with optimistic locking (Feature 001-admin-expenses-cash-fix).
+  ///
+  /// Uses the updated_at timestamp for optimistic locking to prevent concurrent edit conflicts.
+  /// Throws ConflictException if the expense was modified by another user since [originalUpdatedAt].
+  Future<Either<Failure, ExpenseEntity>> updateExpenseWithTimestamp({
+    required String expenseId,
+    required DateTime originalUpdatedAt,
+    required String lastModifiedBy,
+    double? amount,
+    DateTime? date,
+    String? categoryId,
+    String? paymentMethodId,
+    String? merchant,
+    String? notes,
+    ReimbursementStatus? reimbursementStatus,
   });
 
   /// Delete an expense.
