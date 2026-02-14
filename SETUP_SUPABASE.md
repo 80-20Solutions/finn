@@ -1,108 +1,77 @@
 # Finn - Setup Supabase
 
-## 🎯 Configurazione Completa
+## 🎯 Configurazione
 
-Finn è configurato per usare **Supabase self-hosted** sul VPS 8020solutions.org.
+Finn usa **Supabase Development** sul VPS 8020solutions.org per uso personale/famiglia.
 
-### 📦 Ambienti Disponibili
-
-- **Development** → Supabase Dev (https://dev.8020solutions.org)
-- **Production** → Supabase Prod (https://api.8020solutions.org)
+**Non c'è ambiente Production** - Finn non è un'app pubblica! 💰👨‍👩‍👧‍👦
 
 ---
 
 ## 🚀 Setup sul PC Locale
 
-### 1. Installare Dipendenze
+### 1. Pull Ultimi Commit
 
 ```bash
-cd finn
-flutter pub get
+cd ~/finn
+git pull origin 001-family-expense-tracker
 ```
 
-### 2. Configurare Ambiente
+### 2. Crea File .env.dev
 
-I file `.env.dev` e `.env.prod` sono già configurati con gli endpoint corretti:
-
-**Development (.env.dev):**
-```env
+```bash
+cat > .env.dev << 'EOF'
 SUPABASE_URL=https://dev.8020solutions.org
 SUPABASE_ANON_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
+EOF
 ```
 
-**Production (.env.prod):**
-```env
-SUPABASE_URL=https://api.8020solutions.org
-SUPABASE_ANON_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
-```
+### 3. Lancia l'App
 
-### 3. Lanciare l'App
-
-**Development (consigliato):**
 ```bash
 ./scripts/run_dev.sh
 ```
 
-**Production:**
+**Oppure manuale:**
 ```bash
-./scripts/run_prod.sh
-```
-
-**Manuale (se script non funziona):**
-```bash
-# Development
 cp .env.dev .env
 flutter run
-
-# Production
-cp .env.prod .env
-flutter run --release
 ```
 
 ---
 
-## 🔍 Verifica Connessione
+## 🔍 Database
 
-### Test API:
-```bash
-curl https://dev.8020solutions.org/
-```
-
-### Studio UI (via tunnel temporaneo):
+### Accedi a Studio (via tunnel):
 ```bash
 ssh -L 54323:127.0.0.1:54323 root@46.225.60.101
 ```
 Poi: http://localhost:54323
 
----
-
-## ⚠️ Troubleshooting
-
-**Errore: "SUPABASE_URL not configured"**
-→ Assicurati che esista il file `.env` nella root del progetto
-→ Lo script `run_dev.sh` lo crea automaticamente
-
-**Errore: "Connection refused"**
-→ Verifica che Supabase sia attivo sul VPS:
-```bash
-ssh root@46.225.60.101 "cd ~/supabase-cli && supabase status"
+### Connessione Diretta:
+```
+postgresql://postgres:postgres@dev.8020solutions.org:54322/postgres
 ```
 
-**Errore: "Invalid API key"**
-→ Verifica che la chiave in `.env.dev` sia corretta
+---
+
+## 📊 Dati
+
+Il database contiene i dati importati da Supabase Cloud (treetocoin@gmail.com).
+
+Backup disponibile: `/tmp/finn_backup_20260214.sql` sul VPS
 
 ---
 
-## 📝 Note Importanti
+## ⚠️ Note Importanti
 
-- **Nessun tunnel SSH necessario!** Tutto via HTTPS
-- I file `.env*` sono già in `.gitignore`
-- `flutter_dotenv` legge automaticamente da `.env`
-- Hot reload funziona normalmente
-- Le migrazioni Supabase sono in `supabase/migrations/`
+- **Solo Development** - nessun ambiente production
+- Uso personale/famiglia, non pubblico
+- Nessun tunnel SSH necessario - tutto HTTPS
+- Database condiviso su `dev.8020solutions.org` con altri progetti 80/20
 
 ---
 
-## 🎉 Ready to Code!
+## 🎉 Ready!
 
-Ora puoi sviluppare Finn con Supabase backend sempre disponibile! 💰😎
+Finn è configurato per uso famiglia con backend sempre disponibile! 💰😊
