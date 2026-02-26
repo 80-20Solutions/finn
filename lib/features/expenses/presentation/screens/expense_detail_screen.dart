@@ -383,6 +383,8 @@ class ExpenseDetailScreen extends ConsumerWidget {
         ref.invalidate(recentPersonalExpensesProvider);
         ref.invalidate(personalExpensesByCategoryProvider);
         ref.invalidate(expensesByPeriodProvider);
+        ref.invalidate(groupMembersExpensesProvider);
+        ref.invalidate(groupExpensesByCategoryProvider);
         ref.read(dashboardProvider.notifier).refresh();
 
         context.go('/expenses');

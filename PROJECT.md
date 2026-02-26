@@ -2,7 +2,7 @@
 
 ## Project Info
 - **Name**: Finn
-- **Version**: v1.0.0
+- **Version**: v1.0.1
 - **Status**: production
 - **Platforms**: apk, ios, web
 - **Description**: App gestione finanze familiari con tracking spese AI-powered
@@ -33,7 +33,7 @@
 
 ## Repository
 - **Main Branch**: main
-- **Development Branch**: feature/ai-receipt-scanning
+- **Development Branch**: feature/issue-7-bug-totale-dashboard-non-si-aggiorna-aut
 - **GitHub**: https://github.com/ecologicaleaving/finn
 
 ## Tech Stack
@@ -85,10 +85,11 @@
 - **TODO**: Notifiche smart per budget overrun e saving opportunities
 - **DONE**: Core expense tracking + multi-user family support
 - **DONE**: Receipt scanning AI integration
+- **DONE**: #7 Bug fix — dashboard totale gruppo non si aggiornava dopo aggiunta spesa (groupMembersExpensesProvider/groupExpensesByCategoryProvider ora invalidati correttamente)
 - **IN PROGRESS**: Advanced analytics e spending insights
 - **TODO**: Subscription management e recurring expense alerts
 - **TODO**: Investment tracking integration per portfolio overview
 
 ---
-*Last Updated: 2026-02-22T06:10:00Z*
+*Last Updated: 2026-02-26T20:00:00Z*
 *Auto-generated from: https://app.8020solutions.org/status.html*

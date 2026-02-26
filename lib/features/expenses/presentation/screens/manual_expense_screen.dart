@@ -270,10 +270,12 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       // Refresh dashboard to reflect the updated expense
       ref.read(dashboardProvider.notifier).refresh();
 
-      // Invalidate personal dashboard providers to refresh totals
+      // Invalidate all dashboard providers to refresh totals
       ref.invalidate(personalExpensesByCategoryProvider);
       ref.invalidate(expensesByPeriodProvider);
       ref.invalidate(recentPersonalExpensesProvider);
+      ref.invalidate(groupMembersExpensesProvider);
+      ref.invalidate(groupExpensesByCategoryProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -346,10 +348,12 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       // Refresh dashboard to reflect the new expense
       ref.read(dashboardProvider.notifier).refresh();
 
-      // Invalidate personal dashboard providers to refresh totals
+      // Invalidate all dashboard providers to refresh totals
       ref.invalidate(personalExpensesByCategoryProvider);
       ref.invalidate(expensesByPeriodProvider);
       ref.invalidate(recentPersonalExpensesProvider);
+      ref.invalidate(groupMembersExpensesProvider);
+      ref.invalidate(groupExpensesByCategoryProvider);
 
       if (mounted) {
         context.pop(); // Return to previous screen
@@ -419,6 +423,8 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       ref.invalidate(personalExpensesByCategoryProvider);
       ref.invalidate(expensesByPeriodProvider);
       ref.invalidate(recentPersonalExpensesProvider);
+      ref.invalidate(groupMembersExpensesProvider);
+      ref.invalidate(groupExpensesByCategoryProvider);
 
       // Show success message
       if (mounted) {
