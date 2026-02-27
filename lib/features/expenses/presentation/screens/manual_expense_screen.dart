@@ -124,6 +124,20 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
           });
         }
 
+        // Issue #6: Set default category from already-loaded (cached) categories
+        if (_selectedCategoryId == null) {
+          final authState = ref.read(authProvider);
+          final groupId = authState.user?.groupId;
+          if (groupId != null) {
+            final categoryState = ref.read(categoryProvider(groupId));
+            if (categoryState.categories.isNotEmpty) {
+              setState(() {
+                _selectedCategoryId = categoryState.categories.first.id;
+              });
+            }
+          }
+        }
+
         // T014: Keep _selectedMemberIdForExpense as null when user creates expense for themselves
         // Only set it when admin explicitly selects another member
       }
@@ -519,6 +533,21 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   @override
   Widget build(BuildContext context) {
     final formState = ref.watch(expenseFormProvider);
+
+    // Issue #6: Auto-select first category when categories load asynchronously (create mode only)
+    if (!_isEditMode) {
+      final authState = ref.watch(authProvider);
+      final groupId = authState.user?.groupId;
+      if (groupId != null) {
+        ref.listen<CategoryState>(categoryProvider(groupId), (previous, next) {
+          if (_selectedCategoryId == null && next.categories.isNotEmpty) {
+            setState(() {
+              _selectedCategoryId = next.categories.first.id;
+            });
+          }
+        });
+      }
+    }
 
     // T021: Listen for admin demotion during edit mode
     if (_isEditMode) {

@@ -2,7 +2,7 @@
 
 ## Project Info
 - **Name**: Finn
-- **Version**: v1.0.0
+- **Version**: v1.0.1
 - **Status**: production
 - **Platforms**: apk, ios, web
 - **Description**: App gestione finanze familiari con tracking spese AI-powered
@@ -24,7 +24,7 @@
 - **Live URL**: N/A (mobile/desktop app)
 - **Deploy Method**: flutter-build
 - **Deploy Host**: github-releases
-- **CI Status**: passing
+- **CI Status**: passing (unit tests green)
 - **Last Deploy**: 2026-02-14T20:47:00Z
 - **Environment Variables**: 
   - `SUPABASE_URL`: Flutter configuration
@@ -85,10 +85,11 @@
 - **TODO**: Notifiche smart per budget overrun e saving opportunities
 - **DONE**: Core expense tracking + multi-user family support
 - **DONE**: Receipt scanning AI integration
+- **DONE**: Bug #6 — Default category not saved on add expense (moved auto-selection from CategorySelector.build() side-effect to ManualExpenseScreen ref.listen + initState)
 - **IN PROGRESS**: Advanced analytics e spending insights
 - **TODO**: Subscription management e recurring expense alerts
 - **TODO**: Investment tracking integration per portfolio overview
 
 ---
-*Last Updated: 2026-02-22T06:10:00Z*
+*Last Updated: 2026-02-28T08:00:00Z*
 *Auto-generated from: https://app.8020solutions.org/status.html*

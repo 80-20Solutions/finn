@@ -23,8 +23,6 @@ class CategorySelector extends ConsumerStatefulWidget {
 }
 
 class _CategorySelectorState extends ConsumerState<CategorySelector> {
-  bool _hasAutoSelected = false;
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -36,16 +34,6 @@ class _CategorySelectorState extends ConsumerState<CategorySelector> {
     }
 
     final categoryState = ref.watch(categoryProvider(groupId));
-
-    // Auto-select first category if none is selected
-    if (!_hasAutoSelected &&
-        widget.selectedCategoryId == null &&
-        categoryState.categories.isNotEmpty) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        widget.onCategorySelected(categoryState.categories.first.id);
-        _hasAutoSelected = true;
-      });
-    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
