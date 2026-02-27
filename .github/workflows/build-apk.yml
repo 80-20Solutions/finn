@@ -128,6 +128,16 @@ jobs:
               body: `📲 **APK pronto per il test!**\n\n🔗 [${apkName}](${url})\n\n> Scarica e installa direttamente sul tuo dispositivo Android.`
             });
 
+
+      - name: Mark deployed-test & move card
+        if: success()
+        run: |
+          BRANCH="${{ steps.info.outputs.branch }}"
+          ISSUE_NUM=$(echo "$BRANCH" | grep -oP 'issue-\K\d+' || echo "")
+          REPO="${{ github.repository }}"
+          if [ -n "$ISSUE_NUM" ]; then
+            ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no               -o ConnectTimeout=10               ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}               "export PATH=\x24PATH:/root/go/bin &&                gh issue edit $ISSUE_NUM --repo $REPO                  --remove-label review-ready                  --add-label deployed-test 2>/dev/null || true &&                python3 /root/.openclaw/workspace-ciccio/scripts/project_board.py                  $REPO $ISSUE_NUM Test 2>/dev/null || true" || true
+          fi
       - name: Notify Ciccio
         if: always()
         run: |
