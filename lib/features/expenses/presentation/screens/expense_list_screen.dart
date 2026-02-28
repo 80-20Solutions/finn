@@ -8,7 +8,6 @@ import '../../domain/entities/expense_entity.dart';
 import '../../../../shared/widgets/error_display.dart';
 import '../../../../shared/widgets/loading_indicator.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
-import '../../../categories/presentation/providers/category_provider.dart';
 import '../../../categories/presentation/widgets/category_dropdown.dart';
 import '../../../dashboard/presentation/providers/dashboard_provider.dart';
 import '../../../groups/presentation/providers/group_provider.dart';
@@ -185,7 +184,7 @@ class _ExpenseListScreenState extends ConsumerState<ExpenseListScreen> {
                             ),
                             child: ExpenseListItem(
                               expense: expense,
-                              onTap: () => context.go('/expense/${expense.id}'),
+                              onTap: () => context.push('/expense/${expense.id}'),
                             ),
                           ),
                           if (index < monthExpenses.length - 1)

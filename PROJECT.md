@@ -2,7 +2,7 @@
 
 ## Project Info
 - **Name**: Finn
-- **Version**: v1.0.1
+- **Version**: v1.1.0
 - **Status**: production
 - **Platforms**: apk, ios, web
 - **Description**: App gestione finanze familiari con tracking spese AI-powered
@@ -87,10 +87,12 @@
 - **DONE**: Receipt scanning AI integration
 - **DONE**: Bug #6 — Default category not saved on add expense (moved auto-selection from CategorySelector.build() side-effect to ManualExpenseScreen ref.listen + initState)
 - **DONE**: Bug #7 — Dashboard totale gruppo non si aggiornava dopo aggiunta spesa (groupMembersExpensesProvider/groupExpensesByCategoryProvider ora invalidati correttamente)
+- **DONE**: UX — Rimosso campo "Negozio" da schermata aggiunta/modifica spesa
+- **DONE**: UX — Fix navigazione: dopo eliminazione spesa si torna all'elenco corretto con bottom menu (context.push + context.pop invece di context.go)
 - **IN PROGRESS**: Advanced analytics e spending insights
 - **TODO**: Subscription management e recurring expense alerts
 - **TODO**: Investment tracking integration per portfolio overview
 
 ---
-*Last Updated: 2026-02-28T09:00:00Z*
+*Last Updated: 2026-02-28T10:00:00Z*
 *Auto-generated from: https://app.8020solutions.org/status.html*

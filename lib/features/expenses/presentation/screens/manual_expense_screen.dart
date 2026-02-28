@@ -49,7 +49,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
     with UnsavedChangesGuard {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
-  final _merchantController = TextEditingController();
   final _notesController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId; // Will be set when categories load
@@ -72,7 +71,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
 
   // Track initial values for unsaved changes detection
   late final String _initialAmount;
-  late final String _initialMerchant;
   late final String _initialNotes;
   late final DateTime _initialDate;
   late final String? _initialCategoryId;
@@ -107,7 +105,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
     // Store initial values AFTER setting defaults.
     // This prevents false "unsaved changes" detection when only the auto-selection fired.
     _initialAmount = _amountController.text;
-    _initialMerchant = _merchantController.text;
     _initialNotes = _notesController.text;
     _initialDate = _selectedDate;
     _initialCategoryId = _selectedCategoryId; // captures auto-selected value
@@ -175,7 +172,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
             _selectedDate = expense.date;
             _selectedCategoryId = expense.categoryId;
             _selectedPaymentMethodId = expense.paymentMethodId;
-            _merchantController.text = expense.merchant ?? '';
             _notesController.text = expense.notes ?? '';
             _isGroupExpense = expense.isGroupExpense;
             _selectedReimbursementStatus = expense.reimbursementStatus;
@@ -189,7 +185,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   @override
   void dispose() {
     _amountController.dispose();
-    _merchantController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -197,7 +192,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   @override
   bool get hasUnsavedChanges {
     return _amountController.text != _initialAmount ||
-        _merchantController.text != _initialMerchant ||
         _notesController.text != _initialNotes ||
         _selectedDate != _initialDate ||
         _selectedCategoryId != _initialCategoryId ||
@@ -268,9 +262,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       date: _selectedDate != _originalExpense!.date ? _selectedDate : null,
       categoryId: _selectedCategoryId != _originalExpense!.categoryId ? _selectedCategoryId : null,
       paymentMethodId: _selectedPaymentMethodId != _originalExpense!.paymentMethodId ? _selectedPaymentMethodId : null,
-      merchant: _merchantController.text.trim() != (_originalExpense!.merchant ?? '')
-          ? (_merchantController.text.trim().isNotEmpty ? _merchantController.text.trim() : null)
-          : null,
       notes: _notesController.text.trim() != (_originalExpense!.notes ?? '')
           ? (_notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null)
           : null,
@@ -338,9 +329,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       date: _selectedDate,
       categoryId: _selectedCategoryId!,
       paymentMethodId: _selectedPaymentMethodId!,
-      merchant: _merchantController.text.trim().isNotEmpty
-          ? _merchantController.text.trim()
-          : null,
       notes: _notesController.text.trim().isNotEmpty
           ? _notesController.text.trim()
           : null,
@@ -414,9 +402,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       categoryName: categoryName,
       frequency: _recurrenceFrequency,
       anchorDate: _selectedDate, // Use selected date as anchor
-      merchant: _merchantController.text.trim().isNotEmpty
-          ? _merchantController.text.trim()
-          : null,
       notes: _notesController.text.trim().isNotEmpty
           ? _notesController.text.trim()
           : null,
@@ -570,8 +555,8 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
-          // Navigate back to expenses list
-          context.go('/expenses');
+          // Navigate back
+          context.pop();
         }
       });
     }
@@ -636,18 +621,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
                   ),
                   child: Text(DateFormatter.formatFullDate(_selectedDate)),
                 ),
-              ),
-              const SizedBox(height: 16),
-
-              // Merchant field
-              CustomTextField(
-                controller: _merchantController,
-                label: 'Negozio',
-                hint: 'Nome del negozio (opzionale)',
-                prefixIcon: Icons.store_outlined,
-                enabled: !formState.isSubmitting,
-                validator: Validators.validateMerchant,
-                textCapitalization: TextCapitalization.words,
               ),
               const SizedBox(height: 16),
 

@@ -38,7 +38,7 @@ class ExpenseDetailScreen extends ConsumerWidget {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/expenses'),
+          onPressed: () => context.pop(),
         ),
         title: const Text('Dettaglio spesa'),
         actions: [
@@ -387,7 +387,7 @@ class ExpenseDetailScreen extends ConsumerWidget {
         ref.invalidate(groupExpensesByCategoryProvider);
         ref.read(dashboardProvider.notifier).refresh();
 
-        context.go('/expenses');
+        context.pop();
       }
     }
   }
