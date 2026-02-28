@@ -33,7 +33,7 @@
 
 ## Repository
 - **Main Branch**: main
-- **Development Branch**: feature/ai-receipt-scanning
+- **Development Branch**: feature/issue-7-bug-totale-dashboard-non-si-aggiorna-aut
 - **GitHub**: https://github.com/ecologicaleaving/finn
 
 ## Tech Stack
@@ -86,10 +86,11 @@
 - **DONE**: Core expense tracking + multi-user family support
 - **DONE**: Receipt scanning AI integration
 - **DONE**: Bug #6 — Default category not saved on add expense (moved auto-selection from CategorySelector.build() side-effect to ManualExpenseScreen ref.listen + initState)
+- **DONE**: Bug #7 — Dashboard totale gruppo non si aggiornava dopo aggiunta spesa (groupMembersExpensesProvider/groupExpensesByCategoryProvider ora invalidati correttamente)
 - **IN PROGRESS**: Advanced analytics e spending insights
 - **TODO**: Subscription management e recurring expense alerts
 - **TODO**: Investment tracking integration per portfolio overview
 
 ---
-*Last Updated: 2026-02-28T08:00:00Z*
+*Last Updated: 2026-02-28T09:00:00Z*
 *Auto-generated from: https://app.8020solutions.org/status.html*

@@ -318,6 +318,8 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
           ref.invalidate(recentPersonalExpensesProvider);
           ref.invalidate(personalExpensesByCategoryProvider);
           ref.invalidate(expensesByPeriodProvider);
+          ref.invalidate(groupMembersExpensesProvider);
+          ref.invalidate(groupExpensesByCategoryProvider);
           ref.read(dashboardProvider.notifier).refresh();
 
           // Show success message
@@ -402,6 +404,8 @@ class _EditExpenseFormState extends ConsumerState<_EditExpenseForm>
     ref.invalidate(recentPersonalExpensesProvider);
     ref.invalidate(personalExpensesByCategoryProvider);
     ref.invalidate(expensesByPeriodProvider);
+    ref.invalidate(groupMembersExpensesProvider);
+    ref.invalidate(groupExpensesByCategoryProvider);
     ref.read(dashboardProvider.notifier).refresh();
 
     if (mounted) {
