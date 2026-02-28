@@ -361,7 +361,7 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       await _checkAndPromptForVirginCategory();
 
       // Refresh dashboard to reflect the new expense
-      ref.read(dashboardProvider.notifier).refresh();
+      await ref.read(dashboardProvider.notifier).refresh();
 
       // Invalidate all dashboard providers to refresh totals
       ref.invalidate(personalExpensesByCategoryProvider);
@@ -678,8 +678,8 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
               ),
               const SizedBox(height: 16),
 
-              // Category selector
-              CategorySelector(
+              // Category selector (compact dropdown)
+              CategoryDropdown(
                 selectedCategoryId: _selectedCategoryId,
                 onCategorySelected: (categoryId) {
                   setState(() {
