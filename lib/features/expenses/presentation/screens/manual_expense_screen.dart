@@ -90,12 +90,27 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
     // T016: Check if in edit mode
     _isEditMode = widget.expenseId != null;
 
-    // Store initial values
+    // Issue #6: Set default category SYNCHRONOUSLY before storing initial values.
+    // ref.read is valid in ConsumerStatefulWidget.initState().
+    // Fires before the first build() → first frame already shows the chip highlighted.
+    // For async loading (categories not yet cached), ref.listen in build() handles it.
+    if (!_isEditMode) {
+      final groupId = ref.read(authProvider).user?.groupId;
+      if (groupId != null) {
+        final cats = ref.read(categoryProvider(groupId)).categories;
+        if (cats.isNotEmpty) {
+          _selectedCategoryId = cats.first.id;
+        }
+      }
+    }
+
+    // Store initial values AFTER setting defaults.
+    // This prevents false "unsaved changes" detection when only the auto-selection fired.
     _initialAmount = _amountController.text;
     _initialMerchant = _merchantController.text;
     _initialNotes = _notesController.text;
     _initialDate = _selectedDate;
-    _initialCategoryId = _selectedCategoryId;
+    _initialCategoryId = _selectedCategoryId; // captures auto-selected value
     _initialPaymentMethodId = _selectedPaymentMethodId;
     _initialIsGroupExpense = _isGroupExpense;
     _initialReimbursementStatus = _selectedReimbursementStatus; // T035
@@ -122,20 +137,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
           setState(() {
             _selectedPaymentMethodId = paymentMethodState.defaultContanti!.id;
           });
-        }
-
-        // Issue #6: Set default category from already-loaded (cached) categories
-        if (_selectedCategoryId == null) {
-          final authState = ref.read(authProvider);
-          final groupId = authState.user?.groupId;
-          if (groupId != null) {
-            final categoryState = ref.read(categoryProvider(groupId));
-            if (categoryState.categories.isNotEmpty) {
-              setState(() {
-                _selectedCategoryId = categoryState.categories.first.id;
-              });
-            }
-          }
         }
 
         // T014: Keep _selectedMemberIdForExpense as null when user creates expense for themselves
@@ -534,7 +535,9 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   Widget build(BuildContext context) {
     final formState = ref.watch(expenseFormProvider);
 
-    // Issue #6: Auto-select first category when categories load asynchronously (create mode only)
+    // Issue #6: Auto-select first category when categories load asynchronously (create mode only).
+    // This covers the case where categories were NOT cached when initState ran.
+    // Also updates _initialCategoryId to match so "unsaved changes" detection stays correct.
     if (!_isEditMode) {
       final authState = ref.watch(authProvider);
       final groupId = authState.user?.groupId;
@@ -543,6 +546,7 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
           if (_selectedCategoryId == null && next.categories.isNotEmpty) {
             setState(() {
               _selectedCategoryId = next.categories.first.id;
+              _initialCategoryId = next.categories.first.id; // keep initial in sync
             });
           }
         });
