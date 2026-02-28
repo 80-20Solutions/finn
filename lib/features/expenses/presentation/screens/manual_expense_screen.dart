@@ -49,7 +49,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
     with UnsavedChangesGuard {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
-  final _merchantController = TextEditingController();
   final _notesController = TextEditingController();
   DateTime _selectedDate = DateTime.now();
   String? _selectedCategoryId; // Will be set when categories load
@@ -72,7 +71,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
 
   // Track initial values for unsaved changes detection
   late final String _initialAmount;
-  late final String _initialMerchant;
   late final String _initialNotes;
   late final DateTime _initialDate;
   late final String? _initialCategoryId;
@@ -90,12 +88,26 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
     // T016: Check if in edit mode
     _isEditMode = widget.expenseId != null;
 
-    // Store initial values
+    // Issue #6: Set default category SYNCHRONOUSLY before storing initial values.
+    // ref.read is valid in ConsumerStatefulWidget.initState().
+    // Fires before the first build() → first frame already shows the chip highlighted.
+    // For async loading (categories not yet cached), ref.listen in build() handles it.
+    if (!_isEditMode) {
+      final groupId = ref.read(authProvider).user?.groupId;
+      if (groupId != null) {
+        final cats = ref.read(categoryProvider(groupId)).categories;
+        if (cats.isNotEmpty) {
+          _selectedCategoryId = cats.first.id;
+        }
+      }
+    }
+
+    // Store initial values AFTER setting defaults.
+    // This prevents false "unsaved changes" detection when only the auto-selection fired.
     _initialAmount = _amountController.text;
-    _initialMerchant = _merchantController.text;
     _initialNotes = _notesController.text;
     _initialDate = _selectedDate;
-    _initialCategoryId = _selectedCategoryId;
+    _initialCategoryId = _selectedCategoryId; // captures auto-selected value
     _initialPaymentMethodId = _selectedPaymentMethodId;
     _initialIsGroupExpense = _isGroupExpense;
     _initialReimbursementStatus = _selectedReimbursementStatus; // T035
@@ -160,7 +172,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
             _selectedDate = expense.date;
             _selectedCategoryId = expense.categoryId;
             _selectedPaymentMethodId = expense.paymentMethodId;
-            _merchantController.text = expense.merchant ?? '';
             _notesController.text = expense.notes ?? '';
             _isGroupExpense = expense.isGroupExpense;
             _selectedReimbursementStatus = expense.reimbursementStatus;
@@ -174,7 +185,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   @override
   void dispose() {
     _amountController.dispose();
-    _merchantController.dispose();
     _notesController.dispose();
     super.dispose();
   }
@@ -182,7 +192,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   @override
   bool get hasUnsavedChanges {
     return _amountController.text != _initialAmount ||
-        _merchantController.text != _initialMerchant ||
         _notesController.text != _initialNotes ||
         _selectedDate != _initialDate ||
         _selectedCategoryId != _initialCategoryId ||
@@ -253,9 +262,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       date: _selectedDate != _originalExpense!.date ? _selectedDate : null,
       categoryId: _selectedCategoryId != _originalExpense!.categoryId ? _selectedCategoryId : null,
       paymentMethodId: _selectedPaymentMethodId != _originalExpense!.paymentMethodId ? _selectedPaymentMethodId : null,
-      merchant: _merchantController.text.trim() != (_originalExpense!.merchant ?? '')
-          ? (_merchantController.text.trim().isNotEmpty ? _merchantController.text.trim() : null)
-          : null,
       notes: _notesController.text.trim() != (_originalExpense!.notes ?? '')
           ? (_notesController.text.trim().isNotEmpty ? _notesController.text.trim() : null)
           : null,
@@ -270,10 +276,12 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       // Refresh dashboard to reflect the updated expense
       ref.read(dashboardProvider.notifier).refresh();
 
-      // Invalidate personal dashboard providers to refresh totals
+      // Invalidate all dashboard providers to refresh totals
       ref.invalidate(personalExpensesByCategoryProvider);
       ref.invalidate(expensesByPeriodProvider);
       ref.invalidate(recentPersonalExpensesProvider);
+      ref.invalidate(groupMembersExpensesProvider);
+      ref.invalidate(groupExpensesByCategoryProvider);
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -321,9 +329,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       date: _selectedDate,
       categoryId: _selectedCategoryId!,
       paymentMethodId: _selectedPaymentMethodId!,
-      merchant: _merchantController.text.trim().isNotEmpty
-          ? _merchantController.text.trim()
-          : null,
       notes: _notesController.text.trim().isNotEmpty
           ? _notesController.text.trim()
           : null,
@@ -344,12 +349,14 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       await _checkAndPromptForVirginCategory();
 
       // Refresh dashboard to reflect the new expense
-      ref.read(dashboardProvider.notifier).refresh();
+      await ref.read(dashboardProvider.notifier).refresh();
 
-      // Invalidate personal dashboard providers to refresh totals
+      // Invalidate all dashboard providers to refresh totals
       ref.invalidate(personalExpensesByCategoryProvider);
       ref.invalidate(expensesByPeriodProvider);
       ref.invalidate(recentPersonalExpensesProvider);
+      ref.invalidate(groupMembersExpensesProvider);
+      ref.invalidate(groupExpensesByCategoryProvider);
 
       if (mounted) {
         context.pop(); // Return to previous screen
@@ -395,9 +402,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       categoryName: categoryName,
       frequency: _recurrenceFrequency,
       anchorDate: _selectedDate, // Use selected date as anchor
-      merchant: _merchantController.text.trim().isNotEmpty
-          ? _merchantController.text.trim()
-          : null,
       notes: _notesController.text.trim().isNotEmpty
           ? _notesController.text.trim()
           : null,
@@ -419,6 +423,8 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
       ref.invalidate(personalExpensesByCategoryProvider);
       ref.invalidate(expensesByPeriodProvider);
       ref.invalidate(recentPersonalExpensesProvider);
+      ref.invalidate(groupMembersExpensesProvider);
+      ref.invalidate(groupExpensesByCategoryProvider);
 
       // Show success message
       if (mounted) {
@@ -520,6 +526,24 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
   Widget build(BuildContext context) {
     final formState = ref.watch(expenseFormProvider);
 
+    // Issue #6: Auto-select first category when categories load asynchronously (create mode only).
+    // This covers the case where categories were NOT cached when initState ran.
+    // Also updates _initialCategoryId to match so "unsaved changes" detection stays correct.
+    if (!_isEditMode) {
+      final authState = ref.watch(authProvider);
+      final groupId = authState.user?.groupId;
+      if (groupId != null) {
+        ref.listen<CategoryState>(categoryProvider(groupId), (previous, next) {
+          if (_selectedCategoryId == null && next.categories.isNotEmpty) {
+            setState(() {
+              _selectedCategoryId = next.categories.first.id;
+              _initialCategoryId = next.categories.first.id; // keep initial in sync
+            });
+          }
+        });
+      }
+    }
+
     // T021: Listen for admin demotion during edit mode
     if (_isEditMode) {
       ref.listen<bool>(isGroupAdminProvider, (previous, next) {
@@ -531,8 +555,8 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
               backgroundColor: Theme.of(context).colorScheme.error,
             ),
           );
-          // Navigate back to expenses list
-          context.go('/expenses');
+          // Navigate back
+          context.pop();
         }
       });
     }
@@ -600,18 +624,6 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
               ),
               const SizedBox(height: 16),
 
-              // Merchant field
-              CustomTextField(
-                controller: _merchantController,
-                label: 'Negozio',
-                hint: 'Nome del negozio (opzionale)',
-                prefixIcon: Icons.store_outlined,
-                enabled: !formState.isSubmitting,
-                validator: Validators.validateMerchant,
-                textCapitalization: TextCapitalization.words,
-              ),
-              const SizedBox(height: 16),
-
               // Expense type toggle
               Text(
                 'Tipo di spesa',
@@ -639,8 +651,8 @@ class _ManualExpenseScreenState extends ConsumerState<ManualExpenseScreen>
               ),
               const SizedBox(height: 16),
 
-              // Category selector
-              CategorySelector(
+              // Category selector (compact dropdown)
+              CategoryDropdown(
                 selectedCategoryId: _selectedCategoryId,
                 onCategorySelected: (categoryId) {
                   setState(() {
