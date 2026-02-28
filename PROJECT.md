@@ -10,7 +10,7 @@
 ## Database
 - **Provider**: supabase-cloud
 - **Environment**: production
-- **Database ID**: finn-family-expenses
+- **Database ID**: ofsnyaplaowbduujuucb
 - **Schema**: sql-migrations
 - **Migration Status**: current
 - **Connection**: 
@@ -18,7 +18,7 @@
   - PROD: flutter environment injection
 - **Backup**: auto (supabase managed)
 - **Seed Data**: default categories + demo transactions
-- **Admin URL**: https://supabase.com/dashboard
+- **Admin URL**: https://supabase.com/dashboard/project/ofsnyaplaowbduujuucb
 
 ## Deployment
 - **Live URL**: N/A (mobile/desktop app)

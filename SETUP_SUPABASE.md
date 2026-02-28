@@ -2,39 +2,28 @@
 
 ## 🎯 Configurazione
 
-Finn usa **Supabase Development** sul VPS 8020solutions.org per uso personale/famiglia.
+Finn usa **Supabase Cloud** (production) per uso personale/famiglia.
 
-**Non c'è ambiente Production** - Finn non è un'app pubblica! 💰👨‍👩‍👧‍👦
+| Ambiente | URL | Note |
+|----------|-----|------|
+| **Production** | `https://ofsnyaplaowbduujuucb.supabase.co` | Supabase Cloud |
+| **Dev locale** | `http://localhost:54321` | `supabase start` sul PC |
 
 ---
 
-## 🚀 Setup sul PC Locale
+## 🔑 Credenziali
 
-### 1. Pull Ultimi Commit
+Le credenziali **NON** vanno nel repo. Sono gestite tramite:
+- **GitHub Secrets**: `SUPABASE_URL` + `SUPABASE_ANON_KEY` → iniettate nel `.env` dal CI
+- **Locale**: crea manualmente il file `.env` (vedi sotto)
 
-```bash
-cd ~/finn
-git pull origin 001-family-expense-tracker
-```
-
-### 2. Crea File .env.dev
+### Setup locale PC
 
 ```bash
-cat > .env.dev << 'EOF'
-SUPABASE_URL=https://dev.8020solutions.org
-SUPABASE_ANON_KEY=sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH
+cat > .env << 'EOF'
+SUPABASE_URL=https://ofsnyaplaowbduujuucb.supabase.co
+SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mc255YXBsYW93YmR1dWp1dWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDQ5NTAsImV4cCI6MjA4MTg4MDk1MH0.KroyO-7pma1BsjZEWl9CLmsiPQWMIaUPDziwTSOENhE
 EOF
-```
-
-### 3. Lancia l'App
-
-```bash
-./scripts/run_dev.sh
-```
-
-**Oppure manuale:**
-```bash
-cp .env.dev .env
 flutter run
 ```
 
@@ -42,36 +31,18 @@ flutter run
 
 ## 🔍 Database
 
-### Accedi a Studio (via tunnel):
-```bash
-ssh -L 54323:127.0.0.1:54323 root@46.225.60.101
-```
-Poi: http://localhost:54323
-
-### Connessione Diretta:
-```
-postgresql://postgres:postgres@dev.8020solutions.org:54322/postgres
-```
+- **Dashboard**: https://supabase.com/dashboard/project/ofsnyaplaowbduujuucb
+- **Project ID**: `ofsnyaplaowbduujuucb`
+- **Backup**: automatico (gestito da Supabase Cloud)
 
 ---
 
-## 📊 Dati
+## ⚠️ Regole workflow
 
-Il database contiene i dati importati da Supabase Cloud (treetocoin@gmail.com).
-
-Backup disponibile: `/tmp/finn_backup_20260214.sql` sul VPS
-
----
-
-## ⚠️ Note Importanti
-
-- **Solo Development** - nessun ambiente production
-- Uso personale/famiglia, non pubblico
-- Nessun tunnel SSH necessario - tutto HTTPS
-- Database condiviso su `dev.8020solutions.org` con altri progetti 80/20
-
----
-
-## 🎉 Ready!
-
-Finn è configurato per uso famiglia con backend sempre disponibile! 💰😊
+1. **Mai** committare il file `.env` (è in `.gitignore`)
+2. **Sempre** aggiornare i GitHub Secrets se le credenziali cambiano
+3. Il CI inietta automaticamente le credenziali nel `.env` prima del build APK
+4. Se il progetto Supabase Cloud viene sostituito → aggiornare:
+   - GitHub Secrets (`SUPABASE_URL`, `SUPABASE_ANON_KEY`)
+   - Questo file (`SETUP_SUPABASE.md`)
+   - Il campo `Database` in `PROJECT.md`
