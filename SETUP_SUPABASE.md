@@ -20,9 +20,11 @@ Le credenziali **NON** vanno nel repo. Sono gestite tramite:
 ### Setup locale PC
 
 ```bash
+# Chiedi le credenziali a Davide o recuperale da:
+# https://supabase.com/dashboard/project/ofsnyaplaowbduujuucb/settings/api
 cat > .env << 'EOF'
 SUPABASE_URL=https://ofsnyaplaowbduujuucb.supabase.co
-SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im9mc255YXBsYW93YmR1dWp1dWNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYzMDQ5NTAsImV4cCI6MjA4MTg4MDk1MH0.KroyO-7pma1BsjZEWl9CLmsiPQWMIaUPDziwTSOENhE
+SUPABASE_ANON_KEY=<anon key dal dashboard Supabase>
 EOF
 flutter run
 ```
